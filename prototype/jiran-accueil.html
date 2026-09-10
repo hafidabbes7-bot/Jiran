@@ -1,0 +1,2757 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jiran — Accueil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand:#F6EFE3;
+    --paper:#FBF7EF;
+    --ink:#241C17;
+    --brand:#B5502E;
+    --brand-deep:#8F3D22;
+    --alert:#C1272D;
+    --alert-soft:#F6DEDD;
+    --aid:#2F7A5C;
+    --aid-soft:#DEEDE6;
+    --sale:#C9962C;
+    --sale-soft:#F5EBD4;
+    --event:#3B6EA5;
+    --event-soft:#DEE8F2;
+    --muted:#8A8078;
+    --card:#FFFFFF;
+    --line:#EAE1D4;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 10%, #F0E4D4 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #E7EDE6 0%, transparent 40%),
+      var(--sand);
+    font-family:'IBM Plex Sans','IBM Plex Sans Arabic',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 16px;
+  }
+  .stage{display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .stage-label{font-size:13px;color:var(--muted);}
+  .phone{
+    width:380px;height:800px;
+    background:var(--paper);
+    border-radius:38px;
+    border:8px solid #2A2019;
+    box-shadow:0 30px 60px -20px rgba(30,20,10,0.35), 0 8px 20px -8px rgba(30,20,10,0.25);
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+  .notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:130px;height:22px;background:#2A2019;border-radius:0 0 16px 16px;z-index:20;
+  }
+  .screen{
+    flex:1;overflow-y:auto;padding:36px 18px 90px;scrollbar-width:none;
+  }
+  .screen::-webkit-scrollbar{display:none;}
+
+  .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
+  .brand-mark{display:flex;align-items:center;gap:10px;}
+  .logo{
+    width:34px;height:34px;border-radius:9px;background:var(--brand);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .logo svg{width:18px;height:18px;}
+  .brand-text .name{font-weight:700;font-size:18px;line-height:1;}
+  .brand-text .loc{font-size:12.5px;color:var(--muted);margin-top:3px;}
+  .bell{
+    width:34px;height:34px;border-radius:12px;background:var(--card);
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    font-size:15px;position:relative;flex:0 0 auto;
+  }
+  .bell .dot{
+    position:absolute;top:6px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--alert);
+  }
+  .lang-toggle{
+    display:flex;background:#EFE3D3;border-radius:20px;padding:3px;gap:2px;height:30px;
+  }
+  .lang-toggle button{
+    border:none;background:transparent;font-family:inherit;font-size:12.5px;font-weight:600;
+    color:var(--muted);padding:0 12px;border-radius:16px;cursor:pointer;
+  }
+  .lang-toggle button.active{background:var(--ink);color:var(--paper);}
+  .topbar-right{display:flex;align-items:center;gap:8px;}
+  .msg-bell{
+    width:30px;height:30px;border-radius:10px;background:var(--card);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;cursor:pointer;
+  }
+  .msg-bell .dot{
+    position:absolute;top:4px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--alert);
+  }
+  [dir="rtl"] .topbar-right{flex-direction:row-reverse;}
+
+  .categories{
+    display:flex;gap:8px;overflow-x:auto;margin:0 -18px 16px;padding:0 18px 6px;scrollbar-width:none;
+  }
+  .categories::-webkit-scrollbar{display:none;}
+  .cat-chip{
+    flex:0 0 auto;display:flex;align-items:center;gap:6px;background:var(--card);
+    border:1px solid var(--line);border-radius:22px;padding:8px 14px;
+    font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;
+  }
+  .cat-chip.active{background:var(--brand);border-color:var(--brand);color:#fff;}
+
+  .alert-banner{
+    display:flex;align-items:center;gap:12px;background:var(--alert);
+    border-radius:16px;padding:13px 14px;margin-bottom:18px;color:#fff;
+  }
+  .alert-banner .ai{font-size:20px;flex:0 0 auto;}
+  .alert-banner .at{font-size:12.5px;font-weight:700;}
+  .alert-banner .as{font-size:11px;opacity:0.9;margin-top:2px;}
+
+  .games-banner{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:12px 14px;margin-bottom:18px;cursor:pointer;
+  }
+  .gb-icon{font-size:22px;flex:0 0 auto;}
+  .gb-info{flex:1;min-width:0;}
+  .gb-title{font-size:13px;font-weight:700;}
+  .gb-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+  .gb-arrow{color:var(--muted);font-size:18px;flex:0 0 auto;}
+
+  .welcome-card{
+    display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#FBF0D8,var(--sand));
+    border:1px solid #E8D39C;border-radius:16px;padding:12px 14px;margin-bottom:18px;
+  }
+  .wc-icon{font-size:22px;flex:0 0 auto;}
+  .wc-title{font-size:13px;font-weight:700;}
+  .wc-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+  .post-card{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:14px;margin-bottom:12px;
+  }
+  .post-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .avatar{
+    width:36px;height:36px;border-radius:50%;background:var(--sand);
+    display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;
+  }
+  .post-who{flex:1;min-width:0;}
+  .post-who .pname{font-size:13.5px;font-weight:700;}
+  .post-who .pmeta{font-size:11px;color:var(--muted);margin-top:1px;}
+  .badge{
+    font-size:10px;font-weight:700;padding:4px 9px;border-radius:8px;flex:0 0 auto;
+  }
+  .badge.securite{background:var(--alert-soft);color:var(--alert);}
+  .badge.entraide{background:var(--aid-soft);color:var(--aid);}
+  .badge.annonce{background:var(--sale-soft);color:var(--sale);}
+  .badge.evenement{background:var(--event-soft);color:var(--event);}
+  .badge.sondage{background:#EDE3F5;color:#7A4FA3;}
+  .badge.covoit{background:#DDEEF7;color:#2E7AA8;}
+  .badge.solidarite{background:#FBDEE3;color:#C13F63;}
+
+  /* Stories */
+  .stories-row{
+    display:flex;gap:14px;overflow-x:auto;margin:0 -18px 18px;padding:0 18px 4px;scrollbar-width:none;
+  }
+  .stories-row::-webkit-scrollbar{display:none;}
+  .story-item{
+    flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:5px;
+    font-size:10px;color:var(--muted);font-weight:600;width:58px;text-align:center;cursor:pointer;
+  }
+  .story-ring{
+    width:54px;height:54px;border-radius:50%;padding:2.5px;
+    background:var(--line);display:flex;align-items:center;justify-content:center;
+  }
+  .story-ring.unseen{background:linear-gradient(135deg,var(--brand),var(--sale));}
+  .story-ring.add{background:var(--sand);}
+  .story-avatar{
+    width:100%;height:100%;border-radius:50%;background:var(--card);border:2px solid var(--paper);
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+  }
+
+  /* Poll */
+  .poll-option{
+    position:relative;background:var(--sand);border-radius:10px;padding:9px 11px;margin-bottom:7px;
+    overflow:hidden;font-size:12.5px;font-weight:600;
+  }
+  .poll-fill{
+    position:absolute;inset:0;background:#EDE3F5;z-index:0;
+  }
+  .poll-label{position:relative;z-index:1;}
+  .poll-pct{position:relative;z-index:1;float:right;font-weight:700;color:#7A4FA3;}
+  [dir="rtl"] .poll-pct{float:left;}
+
+  /* Story viewer */
+  #screen14{display:none;padding:0 !important;}
+  .story-view{
+    height:100%;display:flex;flex-direction:column;justify-content:flex-end;
+    background:linear-gradient(160deg,#B5502E,#2A2019);position:relative;
+  }
+  .story-progress{display:flex;gap:4px;padding:14px 14px 0;}
+  .story-progress .sp-seg{flex:1;height:3px;background:rgba(255,255,255,0.35);border-radius:2px;}
+  .story-progress .sp-seg.done{background:#fff;}
+  .story-close{
+    position:absolute;top:16px;right:16px;color:#fff;font-size:20px;cursor:pointer;z-index:5;
+  }
+  [dir="rtl"] .story-close{right:auto;left:16px;}
+  .story-who{
+    position:absolute;top:26px;left:16px;display:flex;align-items:center;gap:8px;color:#fff;font-size:12.5px;font-weight:700;
+  }
+  [dir="rtl"] .story-who{left:auto;right:16px;}
+  .story-caption{color:#fff;font-size:14px;padding:0 20px 40px;text-shadow:0 2px 8px rgba(0,0,0,0.3);}
+
+  /* Services directory (screen15) */
+  #screen15{display:none;}
+  .service-card{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:13px;margin-bottom:10px;
+  }
+  .service-icon{
+    width:40px;height:40px;border-radius:12px;background:var(--sand);display:flex;align-items:center;
+    justify-content:center;font-size:19px;flex:0 0 auto;
+  }
+  .service-body{flex:1;min-width:0;}
+  .service-cat{font-size:11px;color:var(--muted);}
+  .service-name{font-size:13.5px;font-weight:700;margin-top:1px;}
+  .service-meta{font-size:11px;color:var(--gold-txt,#B5842E);margin-top:2px;font-weight:600;}
+
+  /* Messages (screen16/17) */
+  #screen16, #screen17{display:none;}
+  .conv-row{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:12px 13px;margin-bottom:9px;cursor:pointer;
+  }
+  .conv-body{flex:1;min-width:0;}
+  .conv-name{font-size:13.5px;font-weight:700;}
+  .conv-last{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .conv-meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:0 0 auto;}
+  .conv-time{font-size:10.5px;color:var(--muted);}
+  .conv-unread{
+    background:var(--brand);color:#fff;font-size:10px;font-weight:700;width:17px;height:17px;
+    border-radius:50%;display:flex;align-items:center;justify-content:center;
+  }
+  .chat-header{display:flex;align-items:center;gap:10px;margin:16px 0 18px;}
+  .ch-name{font-size:14.5px;font-weight:700;}
+  .chat-bubbles{display:flex;flex-direction:column;gap:10px;}
+  .bubble{max-width:78%;padding:10px 13px;border-radius:16px;font-size:13px;line-height:1.4;}
+  .bubble.them{background:var(--card);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px;}
+  .bubble.me{background:var(--brand);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+  [dir="rtl"] .bubble.them{align-self:flex-end;border-bottom-left-radius:16px;border-bottom-right-radius:4px;}
+  [dir="rtl"] .bubble.me{align-self:flex-start;border-bottom-right-radius:16px;border-bottom-left-radius:4px;}
+
+  /* Objets à emprunter (screen18) */
+  #screen18{display:none;}
+  .lend-card{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:13px;margin-bottom:10px;
+  }
+  .lend-icon{font-size:22px;flex:0 0 auto;}
+  .lend-body{flex:1;min-width:0;}
+  .lend-name{font-size:13.5px;font-weight:700;}
+  .lend-owner{font-size:11px;color:var(--muted);margin-top:2px;}
+  .lend-status{font-size:10px;font-weight:700;padding:4px 9px;border-radius:8px;flex:0 0 auto;white-space:nowrap;}
+  .lend-status.available{background:var(--aid-soft);color:var(--aid);}
+  .lend-status.borrowed{background:var(--sale-soft);color:var(--sale);}
+
+  /* Groupes (screen19) */
+  #screen19{display:none;}
+  .group-card{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:13px;margin-bottom:10px;
+  }
+  .grp-icon{font-size:22px;flex:0 0 auto;}
+  .grp-body{flex:1;min-width:0;}
+  .grp-name{font-size:13.5px;font-weight:700;}
+  .grp-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .grp-join{
+    background:var(--card);border:1px solid var(--brand);color:var(--brand);border-radius:10px;
+    padding:8px 14px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;flex:0 0 auto;
+  }
+  .grp-join.joined{background:var(--sand);border-color:var(--line);color:var(--muted);}
+
+  /* Carte du quartier (screen20) */
+  #screen20{display:none;}
+  .poi-card{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:13px;margin-bottom:10px;
+  }
+  .poi-icon{font-size:22px;flex:0 0 auto;}
+  .poi-name{font-size:13.5px;font-weight:700;}
+  .poi-meta{font-size:11.5px;color:var(--muted);margin-top:2px;}
+
+  /* Mode vacances (screen21) */
+  #screen21{display:none;}
+  .trust-row{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:12px 13px;margin-bottom:9px;
+  }
+  .trust-body{flex:1;min-width:0;}
+  .trust-name{font-size:13.5px;font-weight:700;}
+  .trust-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .vac-notice{
+    background:var(--aid-soft);color:var(--aid);border-radius:14px;padding:13px 14px;margin-top:16px;
+    font-size:12.5px;font-weight:600;line-height:1.5;
+  }
+
+  /* Collecte des déchets (screen22) */
+  #screen22{display:none;}
+  .waste-card{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:13px;margin-bottom:10px;
+  }
+  .waste-icon{font-size:22px;flex:0 0 auto;}
+  .waste-name{font-size:13.5px;font-weight:700;}
+  .waste-meta{font-size:11.5px;color:var(--muted);margin-top:2px;}
+
+  /* Actions solidaires (screen23) */
+  #screen23{display:none;}
+  .solid-card{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:13px;margin-bottom:10px;
+  }
+  .solid-icon{font-size:22px;flex:0 0 auto;}
+  .solid-body{flex:1;min-width:0;}
+  .solid-name{font-size:13.5px;font-weight:700;}
+  .solid-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .solid-join{
+    background:var(--card);border:1px solid var(--brand);color:var(--brand);border-radius:10px;
+    padding:8px 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;flex:0 0 auto;
+  }
+  .solid-join.joined{background:var(--aid-soft);border-color:var(--aid);color:var(--aid);}
+
+  .sos-fab{
+    position:absolute;bottom:96px;right:16px;width:52px;height:52px;border-radius:50%;
+    background:var(--alert);color:#fff;display:flex;align-items:center;justify-content:center;
+    font-size:20px;box-shadow:0 8px 18px -4px rgba(193,39,45,0.6);cursor:pointer;z-index:45;
+    animation:sosPulse 2.4s ease-in-out infinite;
+  }
+  [dir="rtl"] .sos-fab{right:auto;left:16px;}
+  @keyframes sosPulse{
+    0%, 100%{box-shadow:0 8px 18px -4px rgba(193,39,45,0.6);}
+    50%{box-shadow:0 8px 22px -2px rgba(193,39,45,0.9), 0 0 0 8px rgba(193,39,45,0.12);}
+  }
+
+  /* SOS screen (screen24) */
+  #screen24{display:none;}
+  .sos-header{text-align:center;margin:16px 0 20px;}
+  .sos-header .sh-icon{font-size:38px;margin-bottom:8px;}
+  .sos-header .sh-title{font-size:17px;font-weight:700;color:var(--alert);}
+  .sos-header .sh-sub{font-size:12.5px;color:var(--muted);margin-top:5px;}
+  .sos-select-all{
+    display:flex;align-items:center;gap:10px;background:var(--alert-soft);border:1px solid #F0C6C4;
+    border-radius:14px;padding:12px 13px;margin-bottom:12px;cursor:pointer;font-size:13px;font-weight:700;color:var(--alert);
+  }
+  .sos-send-btn{
+    width:100%;background:var(--alert);color:#fff;border:none;border-radius:14px;padding:15px;
+    font-family:inherit;font-size:14.5px;font-weight:700;margin-top:16px;cursor:pointer;
+  }
+  .sos-sent{display:none;text-align:center;padding-top:50px;}
+  .sos-sent .ss-icon{font-size:44px;margin-bottom:16px;}
+  .sos-cancel-btn{
+    width:100%;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:14px;
+    padding:13px;font-family:inherit;font-size:13px;font-weight:700;margin-top:24px;cursor:pointer;
+  }
+
+  .post-text{font-size:13.5px;line-height:1.55;margin-bottom:10px;}
+  .post-photo{
+    width:100%;height:130px;border-radius:12px;margin-bottom:10px;
+  }
+  .post-actions{display:flex;gap:16px;padding-top:8px;border-top:1px solid var(--line);}
+  .post-actions .pa{
+    display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);font-weight:600;
+  }
+
+  .bottom-nav{
+    position:absolute;bottom:0;left:0;right:0;
+    background:rgba(251,247,239,0.92);backdrop-filter:blur(6px);
+    border-top:1px solid var(--line);display:flex;padding:10px 10px 16px;
+  }
+  .nav-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+    color:var(--muted);font-size:10.5px;font-weight:600;
+  }
+  .nav-item.active{color:var(--brand);}
+  .nav-item .dot2{width:5px;height:5px;border-radius:50%;background:var(--brand);opacity:0;}
+  .nav-item.active .dot2{opacity:1;}
+  .nav-item .fab{
+    width:44px;height:44px;border-radius:14px;background:var(--brand);
+    display:flex;align-items:center;justify-content:center;color:#fff;margin-top:-24px;
+    box-shadow:0 8px 16px -6px rgba(181,80,46,0.55);
+  }
+
+  [dir="rtl"] .topbar{flex-direction:row-reverse;}
+  [dir="rtl"] .brand-mark{flex-direction:row-reverse;}
+  [dir="rtl"] .post-head{flex-direction:row-reverse;}
+  [dir="rtl"] .alert-banner{flex-direction:row-reverse;}
+
+  /* Multi-screen system */
+  #screen2, #screen3, #screen4, #screen5, #screen6{display:none;}
+  .p-back{
+    display:flex;align-items:center;justify-content:center;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    width:34px;height:34px;cursor:pointer;font-size:16px;margin-bottom:16px;
+  }
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin:20px 0 12px;}
+  .section-head h2{font-size:15.5px;font-weight:600;margin:0;}
+  .section-head .sub{font-size:12px;color:var(--muted);}
+
+  /* Annonces (screen2) */
+  .listing-card{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    overflow:hidden;margin-bottom:12px;cursor:pointer;
+  }
+  .listing-photo{height:120px;}
+  .listing-body{padding:11px 13px;}
+  .listing-title{font-size:13.5px;font-weight:700;margin-bottom:4px;}
+  .listing-meta{font-size:11px;color:var(--muted);}
+  .listing-tag{
+    display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:7px;
+    margin-bottom:6px;
+  }
+  .listing-tag.don{background:var(--aid-soft);color:var(--aid);}
+  .listing-tag.vente{background:var(--sale-soft);color:var(--sale);}
+
+  /* Alertes (screen3) */
+  .alert-row{
+    display:flex;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:13px;margin-bottom:10px;cursor:pointer;
+  }
+  .alert-row .aicon{
+    width:38px;height:38px;border-radius:11px;background:var(--alert-soft);color:var(--alert);
+    display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto;
+  }
+  .alert-row .atext{flex:1;min-width:0;}
+  .alert-row .atitle{font-size:13px;font-weight:700;}
+  .alert-row .ameta{font-size:11px;color:var(--muted);margin-top:3px;}
+
+  /* Profil (screen4) */
+  .profile-card{
+    display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);
+    border-radius:18px;padding:16px;margin:16px 0 18px;
+  }
+  .profile-avatar{
+    width:52px;height:52px;border-radius:50%;background:var(--brand);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto;
+  }
+  .profile-info .pname2{font-size:16px;font-weight:700;}
+  .profile-info .pverif{
+    display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--aid);
+    font-weight:700;margin-top:3px;
+  }
+  .stat-grid{display:flex;gap:10px;margin-bottom:8px;}
+  .stat-box{
+    flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:13px 8px;text-align:center;
+  }
+  .stat-num{font-size:19px;font-weight:700;color:var(--brand);}
+  .stat-lbl{font-size:10.5px;color:var(--muted);margin-top:4px;}
+  .menu-row{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:13px 14px;margin-bottom:8px;cursor:pointer;font-size:13.5px;font-weight:600;
+  }
+  .menu-row span:nth-child(2){flex:1;}
+  .menu-arrow{color:var(--muted);font-size:16px;}
+
+  /* Créer publication (screen5) */
+  .cat-select-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}
+  .cat-select-btn{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    background:var(--card);border:1.5px solid var(--line);border-radius:14px;
+    padding:14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink);
+  }
+  .cat-select-btn .csi{font-size:22px;}
+  .cat-select-btn.selected{border-color:var(--brand);background:var(--sand);}
+  .compose-area{
+    width:100%;min-height:110px;border:1px solid var(--line);border-radius:14px;
+    padding:12px;font-family:inherit;font-size:13.5px;color:var(--ink);resize:none;background:var(--card);
+  }
+  .photo-add{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    background:var(--card);border:1.5px dashed var(--line);border-radius:14px;padding:20px;
+    margin-top:12px;cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:600;
+  }
+  .publish-btn{
+    width:100%;background:var(--brand);color:#fff;border:none;border-radius:14px;padding:14px;
+    font-family:inherit;font-size:14.5px;font-weight:700;margin-top:18px;cursor:pointer;
+  }
+  .publish-btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .mod-warning{
+    display:flex;align-items:flex-start;gap:8px;background:var(--alert-soft);color:var(--alert);
+    border-radius:12px;padding:10px 12px;margin-top:10px;font-size:12px;font-weight:600;line-height:1.5;
+  }
+  .photo-add.checking{border-color:var(--sale);color:var(--sale);}
+  .photo-add.rejected{border-color:var(--alert);color:var(--alert);background:var(--alert-soft);}
+  .photo-add.approved{border-color:var(--aid);color:var(--aid);background:var(--aid-soft);}
+
+  /* Détail publication (screen6) */
+  .comment-row{display:flex;gap:10px;margin-bottom:14px;}
+  .comment-row .cbody{flex:1;}
+  .comment-row .cname{font-size:12.5px;font-weight:700;}
+  .comment-row .ctext{font-size:12.5px;margin-top:2px;line-height:1.5;}
+  .comment-row .ctime{font-size:10.5px;color:var(--muted);margin-top:3px;}
+  .comment-input-row{
+    display:flex;gap:8px;position:sticky;bottom:0;background:var(--paper);padding-top:10px;
+  }
+  .comment-input-row input{
+    flex:1;border:1px solid var(--line);border-radius:20px;padding:10px 14px;
+    font-family:inherit;font-size:13px;background:var(--card);
+  }
+  .comment-send{
+    width:38px;height:38px;border-radius:50%;background:var(--brand);color:#fff;border:none;
+    font-size:15px;cursor:pointer;flex:0 0 auto;
+  }
+
+  /* Onboarding */
+  .onboarding{
+    position:absolute;inset:0;z-index:60;
+    background:
+      radial-gradient(circle at 20% 15%, #F0E4D4 0%, transparent 45%),
+      radial-gradient(circle at 80% 85%, #E7EDE6 0%, transparent 40%),
+      var(--paper);
+    display:flex;flex-direction:column;padding:46px 26px 34px;
+  }
+  .ob-dots{display:flex;justify-content:center;gap:6px;margin-bottom:26px;}
+  .ob-dot{width:22px;height:4px;border-radius:3px;background:var(--line);}
+  .ob-dot.active{background:var(--brand);}
+  .ob-step{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;}
+  .ob-logo{
+    width:64px;height:64px;border-radius:18px;background:var(--brand);
+    display:flex;align-items:center;justify-content:center;margin-bottom:18px;
+  }
+  .ob-logo svg{width:32px;height:32px;}
+  .ob-title{font-size:24px;font-weight:700;margin-bottom:10px;}
+  .ob-tagline{font-size:14px;color:var(--muted);line-height:1.5;max-width:250px;margin-bottom:36px;}
+  .ob-lang-buttons{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:auto;}
+  .ob-lang-btn{
+    width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:15px;font-family:inherit;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;
+  }
+  .ob-icon{font-size:34px;margin-bottom:14px;}
+  .ob-h{font-size:19px;font-weight:700;margin-bottom:8px;}
+  .ob-sub{font-size:13px;color:var(--muted);max-width:250px;line-height:1.5;}
+  .ob-step .field{width:100%;text-align:left;}
+  .ob-step .field label{
+    display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;
+  }
+  .ob-step .field select, .ob-step .field input{
+    width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:11px 12px;font-family:inherit;font-size:14px;color:var(--ink);margin-bottom:6px;
+  }
+  .ob-geoloc-btn{
+    width:100%;background:var(--sand);border:1px solid var(--line);color:var(--brand-deep);
+    border-radius:14px;padding:13px;font-family:inherit;font-size:13.5px;font-weight:700;
+    cursor:pointer;margin:6px 0 14px;
+  }
+  .ob-primary-btn{
+    width:100%;background:var(--brand);color:#fff;border:none;border-radius:14px;padding:15px;
+    font-family:inherit;font-size:14.5px;font-weight:700;margin-top:auto;cursor:pointer;
+  }
+  .ob-primary-btn:disabled{opacity:0.45;cursor:not-allowed;}
+  .ob-feature{display:flex;align-items:flex-start;gap:13px;text-align:left;width:100%;margin-bottom:18px;}
+  .ob-fem{font-size:24px;flex:0 0 auto;margin-top:2px;}
+  .ob-flbl{font-size:14px;font-weight:700;}
+  .ob-fsub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4;}
+
+  .ob-rules-list{width:100%;margin:18px 0;}
+  .ob-rule{
+    display:flex;align-items:flex-start;gap:10px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:12px 13px;margin-bottom:9px;text-align:left;
+  }
+  .obr-icon{font-size:16px;flex:0 0 auto;margin-top:1px;}
+  .ob-rule span:last-child{font-size:12px;line-height:1.5;}
+  [dir="rtl"] .ob-rule{text-align:right;}
+
+  /* Mon quartier (screen7) */
+  #screen7{display:none;}
+  .quartier-hero{
+    background:linear-gradient(120deg,var(--brand) 0%, var(--brand-deep) 100%);
+    border-radius:18px;padding:22px;margin:0 0 20px;text-align:center;color:#fff;
+  }
+  .qh-icon{font-size:26px;margin-bottom:8px;}
+  .qh-count{font-size:26px;font-weight:700;}
+  .qh-lbl{font-size:12px;opacity:0.9;margin-top:2px;}
+  .linked-row{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:12px 13px;margin-bottom:9px;
+  }
+  .linked-row .lr-icon{
+    width:36px;height:36px;border-radius:11px;background:var(--sand);
+    display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;
+  }
+  .lr-body{flex:1;}
+  .lr-name{font-size:13.5px;font-weight:700;}
+  .lr-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+
+  .post-menu{
+    font-size:16px;color:var(--muted);cursor:pointer;padding:2px 4px;flex:0 0 auto;
+  }
+  .post-card.blocked{padding:0;overflow:hidden;background:transparent;border:none;}
+  .blocked-notice{
+    background:var(--alert-soft);color:var(--alert);border:1px solid #F0C6C4;border-radius:18px;
+    padding:16px;font-size:12.5px;font-weight:600;text-align:center;line-height:1.5;
+  }
+  .overlay{
+    position:absolute;inset:0;background:rgba(30,20,10,0.45);z-index:40;display:none;align-items:flex-end;
+  }
+  .sheet{
+    background:var(--paper);width:100%;border-radius:24px 24px 0 0;padding:20px 18px 28px;
+    box-shadow:0 -10px 30px rgba(0,0,0,0.2);
+  }
+  .sheet-handle{width:36px;height:4px;background:var(--line);border-radius:3px;margin:0 auto 16px;}
+  .sheet h3{margin:0 0 16px;font-size:16.5px;font-weight:700;}
+  .report-option{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:13px 14px;margin-bottom:9px;cursor:pointer;font-size:13.5px;font-weight:600;
+  }
+  .report-option:hover{border-color:var(--alert);}
+  .toast{
+    position:absolute;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--paper);padding:11px 18px;border-radius:12px;font-size:13px;
+    font-weight:600;opacity:0;transition:opacity .25s ease, transform .25s ease;z-index:50;white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .search-bar{
+    display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:11px 13px;margin-bottom:16px;font-size:13px;color:var(--muted);cursor:pointer;
+  }
+  .pa.likeable{cursor:pointer;user-select:none;}
+  .pa.likeable.liked{color:var(--brand);font-weight:700;}
+
+  #screen8{display:none;}
+  .search-result-empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 0;}
+
+  #screen9{display:none;}
+  .switch-row{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:13px 14px;margin-bottom:8px;font-size:13.5px;font-weight:600;
+  }
+  .switch-row span:nth-child(2){flex:1;}
+  .switch{position:relative;width:42px;height:24px;flex:0 0 auto;}
+  .switch input{opacity:0;width:0;height:0;}
+  .switch .slider{
+    position:absolute;inset:0;background:var(--line);border-radius:24px;cursor:pointer;transition:.2s;
+  }
+  .switch .slider::before{
+    content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;
+    border-radius:50%;transition:.2s;
+  }
+  .switch input:checked + .slider{background:var(--brand);}
+  .switch input:checked + .slider::before{transform:translateX(18px);}
+  [dir="rtl"] .switch input:checked + .slider::before{transform:translateX(-18px);}
+
+  #screen10, #screen11{display:none;}
+  .rule-card{
+    display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:14px;margin-bottom:12px;
+  }
+  .rc-icon{font-size:20px;flex:0 0 auto;}
+  .rc-title{font-size:13.5px;font-weight:700;margin-bottom:4px;}
+  .rc-text{font-size:12.5px;color:var(--muted);line-height:1.5;}
+
+  /* Jeux (screen12) */
+  #screen12, #screen13{display:none;}
+  .game-row{
+    display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:13px;margin-bottom:10px;cursor:pointer;
+  }
+  .gr-icon{font-size:24px;flex:0 0 auto;}
+  .gr-body{flex:1;min-width:0;}
+  .gr-name{font-size:13.5px;font-weight:700;}
+  .gr-meta{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .gr-badge{font-size:10px;flex:0 0 auto;}
+  .gr-badge.you{color:var(--aid);}
+  .gr-badge.wait{color:var(--muted);}
+
+  .game-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .game-tile{
+    display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--card);
+    border:1px solid var(--line);border-radius:16px;padding:18px 10px;cursor:pointer;
+    font-size:13px;font-weight:600;
+  }
+  .gt-icon{font-size:26px;}
+
+  /* Chess screen */
+  .game-header{display:flex;align-items:center;gap:12px;margin:16px 0 18px;}
+  .gh-name{font-size:15px;font-weight:700;}
+  .gh-turn{font-size:12px;color:var(--muted);margin-top:2px;}
+  .chessboard{
+    width:100%;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(8,1fr);
+    border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-bottom:18px;
+  }
+  .cb-sq{display:flex;align-items:center;justify-content:center;font-size:22px;}
+  .cb-sq.light{background:var(--sand);}
+  .cb-sq.dark{background:var(--brand);}
+  .game-actions{display:flex;gap:10px;}
+  .game-btn{
+    flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;
+    font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer;
+  }
+
+  .lb-row{
+    display:flex;align-items:center;gap:11px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:10px 13px;margin-bottom:8px;
+  }
+  .lb-row.champion{border-color:#E8D39C;background:#FBF0D8;}
+  .lb-rank{width:24px;font-size:14px;font-weight:700;color:var(--muted);flex:0 0 auto;text-align:center;}
+  .lb-avatar{
+    width:30px;height:30px;border-radius:50%;background:var(--sand);display:flex;align-items:center;
+    justify-content:center;font-size:14px;flex:0 0 auto;
+  }
+  .lb-name{flex:1;font-size:13px;font-weight:600;}
+  .lb-count{font-size:12px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="phone">
+    <div class="notch"></div>
+
+    <div class="onboarding" id="onboarding">
+      <div class="ob-dots">
+        <div class="ob-dot active" id="ob-dot-1"></div>
+        <div class="ob-dot" id="ob-dot-2"></div>
+        <div class="ob-dot" id="ob-dot-3"></div>
+        <div class="ob-dot" id="ob-dot-4"></div>
+        <div class="ob-dot" id="ob-dot-5"></div>
+      </div>
+
+      <div class="ob-step" id="ob-step-1">
+        <div class="ob-logo">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 21V10L12 4L20 10V21H14V14H10V21H4Z" stroke="#F6EFE3" stroke-width="2" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="ob-title">Jiran</div>
+        <div class="ob-tagline" id="t-ob-tagline">Le réseau de ton quartier, entre voisins</div>
+        <div class="ob-lang-buttons">
+          <button class="ob-lang-btn" onclick="obChooseLang('fr')">🇩🇿 Français</button>
+          <button class="ob-lang-btn" onclick="obChooseLang('ar')">🇩🇿 العربية</button>
+        </div>
+      </div>
+
+      <div class="ob-step" id="ob-step-2" style="display:none;">
+        <div class="ob-icon">👤</div>
+        <div class="ob-h" id="t-ob-h2">Créer ton compte</div>
+        <div class="ob-sub" id="t-ob-sub2">Pour publier et échanger avec tes voisins en confiance</div>
+        <div class="field" style="margin-top:20px;">
+          <label id="t-ob-prenom-lbl">Prénom</label>
+          <input type="text" placeholder="Ex : Hafid">
+        </div>
+        <div class="field">
+          <label id="t-ob-phone-lbl">Numéro de téléphone</label>
+          <input type="tel" placeholder="05 xx xx xx xx" inputmode="tel">
+        </div>
+        <button class="ob-primary-btn" onclick="obGoStep(3)" id="t-ob-createacc">Créer mon compte</button>
+      </div>
+
+      <div class="ob-step" id="ob-step-3" style="display:none;">
+        <div class="ob-icon">📍</div>
+        <div class="ob-h" id="t-ob-h3">Où habites-tu ?</div>
+        <div class="ob-sub" id="t-ob-sub3">Pour te connecter uniquement avec tes vrais voisins</div>
+        <div class="field" style="margin-top:18px;">
+          <label id="t-ob-quartier-lbl">Quartier</label>
+          <select>
+            <option>Bab Ezzouar, Alger</option>
+            <option>Dar El Beïda, Alger</option>
+            <option>Boumerdès Centre</option>
+            <option>Blida Centre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="t-ob-cite-lbl">Cité / Immeuble (optionnel)</label>
+          <input type="text" placeholder="Ex : Cité 500 Logts, Bât. C">
+        </div>
+        <button class="ob-geoloc-btn" id="t-ob-geoloc">📍 Confirmer ma position</button>
+        <button class="ob-primary-btn" onclick="obGoStep(4)" id="t-ob-continue">Continuer</button>
+      </div>
+
+      <div class="ob-step" id="ob-step-4" style="display:none;">
+        <div class="ob-h" id="t-ob-h4">Trois choses à savoir</div>
+        <div class="ob-feature">
+          <span class="ob-fem">🏘️</span>
+          <div>
+            <div class="ob-flbl" id="t-ob-f1t">Un fil réservé à ton quartier</div>
+            <div class="ob-fsub" id="t-ob-f1s">Seuls tes vrais voisins peuvent voir et publier ici</div>
+          </div>
+        </div>
+        <div class="ob-feature">
+          <span class="ob-fem">🚨</span>
+          <div>
+            <div class="ob-flbl" id="t-ob-f2t">Alertes sécurité en temps réel</div>
+            <div class="ob-fsub" id="t-ob-f2s">Sois prévenu rapidement de ce qui se passe près de chez toi</div>
+          </div>
+        </div>
+        <div class="ob-feature">
+          <span class="ob-fem">🤝</span>
+          <div>
+            <div class="ob-flbl" id="t-ob-f3t">Entraide et annonces</div>
+            <div class="ob-fsub" id="t-ob-f3s">Emprunte, donne, vends, demande un coup de main</div>
+          </div>
+        </div>
+        <button class="ob-primary-btn" onclick="obGoStep(5)" id="t-ob-finish">Découvrir mon quartier</button>
+      </div>
+
+      <div class="ob-step" id="ob-step-5" style="display:none;">
+        <div class="ob-icon">📜</div>
+        <div class="ob-h" id="t-ob-h5">Les règles du quartier</div>
+        <div class="ob-sub" id="t-ob-sub5">À lire avant de commencer — merci de les respecter</div>
+
+        <div class="ob-rules-list">
+          <div class="ob-rule">
+            <span class="obr-icon">🤝</span>
+            <span id="t-ob-rule1">Respect entre voisins, pas d'insultes ni de harcèlement.</span>
+          </div>
+          <div class="ob-rule">
+            <span class="obr-icon">✅</span>
+            <span id="t-ob-rule2">N'alerte que sur des informations vérifiées.</span>
+          </div>
+          <div class="ob-rule">
+            <span class="obr-icon">🚫</span>
+            <span id="t-ob-rule3">Pas de publicité commerciale ni de contenu inapproprié.</span>
+          </div>
+          <div class="ob-rule">
+            <span class="obr-icon">⚠️</span>
+            <span id="t-ob-rule4">3 signalements = contenu bloqué 3 jours. Une 2ᵉ fois = blocage définitif.</span>
+          </div>
+        </div>
+
+        <button class="ob-primary-btn" onclick="finishOnboarding()" id="t-ob-agree" disabled>J'ai compris, je m'engage à les respecter (3s)</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen1" dir="ltr">
+
+      <div class="topbar">
+        <div class="brand-mark">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 21V10L12 4L20 10V21H14V14H10V21H4Z" stroke="#F6EFE3" stroke-width="2" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="brand-text">
+            <div class="name">Jiran</div>
+            <div class="loc" id="t-loc">📍 Bab Ezzouar, Alger</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="msg-bell" onclick="showScreen('screen16')">💬<div class="dot"></div></div>
+          <div class="lang-toggle">
+            <button class="active" onclick="setLang('fr')" id="btn-fr">FR</button>
+            <button onclick="setLang('ar')" id="btn-ar">عربي</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-bar" onclick="showScreen('screen8')">
+        🔍 <span id="t-home-search-ph">Chercher une publication ou un voisin</span>
+      </div>
+
+      <div class="categories">
+        <button class="cat-chip active" id="t-cat-tout">🏘️ Tout</button>
+        <button class="cat-chip" id="t-cat-securite">🚨 Sécurité</button>
+        <button class="cat-chip" id="t-cat-entraide">🤝 Entraide</button>
+        <button class="cat-chip" id="t-cat-annonces">🛍️ Annonces</button>
+        <button class="cat-chip" id="t-cat-evenements">📅 Événements</button>
+        <button class="cat-chip" id="t-cat-sondages">📊 Sondages</button>
+        <button class="cat-chip" id="t-cat-covoit">🚗 Covoiturage</button>
+        <button class="cat-chip" id="t-cat-solidarite">❤️ Solidarité</button>
+      </div>
+
+      <div class="stories-row">
+        <div class="story-item" onclick="showScreen('screen14')">
+          <div class="story-ring add"><div class="story-avatar">➕</div></div>
+          <span id="t-story-add">Ta story</span>
+        </div>
+        <div class="story-item" onclick="showScreen('screen14')">
+          <div class="story-ring unseen"><div class="story-avatar">👤</div></div>
+          <span>Amina R.</span>
+        </div>
+        <div class="story-item" onclick="showScreen('screen14')">
+          <div class="story-ring unseen"><div class="story-avatar">👤</div></div>
+          <span>Sofiane K.</span>
+        </div>
+        <div class="story-item" onclick="showScreen('screen14')">
+          <div class="story-ring"><div class="story-avatar">👤</div></div>
+          <span>Yacine O.</span>
+        </div>
+        <div class="story-item" onclick="showScreen('screen14')">
+          <div class="story-ring unseen"><div class="story-avatar">👤</div></div>
+          <span id="t-story-assoc">Association</span>
+        </div>
+      </div>
+
+      <div class="alert-banner">
+        <span class="ai">🚨</span>
+        <div>
+          <div class="at" id="t-alert1-title">Vol signalé rue des Frères Bouadou</div>
+          <div class="as" id="t-alert1-sub">Il y a 20 min · 8 voisins prévenus</div>
+        </div>
+      </div>
+
+      <div class="games-banner" onclick="showScreen('screen12')">
+        <span class="gb-icon">🎮</span>
+        <div class="gb-info">
+          <div class="gb-title" id="t-gb-title">Jeux entre voisins</div>
+          <div class="gb-sub" id="t-gb-sub">2 défis en cours · à toi de jouer aux échecs</div>
+        </div>
+        <span class="gb-arrow">›</span>
+      </div>
+
+      <div class="welcome-card">
+        <span class="wc-icon">🎉</span>
+        <div class="wc-body">
+          <div class="wc-title" id="t-welcome-title">Souhaite la bienvenue à Rachid D. !</div>
+          <div class="wc-sub" id="t-welcome-sub">Nouveau voisin · Immeuble D · arrivé cette semaine</div>
+        </div>
+      </div>
+
+      <div class="post-card">
+        <div class="post-head">
+          <div class="avatar">👤</div>
+          <div class="post-who">
+            <div class="pname" id="t-poll-author">Association du quartier</div>
+            <div class="pmeta" id="t-poll-meta">Officiel · il y a 1 jour</div>
+          </div>
+          <span class="badge sondage" id="t-badge-sondage">Sondage</span>
+        </div>
+        <div class="post-text" id="t-poll-question">Pour l'entretien des espaces verts, tu préfères qu'on embauche :</div>
+        <div class="poll-option">
+          <div class="poll-fill" style="width:68%"></div>
+          <span class="poll-label" id="t-poll-opt1">Un jardinier fixe du quartier</span>
+          <span class="poll-pct">68%</span>
+        </div>
+        <div class="poll-option">
+          <div class="poll-fill" style="width:32%"></div>
+          <span class="poll-label" id="t-poll-opt2">Une entreprise externe</span>
+          <span class="poll-pct">32%</span>
+        </div>
+        <div class="post-actions">
+          <span class="pa" id="t-poll-votes">🗳️ 47 votes</span>
+          <span class="pa" id="t-poll-time">⏱️ 2 jours restants</span>
+        </div>
+      </div>
+
+      <div class="post-card" onclick="showScreen('screen6')">
+        <div class="post-head">
+          <div class="avatar">👤</div>
+          <div class="post-who">
+            <div class="pname">Karim B.</div>
+            <div class="pmeta" id="t-post1-meta">Immeuble C · il y a 40 min</div>
+          </div>
+          <span class="badge entraide" id="t-badge-entraide-1">Entraide</span>
+          <span class="post-menu" onclick="openReport(event)">⋮</span>
+        </div>
+        <div class="post-text" id="t-post1-text">Quelqu'un aurait une perceuse à me prêter pour ce week-end ? Je vous la rends lundi 🙏</div>
+        <div class="post-actions">
+          <span class="pa likeable" onclick="toggleLike(this, 6)">👍 6</span>
+          <span class="pa" id="t-post1-replies">💬 3 réponses</span>
+        </div>
+      </div>
+
+      <div class="post-card" onclick="showScreen('screen2')">
+        <div class="post-head">
+          <div class="avatar">👤</div>
+          <div class="post-who">
+            <div class="pname">Amina R.</div>
+            <div class="pmeta" id="t-post2-meta">Immeuble A · il y a 2 h</div>
+          </div>
+          <span class="badge annonce" id="t-badge-annonce-1">Annonce</span>
+          <span class="post-menu" onclick="openReport(event)">⋮</span>
+        </div>
+        <div class="post-text" id="t-post2-text">Je donne une table basse en bon état, à venir chercher chez moi. Premier arrivé, premier servi !</div>
+        <div class="post-photo" style="background:linear-gradient(160deg,#E4A15A,#C1502E)"></div>
+        <div class="post-actions">
+          <span class="pa likeable" onclick="toggleLike(this, 14)">👍 14</span>
+          <span class="pa" id="t-post2-replies">💬 5 réponses</span>
+        </div>
+      </div>
+
+      <div class="post-card">
+        <div class="post-head">
+          <div class="avatar">👤</div>
+          <div class="post-who">
+            <div class="pname" id="t-post3-name">Association du quartier</div>
+            <div class="pmeta" id="t-post3-meta">Officiel · il y a 5 h</div>
+          </div>
+          <span class="badge evenement" id="t-badge-evenement-1">Événement</span>
+          <span class="post-menu" onclick="openReport(event)">⋮</span>
+        </div>
+        <div class="post-text" id="t-post3-text">Journée de nettoyage collectif du quartier samedi matin, 9h devant la mosquée. Tout le monde est bienvenu !</div>
+        <div class="post-actions">
+          <span class="pa likeable" onclick="toggleLike(this, 32)">👍 32</span>
+          <span class="pa" id="t-post3-replies">💬 11 réponses</span>
+        </div>
+      </div>
+
+      <div class="post-card">
+        <div class="post-head">
+          <div class="avatar">👤</div>
+          <div class="post-who">
+            <div class="pname">Bilal T.</div>
+            <div class="pmeta" id="t-post4-meta">Immeuble D · il y a 6 h</div>
+          </div>
+          <span class="badge covoit" id="t-badge-covoit">Covoiturage</span>
+        </div>
+        <div class="post-text" id="t-post4-text">Je descends au centre-ville tous les matins à 8h en voiture, une place libre si ça intéresse quelqu'un du quartier 🚗</div>
+        <div class="post-actions">
+          <span class="pa likeable" onclick="toggleLike(this, 4)">👍 4</span>
+          <span class="pa" id="t-post4-replies">💬 2 réponses</span>
+        </div>
+      </div>
+
+      <div class="post-card">
+        <div class="post-head">
+          <div class="avatar">👤</div>
+          <div class="post-who">
+            <div class="pname">Nadia H.</div>
+            <div class="pmeta" id="t-post5-meta">Immeuble A · il y a 1 jour</div>
+          </div>
+          <span class="badge solidarite" id="t-badge-solidarite">Solidarité</span>
+        </div>
+        <div class="post-text" id="t-post5-text">Qui peut passer voir Mme Fatiha cette semaine ? Elle vit seule au 2e étage et n'est pas sortie depuis quelques jours ❤️</div>
+        <div class="post-actions">
+          <span class="pa likeable" onclick="toggleLike(this, 21)">👍 21</span>
+          <span class="pa" id="t-post5-replies">💬 6 réponses</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="screen" id="screen2">
+      <div class="p-back" onclick="showScreen('screen1')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-annonces-title">Annonces du quartier</h2>
+        <span class="sub">12</span>
+      </div>
+
+      <div class="listing-card">
+        <div class="listing-photo" style="background:linear-gradient(160deg,#E4A15A,#C1502E)"></div>
+        <div class="listing-body">
+          <span class="listing-tag don" id="t-tag-don-1">À donner</span>
+          <div class="listing-title" id="t-listing1-title">Table basse en bon état</div>
+          <div class="listing-meta" id="t-listing1-meta">Amina R. · Immeuble A · il y a 2 h</div>
+        </div>
+      </div>
+
+      <div class="listing-card">
+        <div class="listing-photo" style="background:linear-gradient(160deg,#7FB88F,#3FA34D)"></div>
+        <div class="listing-body">
+          <span class="listing-tag vente" id="t-tag-vente-1">À vendre · 8 000 DA</span>
+          <div class="listing-title" id="t-listing2-title">Vélo enfant 6-9 ans</div>
+          <div class="listing-meta" id="t-listing2-meta">Yacine O. · Immeuble B · hier</div>
+        </div>
+      </div>
+
+      <div class="listing-card">
+        <div class="listing-photo" style="background:linear-gradient(160deg,#9E7FD6,#5E3FA3)"></div>
+        <div class="listing-body">
+          <span class="listing-tag don" id="t-tag-don-2">À donner</span>
+          <div class="listing-title" id="t-listing3-title">Livres scolaires 3AM</div>
+          <div class="listing-meta" id="t-listing3-meta">Nadia H. · Immeuble C · il y a 3 jours</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen3">
+      <div class="p-back" onclick="showScreen('screen1')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-alertes-title">Alertes du quartier</h2>
+        <span class="sub" id="t-alertes-sub">Aujourd'hui</span>
+      </div>
+
+      <div class="alert-row">
+        <div class="aicon">🚨</div>
+        <div class="atext">
+          <div class="atitle" id="t-alertrow1-title">Vol signalé rue des Frères Bouadou</div>
+          <div class="ameta" id="t-alertrow1-meta">Il y a 20 min · 8 voisins prévenus</div>
+        </div>
+      </div>
+
+      <div class="alert-row">
+        <div class="aicon">⚠️</div>
+        <div class="atext">
+          <div class="atitle" id="t-alertrow2-title">Coupure d'eau prévue demain 8h-14h</div>
+          <div class="ameta" id="t-alertrow2-meta">Il y a 3 h · Info SEAAL</div>
+        </div>
+      </div>
+
+      <div class="alert-row">
+        <div class="aicon">🐕</div>
+        <div class="atext">
+          <div class="atitle" id="t-alertrow3-title">Chien perdu près du parc, collier bleu</div>
+          <div class="ameta" id="t-alertrow3-meta">Hier · 15 voisins prévenus</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen4">
+      <div class="section-head" style="margin-top:16px;">
+        <h2 id="t-profil-title">Mon profil</h2>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-avatar">👤</div>
+        <div class="profile-info">
+          <div class="pname2" id="t-profil-name">Hafid</div>
+          <div class="pverif" id="t-profil-verif">✅ Voisin vérifié · Bab Ezzouar</div>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-num">14</div>
+          <div class="stat-lbl" id="t-stat-pub">Publications</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">6</div>
+          <div class="stat-lbl" id="t-stat-mois">Mois dans Jiran</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">47</div>
+          <div class="stat-lbl" id="t-stat-voisins">Voisins connectés</div>
+        </div>
+      </div>
+
+      <div class="section-head"><h2 id="t-reglages-title">Réglages</h2></div>
+      <div class="menu-row" onclick="showScreen('screen10')">
+        <span class="menu-icon">📝</span>
+        <span id="t-menu-pub">Mes publications</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showScreen('screen9')">
+        <span class="menu-icon">🔔</span>
+        <span id="t-menu-notif">Notifications</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showScreen('screen7')">
+        <span class="menu-icon">🏘️</span>
+        <span id="t-menu-quartier">Mon quartier</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showScreen('screen12')">
+        <span class="menu-icon">🎮</span>
+        <span id="t-menu-jeux">Jeux entre voisins</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showScreen('screen15')">
+        <span class="menu-icon">📇</span>
+        <span id="t-menu-services">Services recommandés</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showScreen('screen18')">
+        <span class="menu-icon">🧰</span>
+        <span id="t-menu-objets">Objets à emprunter</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showScreen('screen19')">
+        <span class="menu-icon">👥</span>
+        <span id="t-menu-groupes">Groupes d'intérêt</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showScreen('screen20')">
+        <span class="menu-icon">🗺️</span>
+        <span id="t-menu-carte">Carte du quartier</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showScreen('screen21')">
+        <span class="menu-icon">🏠</span>
+        <span id="t-menu-vacances">Mode vacances</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showScreen('screen22')">
+        <span class="menu-icon">🗑️</span>
+        <span id="t-menu-dechets">Collecte des déchets</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showScreen('screen23')">
+        <span class="menu-icon">🩸</span>
+        <span id="t-menu-solidaire">Actions solidaires</span>
+        <span class="menu-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="screen" id="screen7">
+      <div class="p-back" onclick="showScreen('screen4')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-q-title">Bab Ezzouar</h2>
+      </div>
+
+      <div class="quartier-hero">
+        <div class="qh-icon">🏘️</div>
+        <div class="qh-count" id="qh-count">1 240</div>
+        <div class="qh-lbl" id="t-q-members">voisins vérifiés</div>
+      </div>
+
+      <div class="section-head">
+        <h2 id="t-q-linked-title">Cités jumelées</h2>
+        <span class="sub" id="t-q-linked-sub">2</span>
+      </div>
+      <div class="ob-sub" style="text-align:left;margin-bottom:14px;" id="t-q-linked-explain">
+        Ces cités partagent le même fil pour l'instant, le temps d'avoir assez de voisins actifs. L'origine reste toujours affichée sur chaque publication.
+      </div>
+
+      <div class="linked-row">
+        <span class="lr-icon">🏢</span>
+        <div class="lr-body">
+          <div class="lr-name">Cité 500 Logts</div>
+          <div class="lr-meta" id="t-q-linked1-meta">38 voisins · seuil : 50</div>
+        </div>
+      </div>
+      <div class="linked-row">
+        <span class="lr-icon">🏢</span>
+        <div class="lr-body">
+          <div class="lr-name">Cité El Kahwa</div>
+          <div class="lr-meta" id="t-q-linked2-meta">22 voisins · seuil : 50</div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h2 id="t-q-mod-title">Modération</h2>
+      </div>
+      <div class="menu-row">
+        <span class="menu-icon">🚩</span>
+        <span id="t-q-mod-report">Signalements en attente</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showScreen('screen11')">
+        <span class="menu-icon">📜</span>
+        <span id="t-q-mod-rules">Règles du quartier</span>
+        <span class="menu-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="screen" id="screen10">
+      <div class="p-back" onclick="showScreen('screen4')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-mypubs-title">Mes publications</h2>
+        <span class="sub">14</span>
+      </div>
+
+      <div class="post-card" style="margin-top:0;" onclick="showScreen('screen6')">
+        <div class="post-head">
+          <div class="avatar">👤</div>
+          <div class="post-who">
+            <div class="pname" id="t-profil-name-2">Hafid</div>
+            <div class="pmeta" id="t-mypub1-meta">Immeuble B · il y a 40 min</div>
+          </div>
+          <span class="badge entraide" id="t-badge-entraide-3">Entraide</span>
+        </div>
+        <div class="post-text" id="t-mypub1-text">Quelqu'un aurait un escabeau à me prêter pour changer une ampoule ?</div>
+        <div class="post-actions">
+          <span class="pa">👍 3</span>
+          <span class="pa" id="t-mypub1-replies">💬 1 réponse</span>
+        </div>
+      </div>
+
+      <div class="post-card">
+        <div class="post-head">
+          <div class="avatar">👤</div>
+          <div class="post-who">
+            <div class="pname" id="t-profil-name-3">Hafid</div>
+            <div class="pmeta" id="t-mypub2-meta">Immeuble B · il y a 5 jours</div>
+          </div>
+          <span class="badge annonce" id="t-badge-annonce-2">Annonce</span>
+        </div>
+        <div class="post-text" id="t-mypub2-text">Je vends une machine à café, très peu servie, 4 500 DA.</div>
+        <div class="post-actions">
+          <span class="pa">👍 9</span>
+          <span class="pa" id="t-mypub2-replies">💬 4 réponses</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen11">
+      <div class="p-back" onclick="showScreen('screen7')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-rules-title">Règles du quartier</h2>
+      </div>
+
+      <div class="rule-card">
+        <span class="rc-icon">🤝</span>
+        <div class="rc-body">
+          <div class="rc-title" id="t-rule1-title">Respect entre voisins</div>
+          <div class="rc-text" id="t-rule1-text">Pas d'insultes, de propos discriminatoires ou de harcèlement, même en cas de désaccord.</div>
+        </div>
+      </div>
+      <div class="rule-card">
+        <span class="rc-icon">✅</span>
+        <div class="rc-body">
+          <div class="rc-title" id="t-rule2-title">Informations vérifiées</div>
+          <div class="rc-text" id="t-rule2-text">Ne publie une alerte sécurité que si tu es sûr de l'information — une fausse alerte peut être signalée.</div>
+        </div>
+      </div>
+      <div class="rule-card">
+        <span class="rc-icon">🚫</span>
+        <div class="rc-body">
+          <div class="rc-title" id="t-rule3-title">Pas de publicité commerciale</div>
+          <div class="rc-text" id="t-rule3-text">Jiran est un espace entre voisins, pas une vitrine publicitaire pour des entreprises extérieures.</div>
+        </div>
+      </div>
+      <div class="rule-card">
+        <span class="rc-icon">🔒</span>
+        <div class="rc-body">
+          <div class="rc-title" id="t-rule4-title">Vie privée</div>
+          <div class="rc-text" id="t-rule4-text">Ne partage pas les coordonnées personnelles d'un voisin sans son accord.</div>
+        </div>
+      </div>
+      <div class="rule-card">
+        <span class="rc-icon">⚠️</span>
+        <div class="rc-body">
+          <div class="rc-title" id="t-rule5-title">Modération automatique</div>
+          <div class="rc-text" id="t-rule5-text">Un contenu signalé par 3 voisins différents est automatiquement masqué pendant 3 jours. En cas de récidive, le blocage devient définitif.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen12">
+      <div class="p-back" onclick="showScreen('screen4')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-games-title">Jeux entre voisins</h2>
+      </div>
+
+      <div class="section-head"><h2 id="t-games-active-title">Tes défis en cours</h2></div>
+
+      <div class="game-row" onclick="showScreen('screen13')">
+        <span class="gr-icon">♟️</span>
+        <div class="gr-body">
+          <div class="gr-name" id="t-game1-name">Échecs · contre Amina R.</div>
+          <div class="gr-meta" id="t-game1-meta">À toi de jouer · tour 14</div>
+        </div>
+        <span class="gr-badge you">●</span>
+      </div>
+
+      <div class="game-row">
+        <span class="gr-icon">⚫</span>
+        <div class="gr-body">
+          <div class="gr-name" id="t-game2-name">Dames · contre Yacine O.</div>
+          <div class="gr-meta" id="t-game2-meta">En attente de son tour</div>
+        </div>
+        <span class="gr-badge wait">●</span>
+      </div>
+
+      <div class="section-head"><h2 id="t-games-choose-title">Défier un voisin</h2></div>
+
+      <div class="game-grid">
+        <div class="game-tile" onclick="showScreen('screen13')">
+          <span class="gt-icon">♟️</span>
+          <span id="t-gt-echecs">Échecs</span>
+        </div>
+        <div class="game-tile">
+          <span class="gt-icon">⚫</span>
+          <span id="t-gt-dames">Dames</span>
+        </div>
+        <div class="game-tile">
+          <span class="gt-icon">🃏</span>
+          <span id="t-gt-belote">Belote</span>
+        </div>
+        <div class="game-tile">
+          <span class="gt-icon">🀫</span>
+          <span id="t-gt-dominos">Dominos</span>
+        </div>
+        <div class="game-tile">
+          <span class="gt-icon">🔤</span>
+          <span id="t-gt-scrabble">Scrabble</span>
+        </div>
+        <div class="game-tile">
+          <span class="gt-icon">❌⭕</span>
+          <span id="t-gt-morpion">Morpion</span>
+        </div>
+      </div>
+
+      <div class="section-head"><h2 id="t-quiz-cat-title">Quiz à thème</h2></div>
+      <div class="game-grid">
+        <div class="game-tile">
+          <span class="gt-icon">🇩🇿</span>
+          <span id="t-gt-quiz-algerie">Culture Algérie</span>
+        </div>
+        <div class="game-tile">
+          <span class="gt-icon">⚽</span>
+          <span id="t-gt-quiz-sport">Sport</span>
+        </div>
+        <div class="game-tile">
+          <span class="gt-icon">🕌</span>
+          <span id="t-gt-quiz-religion">Religion</span>
+        </div>
+        <div class="game-tile">
+          <span class="gt-icon">🌍</span>
+          <span id="t-gt-quiz-general">Culture générale</span>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h2 id="t-leaderboard-title">Classement du quartier</h2>
+        <span class="sub" id="t-leaderboard-sub">ce mois-ci</span>
+      </div>
+      <div id="game-leaderboard"></div>
+    </div>
+
+    <div class="screen" id="screen13">
+      <div class="p-back" onclick="showScreen('screen12')">←</div>
+      <div class="game-header">
+        <div class="avatar">👤</div>
+        <div>
+          <div class="gh-name" id="t-chess-vs">Contre Amina R.</div>
+          <div class="gh-turn" id="t-chess-turn">🟢 À toi de jouer</div>
+        </div>
+      </div>
+
+      <div class="chessboard" id="chessboard"></div>
+
+      <div class="game-actions">
+        <button class="game-btn" id="t-game-draw">🤝 Proposer nulle</button>
+        <button class="game-btn" id="t-game-resign">🏳️ Abandonner</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen14">
+      <div class="story-view">
+        <div class="story-progress">
+          <div class="sp-seg done"></div>
+          <div class="sp-seg"></div>
+          <div class="sp-seg"></div>
+        </div>
+        <span class="story-close" onclick="showScreen('screen1')">✕</span>
+        <div class="story-who">
+          <div class="avatar" style="background:rgba(255,255,255,0.25);">👤</div>
+          <span id="t-story-who">Amina R. · il y a 2 h</span>
+        </div>
+        <div class="story-caption" id="t-story-caption">Marché du vendredi bien animé ce matin au quartier 🍊🥬</div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen15">
+      <div class="p-back" onclick="showScreen('screen4')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-services-title">Services recommandés</h2>
+      </div>
+      <div class="ob-sub" style="text-align:left;margin-bottom:14px;" id="t-services-sub">
+        Des professionnels recommandés par de vrais voisins de Bab Ezzouar.
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">🔧</div>
+        <div class="service-body">
+          <div class="service-cat" id="t-service1-cat">Plombier</div>
+          <div class="service-name">Sofiane — Plomberie Sofiane</div>
+          <div class="service-meta" id="t-service1-meta">★ 4.9 · recommandé par 12 voisins</div>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">💡</div>
+        <div class="service-body">
+          <div class="service-cat" id="t-service2-cat">Électricien</div>
+          <div class="service-name">Ahmed Bensalem</div>
+          <div class="service-meta" id="t-service2-meta">★ 4.7 · recommandé par 8 voisins</div>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📚</div>
+        <div class="service-body">
+          <div class="service-cat" id="t-service3-cat">Professeur de maths</div>
+          <div class="service-name">Meriem A.</div>
+          <div class="service-meta" id="t-service3-meta">★ 5.0 · recommandé par 5 voisins</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen16">
+      <div class="p-back" onclick="showScreen('screen1')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-msgs-title">Messages</h2>
+      </div>
+
+      <div class="conv-row" onclick="showScreen('screen17')">
+        <div class="avatar">👤</div>
+        <div class="conv-body">
+          <div class="conv-name">Amina R.</div>
+          <div class="conv-last" id="t-conv1-last">D'accord, je te la garde jusqu'à demain 👍</div>
+        </div>
+        <div class="conv-meta">
+          <span class="conv-time" id="t-conv1-time">14:02</span>
+          <span class="conv-unread">1</span>
+        </div>
+      </div>
+
+      <div class="conv-row" onclick="showScreen('screen17')">
+        <div class="avatar">👤</div>
+        <div class="conv-body">
+          <div class="conv-name">Sofiane K.</div>
+          <div class="conv-last" id="t-conv2-last">Ça marche pour 19h, à ce soir !</div>
+        </div>
+        <div class="conv-meta">
+          <span class="conv-time" id="t-conv2-time">Hier</span>
+        </div>
+      </div>
+
+      <div class="conv-row" onclick="showScreen('screen17')">
+        <div class="avatar">👤</div>
+        <div class="conv-body">
+          <div class="conv-name">Bilal T.</div>
+          <div class="conv-last" id="t-conv3-last">Je suis dispo à 8h précises devant l'arrêt</div>
+        </div>
+        <div class="conv-meta">
+          <span class="conv-time" id="t-conv3-time">Lun</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen17" style="padding-bottom:0;">
+      <div class="p-back" onclick="showScreen('screen16')">←</div>
+      <div class="chat-header">
+        <div class="avatar">👤</div>
+        <div class="ch-name">Amina R.</div>
+      </div>
+
+      <div class="chat-bubbles">
+        <div class="bubble them">
+          <div id="t-chat-msg1">Bonjour ! La table basse est toujours dispo si ça t'intéresse</div>
+        </div>
+        <div class="bubble me">
+          <div id="t-chat-msg2">Oui carrément, je peux passer ce soir ?</div>
+        </div>
+        <div class="bubble them">
+          <div id="t-chat-msg3">D'accord, je te la garde jusqu'à demain 👍</div>
+        </div>
+      </div>
+
+      <div class="comment-input-row" style="padding:10px 18px 20px;">
+        <input type="text" id="t-chat-input-ph" placeholder="Écrire un message...">
+        <button class="comment-send">➤</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen18">
+      <div class="p-back" onclick="showScreen('screen4')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-lend-title">Objets à emprunter</h2>
+      </div>
+      <div class="ob-sub" style="text-align:left;margin-bottom:14px;" id="t-lend-sub">
+        Emprunte au lieu d'acheter — ces voisins prêtent volontiers leurs outils.
+      </div>
+
+      <div class="lend-card">
+        <span class="lend-icon">🪛</span>
+        <div class="lend-body">
+          <div class="lend-name">Perceuse</div>
+          <div class="lend-owner" id="t-lend1-owner">Prêtée par Ahmed B.</div>
+        </div>
+        <span class="lend-status available" id="t-lend1-status">Disponible</span>
+      </div>
+      <div class="lend-card">
+        <span class="lend-icon">🪜</span>
+        <div class="lend-body">
+          <div class="lend-name">Escabeau</div>
+          <div class="lend-owner" id="t-lend2-owner">Prêté par Nadia H. · emprunté par Karim B.</div>
+        </div>
+        <span class="lend-status borrowed" id="t-lend2-status">À rendre le 15</span>
+      </div>
+      <div class="lend-card">
+        <span class="lend-icon">🎪</span>
+        <div class="lend-body">
+          <div class="lend-name">Tente de camping (4 places)</div>
+          <div class="lend-owner" id="t-lend3-owner">Prêtée par Yacine O.</div>
+        </div>
+        <span class="lend-status available" id="t-lend3-status">Disponible</span>
+      </div>
+    </div>
+
+    <div class="screen" id="screen19">
+      <div class="p-back" onclick="showScreen('screen4')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-groups-title">Groupes d'intérêt</h2>
+      </div>
+
+      <div class="group-card">
+        <span class="grp-icon">🎒</span>
+        <div class="grp-body">
+          <div class="grp-name" id="t-group1-name">Parents d'élèves</div>
+          <div class="grp-meta" id="t-group1-meta">86 membres</div>
+        </div>
+        <button class="grp-join joined" id="t-grp-joined">Rejoint</button>
+      </div>
+      <div class="group-card">
+        <span class="grp-icon">🌱</span>
+        <div class="grp-body">
+          <div class="grp-name" id="t-group2-name">Jardinage</div>
+          <div class="grp-meta" id="t-group2-meta">34 membres</div>
+        </div>
+        <button class="grp-join" id="t-grp-join1" onclick="toggleJoin(this)">Rejoindre</button>
+      </div>
+      <div class="group-card">
+        <span class="grp-icon">⚽</span>
+        <div class="grp-body">
+          <div class="grp-name" id="t-group3-name">Foot du quartier</div>
+          <div class="grp-meta" id="t-group3-meta">52 membres</div>
+        </div>
+        <button class="grp-join" id="t-grp-join2" onclick="toggleJoin(this)">Rejoindre</button>
+      </div>
+      <div class="group-card">
+        <span class="grp-icon">📖</span>
+        <div class="grp-body">
+          <div class="grp-name" id="t-group4-name">Cercle d'étude religieuse</div>
+          <div class="grp-meta" id="t-group4-meta">29 membres</div>
+        </div>
+        <button class="grp-join" id="t-grp-join3" onclick="toggleJoin(this)">Rejoindre</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen20">
+      <div class="p-back" onclick="showScreen('screen4')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-map-title">Carte du quartier</h2>
+      </div>
+
+      <div class="poi-card">
+        <span class="poi-icon">💊</span>
+        <div class="poi-body">
+          <div class="poi-name" id="t-poi1-name">Pharmacie de garde</div>
+          <div class="poi-meta" id="t-poi1-meta">Pharmacie El Amel · 350 m</div>
+        </div>
+      </div>
+      <div class="poi-card">
+        <span class="poi-icon">🏫</span>
+        <div class="poi-body">
+          <div class="poi-name" id="t-poi2-name">École primaire</div>
+          <div class="poi-meta" id="t-poi2-meta">École Ibn Khaldoun · 420 m</div>
+        </div>
+      </div>
+      <div class="poi-card">
+        <span class="poi-icon">🕌</span>
+        <div class="poi-body">
+          <div class="poi-name" id="t-poi3-name">Mosquée</div>
+          <div class="poi-meta" id="t-poi3-meta">Mosquée El Nour · 200 m</div>
+        </div>
+      </div>
+      <div class="poi-card">
+        <span class="poi-icon">🚌</span>
+        <div class="poi-body">
+          <div class="poi-name" id="t-poi4-name">Arrêt de bus</div>
+          <div class="poi-meta" id="t-poi4-meta">Ligne 12 · 150 m</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen21">
+      <div class="p-back" onclick="showScreen('screen4')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-vac-title">Mode vacances</h2>
+      </div>
+      <div class="ob-sub" style="text-align:left;margin-bottom:14px;" id="t-vac-sub">
+        Un voisin de confiance surveille ton logement pendant ton absence.
+      </div>
+
+      <div class="switch-row">
+        <span class="rb-icon-small">🏠</span>
+        <span id="t-vac-toggle-lbl">Activer le mode vacances</span>
+        <label class="switch">
+          <input type="checkbox" id="vac-toggle" onchange="toggleVacation(this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="section-head"><h2 id="t-vac-trust-title">Voisins de confiance</h2></div>
+      <div class="trust-row">
+        <div class="avatar">👤</div>
+        <div class="trust-body">
+          <div class="trust-name">Amina R.</div>
+          <div class="trust-meta" id="t-trust1-meta">Immeuble A</div>
+        </div>
+        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+      </div>
+      <div class="trust-row">
+        <div class="avatar">👤</div>
+        <div class="trust-body">
+          <div class="trust-name">Sofiane K.</div>
+          <div class="trust-meta" id="t-trust2-meta">Immeuble C</div>
+        </div>
+        <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+      </div>
+
+      <div class="vac-notice" id="vac-notice" style="display:none;">
+        <span id="t-vac-notice-text">✅ Mode vacances actif — Amina R. surveillera ton logement jusqu'à ta désactivation manuelle.</span>
+      </div>
+    </div>
+
+    <div class="screen" id="screen22">
+      <div class="p-back" onclick="showScreen('screen4')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-waste-title">Collecte des déchets</h2>
+      </div>
+
+      <div class="waste-card">
+        <span class="waste-icon">🗑️</span>
+        <div class="waste-body">
+          <div class="waste-name" id="t-waste1-name">Ordures ménagères</div>
+          <div class="waste-meta" id="t-waste1-meta">Dimanche, mardi, jeudi · à sortir la veille au soir</div>
+        </div>
+      </div>
+      <div class="waste-card">
+        <span class="waste-icon">♻️</span>
+        <div class="waste-body">
+          <div class="waste-name" id="t-waste2-name">Recyclable (plastique, carton)</div>
+          <div class="waste-meta" id="t-waste2-meta">Mercredi</div>
+        </div>
+      </div>
+      <div class="waste-card">
+        <span class="waste-icon">🪑</span>
+        <div class="waste-body">
+          <div class="waste-name" id="t-waste3-name">Encombrants</div>
+          <div class="waste-meta" id="t-waste3-meta">1er samedi de chaque mois</div>
+        </div>
+      </div>
+
+      <div class="switch-row" style="margin-top:8px;">
+        <span class="rb-icon-small">🔔</span>
+        <span id="t-waste-reminder">Rappel la veille au soir</span>
+        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="screen" id="screen23">
+      <div class="p-back" onclick="showScreen('screen4')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-solid-title">Actions solidaires</h2>
+      </div>
+
+      <div class="solid-card">
+        <span class="solid-icon">🩸</span>
+        <div class="solid-body">
+          <div class="solid-name" id="t-solid1-name">Collecte de don du sang</div>
+          <div class="solid-meta" id="t-solid1-meta">Samedi 14, devant la polyclinique · 9h-15h</div>
+        </div>
+        <button class="solid-join" onclick="toggleParticipate(this)" id="t-solid1-btn">Je participe</button>
+      </div>
+      <div class="solid-card">
+        <span class="solid-icon">🧥</span>
+        <div class="solid-body">
+          <div class="solid-name" id="t-solid2-name">Collecte de vêtements chauds</div>
+          <div class="solid-meta" id="t-solid2-meta">Dépose chez Nadia H., Immeuble C, avant le 20</div>
+        </div>
+        <button class="solid-join" onclick="toggleParticipate(this)" id="t-solid2-btn">Je participe</button>
+      </div>
+      <div class="solid-card">
+        <span class="solid-icon">🍚</span>
+        <div class="solid-body">
+          <div class="solid-name" id="t-solid3-name">Panier Ramadan pour familles du quartier</div>
+          <div class="solid-meta" id="t-solid3-meta">Organisé par l'association du quartier</div>
+        </div>
+        <button class="solid-join" onclick="toggleParticipate(this)" id="t-solid3-btn">Je participe</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen24">
+      <div class="p-back" onclick="showScreen('screen1')">←</div>
+
+      <div id="sos-form">
+        <div class="sos-header">
+          <div class="sh-icon">🆘</div>
+          <div class="sh-title" id="t-sos-title">Alerte SOS</div>
+          <div class="sh-sub" id="t-sos-sub">Choisis les voisins à alerter immédiatement</div>
+        </div>
+
+        <div class="sos-select-all" onclick="toggleSelectAllSos(this)">
+          <span>☑️</span>
+          <span id="t-sos-select-all">Alerter tous mes voisins de confiance</span>
+        </div>
+
+        <div class="trust-row">
+          <div class="avatar">👤</div>
+          <div class="trust-body">
+            <div class="trust-name">Amina R.</div>
+            <div class="trust-meta" id="t-sos-n1-meta">Immeuble A · 350 m</div>
+          </div>
+          <label class="switch"><input type="checkbox" class="sos-check" checked><span class="slider"></span></label>
+        </div>
+        <div class="trust-row">
+          <div class="avatar">👤</div>
+          <div class="trust-body">
+            <div class="trust-name">Sofiane K.</div>
+            <div class="trust-meta" id="t-sos-n2-meta">Immeuble C · 200 m</div>
+          </div>
+          <label class="switch"><input type="checkbox" class="sos-check" checked><span class="slider"></span></label>
+        </div>
+        <div class="trust-row">
+          <div class="avatar">👤</div>
+          <div class="trust-body">
+            <div class="trust-name">Karim B.</div>
+            <div class="trust-meta" id="t-sos-n3-meta">Immeuble C · 180 m</div>
+          </div>
+          <label class="switch"><input type="checkbox" class="sos-check"><span class="slider"></span></label>
+        </div>
+
+        <button class="sos-send-btn" onclick="sendSos()" id="t-sos-send">🆘 Envoyer l'alerte maintenant</button>
+      </div>
+
+      <div class="sos-sent" id="sos-sent">
+        <div class="ss-icon">✅</div>
+        <div class="ob-h" id="t-sos-sent-title">Alerte envoyée !</div>
+        <div class="ob-sub" id="sos-sent-detail">2 voisins ont été alertés et connaissent ta position.</div>
+        <button class="sos-cancel-btn" onclick="cancelSos()" id="t-sos-cancel">C'était une fausse alerte / annuler</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen8">
+      <div class="p-back" onclick="showScreen('screen1')">←</div>
+      <div class="search-bar" style="margin-top:16px;">
+        🔍 <input type="text" id="jiran-search-input" oninput="performJiranSearch(this.value)" placeholder="Chercher une publication ou un voisin" autofocus style="border:none;background:transparent;outline:none;font-family:inherit;font-size:13px;color:var(--ink);width:100%;">
+      </div>
+      <div id="jiran-search-hint" class="ob-sub" style="text-align:left;margin-top:14px;">
+        <span id="t-jiran-search-hint">Essaie « perceuse », « Amina » ou « alerte »…</span>
+      </div>
+      <div id="jiran-search-results"></div>
+    </div>
+
+    <div class="screen" id="screen9">
+      <div class="p-back" onclick="showScreen('screen4')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-notif-title">Notifications</h2>
+      </div>
+
+      <div class="section-head"><h2 id="t-notif-cat-securite">Sécurité</h2></div>
+      <div class="switch-row">
+        <span class="rb-icon-small">🚨</span>
+        <span id="t-notif-alertes">Alertes du quartier</span>
+        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+      </div>
+
+      <div class="section-head"><h2 id="t-notif-cat-social">Vie de quartier</h2></div>
+      <div class="switch-row">
+        <span class="rb-icon-small">💬</span>
+        <span id="t-notif-reponses">Réponses à mes publications</span>
+        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+      </div>
+      <div class="switch-row">
+        <span class="rb-icon-small">🛍️</span>
+        <span id="t-notif-annonces">Nouvelles annonces</span>
+        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+      </div>
+      <div class="switch-row">
+        <span class="rb-icon-small">📅</span>
+        <span id="t-notif-evenements">Événements à venir</span>
+        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="screen" id="screen5">
+      <div class="p-back" onclick="showScreen('screen1')">←</div>
+      <div class="section-head" style="margin-top:0;">
+        <h2 id="t-newpost-title">Nouvelle publication</h2>
+      </div>
+
+      <div class="cat-select-grid">
+        <div class="cat-select-btn selected" onclick="selectCat(this)">
+          <span class="csi">🚨</span><span id="t-cs-securite">Sécurité</span>
+        </div>
+        <div class="cat-select-btn" onclick="selectCat(this)">
+          <span class="csi">🤝</span><span id="t-cs-entraide">Entraide</span>
+        </div>
+        <div class="cat-select-btn" onclick="selectCat(this)">
+          <span class="csi">🛍️</span><span id="t-cs-annonce">Annonce</span>
+        </div>
+        <div class="cat-select-btn" onclick="selectCat(this)">
+          <span class="csi">📅</span><span id="t-cs-evenement">Événement</span>
+        </div>
+        <div class="cat-select-btn" onclick="selectCat(this)">
+          <span class="csi">📊</span><span id="t-cs-sondage">Sondage</span>
+        </div>
+        <div class="cat-select-btn" onclick="selectCat(this)">
+          <span class="csi">🚗</span><span id="t-cs-covoit">Covoiturage</span>
+        </div>
+        <div class="cat-select-btn" onclick="selectCat(this)">
+          <span class="csi">❤️</span><span id="t-cs-solidarite">Solidarité</span>
+        </div>
+      </div>
+
+      <textarea class="compose-area" id="compose-textarea" placeholder="Qu'est-ce que tu veux partager avec tes voisins ?" oninput="checkComposeText(this.value)"></textarea>
+
+      <div class="mod-warning" id="mod-warning" style="display:none;">
+        ⚠️ <span id="t-mod-warning-text">Ce message contient des termes potentiellement inappropriés. Merci de reformuler.</span>
+      </div>
+
+      <div class="photo-add" id="photo-add-btn" onclick="mockPhotoCheck()">
+        <span id="photo-add-icon" style="font-size:20px;">📷</span>
+        <span id="t-photo-add">Ajouter une photo (optionnel)</span>
+      </div>
+
+      <button class="publish-btn" onclick="tryPublish()" id="t-publish-btn">Publier</button>
+    </div>
+
+    <div class="screen" id="screen6">
+      <div class="p-back" onclick="showScreen('screen1')">←</div>
+
+      <div class="post-card" style="margin-top:0;">
+        <div class="post-head">
+          <div class="avatar">👤</div>
+          <div class="post-who">
+            <div class="pname">Karim B.</div>
+            <div class="pmeta" id="t-detail-meta">Immeuble C · il y a 40 min</div>
+          </div>
+          <span class="badge entraide" id="t-badge-entraide-2">Entraide</span>
+          <span class="post-menu" onclick="openReport(event)">⋮</span>
+        </div>
+        <div class="post-text" id="t-detail-text">Quelqu'un aurait une perceuse à me prêter pour ce week-end ? Je vous la rends lundi 🙏</div>
+        <div class="post-actions">
+          <span class="pa likeable" onclick="toggleLike(this, 6)">👍 6</span>
+          <span class="pa" id="t-detail-replies">💬 3 réponses</span>
+        </div>
+      </div>
+
+      <div class="section-head"><h2 id="t-reponses-title">Réponses</h2></div>
+
+      <div class="comment-row">
+        <div class="avatar">👤</div>
+        <div class="cbody">
+          <div class="cname">Sofiane K.</div>
+          <div class="ctext" id="t-comment1-text">J'en ai une, je te l'apporte ce soir vers 19h !</div>
+          <div class="ctime" id="t-comment1-time">Il y a 25 min</div>
+        </div>
+      </div>
+
+      <div class="comment-row">
+        <div class="avatar">👤</div>
+        <div class="cbody">
+          <div class="cname">Karim B.</div>
+          <div class="ctext" id="t-comment2-text">Merci beaucoup Sofiane, à ce soir 🙏</div>
+          <div class="ctime" id="t-comment2-time">Il y a 18 min</div>
+        </div>
+      </div>
+
+      <div class="comment-input-row">
+        <input type="text" id="comment-input" placeholder="Écrire une réponse...">
+        <button class="comment-send">➤</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="report-overlay" onclick="if(event.target===this) closeReport()">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <h3 id="t-report-title">Signaler cette publication</h3>
+        <div class="report-option" onclick="submitReport()">🚫 <span id="t-report-1">Spam ou publicité</span></div>
+        <div class="report-option" onclick="submitReport()">⚠️ <span id="t-report-2">Contenu inapproprié</span></div>
+        <div class="report-option" onclick="submitReport()">🚨 <span id="t-report-3">Fausse alerte</span></div>
+        <div class="report-option" onclick="submitReport()">❓ <span id="t-report-4">Autre raison</span></div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="sos-fab" onclick="showScreen('screen24')">🆘</div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active" id="nav-screen1" onclick="showScreen('screen1')"><div class="dot2"></div><span>🏘️</span><span id="t-nav-accueil">Accueil</span></div>
+      <div class="nav-item" id="nav-screen2" onclick="showScreen('screen2')"><div class="dot2"></div><span>🛍️</span><span id="t-nav-annonces">Annonces</span></div>
+      <div class="nav-item" onclick="showScreen('screen5')"><div class="fab">+</div><span style="margin-top:2px" id="t-nav-publier">Publier</span></div>
+      <div class="nav-item" id="nav-screen3" onclick="showScreen('screen3')"><div class="dot2"></div><span>🚨</span><span id="t-nav-alertes">Alertes</span></div>
+      <div class="nav-item" id="nav-screen4" onclick="showScreen('screen4')"><div class="dot2"></div><span>👤</span><span id="t-nav-profil">Profil</span></div>
+    </div>
+  </div>
+  <div class="stage-label">Jiran — prototype de design (accueil, annonces, alertes, profil, publication)</div>
+</div>
+
+<script>
+const navMap = {screen1:'nav-screen1', screen2:'nav-screen2', screen3:'nav-screen3', screen4:'nav-screen4'};
+const ALL_SCREENS = ['screen1','screen2','screen3','screen4','screen5','screen6','screen7','screen8','screen9','screen10','screen11','screen12','screen13','screen14','screen15','screen16','screen17','screen18','screen19','screen20','screen21','screen22','screen23','screen24'];
+
+function showScreen(name){
+  ALL_SCREENS.forEach(id => {
+    document.getElementById(id).style.display = (id === name) ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if(navMap[name]) document.getElementById(navMap[name]).classList.add('active');
+  if(name === 'screen12') renderGameLeaderboard();
+  if(name === 'screen24') resetSosScreen();
+}
+
+document.querySelectorAll('.categories .cat-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.categories .cat-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+});
+
+const FLAGGED_WORDS = ['con', 'connard', 'pute', 'merde', 'enculé', 'batard', 'fuck', 'shit'];
+let textFlagged = false;
+let photoState = 'none';
+
+function checkComposeText(text){
+  const lower = text.toLowerCase();
+  textFlagged = FLAGGED_WORDS.some(w => lower.includes(w));
+  document.getElementById('mod-warning').style.display = textFlagged ? 'flex' : 'none';
+  updatePublishState();
+}
+
+function mockPhotoCheck(){
+  const btn = document.getElementById('photo-add-btn');
+  const icon = document.getElementById('photo-add-icon');
+  const label = document.getElementById('t-photo-add');
+  const L = currentLang;
+
+  photoState = 'checking';
+  btn.className = 'photo-add checking';
+  icon.textContent = '⏳';
+  label.textContent = L === 'ar' ? 'جارٍ التحقق من الصورة...' : "Vérification de l'image...";
+  updatePublishState();
+
+  setTimeout(() => {
+    const approved = Math.random() > 0.25;
+    photoState = approved ? 'approved' : 'rejected';
+    btn.className = 'photo-add ' + photoState;
+    icon.textContent = approved ? '✅' : '🚫';
+    label.textContent = approved
+      ? (L==='ar' ? 'الصورة مقبولة' : 'Photo approuvée')
+      : (L==='ar' ? 'صورة غير لائقة، تمت إزالتها' : 'Image inappropriée détectée, retirée');
+    updatePublishState();
+  }, 1200);
+}
+
+function updatePublishState(){
+  const btn = document.getElementById('t-publish-btn');
+  btn.disabled = textFlagged || photoState === 'checking' || photoState === 'rejected';
+}
+
+function tryPublish(){
+  if(textFlagged || photoState === 'checking' || photoState === 'rejected') return;
+  showScreen('screen1');
+  document.getElementById('compose-textarea').value = '';
+  document.getElementById('mod-warning').style.display = 'none';
+  textFlagged = false;
+  photoState = 'none';
+  const btn = document.getElementById('photo-add-btn');
+  btn.className = 'photo-add';
+  document.getElementById('photo-add-icon').textContent = '📷';
+  document.getElementById('t-photo-add').textContent = dict[currentLang]['photo-add'];
+}
+
+function selectCat(el){
+  document.querySelectorAll('.cat-select-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function obGoStep(n){
+  [1,2,3,4,5].forEach(i => {
+    document.getElementById('ob-step-'+i).style.display = (i===n) ? 'flex' : 'none';
+    document.getElementById('ob-dot-'+i).classList.toggle('active', i===n);
+  });
+  if(n === 5) startRulesCountdown();
+}
+
+function startRulesCountdown(){
+  const btn = document.getElementById('t-ob-agree');
+  btn.disabled = true;
+  let remaining = 3;
+  const label = () => currentLang === 'ar'
+    ? `فهمت، وألتزم باحترامها (${remaining})`
+    : `J'ai compris, je m'engage à les respecter (${remaining}s)`;
+  btn.textContent = label();
+  const timer = setInterval(() => {
+    remaining--;
+    if(remaining <= 0){
+      clearInterval(timer);
+      btn.disabled = false;
+      btn.textContent = dict[currentLang]['ob-agree'];
+    } else {
+      btn.textContent = label();
+    }
+  }, 1000);
+}
+
+function obChooseLang(l){
+  setLang(l);
+  obGoStep(2);
+}
+
+function finishOnboarding(){
+  document.getElementById('onboarding').style.display = 'none';
+}
+
+let postIdCounter = 0;
+const REPORT_COUNTS = {};
+const BLOCKED_PERMANENT = {};
+let currentReportTarget = null;
+
+function openReport(e){
+  e.stopPropagation();
+  const card = e.target.closest('.post-card');
+  if(card && !card.dataset.pid){
+    postIdCounter++;
+    card.dataset.pid = 'post-' + postIdCounter;
+  }
+  currentReportTarget = card;
+  document.getElementById('report-overlay').style.display = 'flex';
+}
+function closeReport(){
+  document.getElementById('report-overlay').style.display = 'none';
+}
+function submitReport(){
+  closeReport();
+  const L = currentLang;
+  const toast = document.getElementById('toast');
+
+  if(currentReportTarget){
+    const pid = currentReportTarget.dataset.pid;
+    REPORT_COUNTS[pid] = (REPORT_COUNTS[pid] || 0) + 1;
+    if(REPORT_COUNTS[pid] >= 3){
+      if(BLOCKED_PERMANENT[pid]){
+        blockPost(currentReportTarget, true);
+      } else {
+        BLOCKED_PERMANENT[pid] = true;
+        blockPost(currentReportTarget, false);
+      }
+    }
+  }
+
+  toast.textContent = L === 'ar' ? '✓ شكراً، تم إرسال البلاغ للمشرفين' : '✓ Merci, signalement envoyé aux modérateurs';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+function blockPost(card, permanent){
+  const L = currentLang;
+  card.onclick = null;
+  card.classList.add('blocked');
+  const msg = permanent
+    ? (L==='ar' ? '🚫 محتوى محظور نهائياً بعد عدة بلاغات' : '🚫 Contenu bloqué définitivement après plusieurs signalements')
+    : (L==='ar' ? '🚫 محتوى مخفي — تم الإبلاغ عنه من طرف 3 جيران. محظور لمدة 3 أيام.' : '🚫 Contenu masqué — signalé par 3 voisins différents. Bloqué pendant 3 jours.');
+  card.innerHTML = `<div class="blocked-notice">${msg}</div>`;
+}
+
+function toggleJoin(el){
+  const joined = el.classList.toggle('joined');
+  el.textContent = joined ? dict[currentLang]['grp-joined-lbl'] : dict[currentLang]['grp-join-lbl'];
+}
+
+function toggleVacation(checked){
+  document.getElementById('vac-notice').style.display = checked ? 'block' : 'none';
+}
+
+function toggleSelectAllSos(el){
+  const checks = document.querySelectorAll('.sos-check');
+  const allChecked = Array.from(checks).every(c => c.checked);
+  checks.forEach(c => c.checked = !allChecked);
+}
+
+function sendSos(){
+  const count = document.querySelectorAll('.sos-check:checked').length;
+  if(count === 0){
+    const toast = document.getElementById('toast');
+    toast.textContent = currentLang === 'ar' ? 'اختر جاراً واحداً على الأقل' : 'Choisis au moins un voisin';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1800);
+    return;
+  }
+  document.getElementById('sos-form').style.display = 'none';
+  document.getElementById('sos-sent').style.display = 'block';
+  const L = currentLang;
+  const detail = document.getElementById('sos-sent-detail');
+  detail.textContent = L === 'ar'
+    ? `تم تنبيه ${count} ${count > 1 ? 'جيران' : 'جار'} وهم يعرفون موقعك.`
+    : `${count} voisin${count>1?'s':''} ${count>1?'ont':'a'} été alerté${count>1?'s':''} et connaissen${count>1?'t':''} ta position.`;
+}
+
+function cancelSos(){
+  document.getElementById('sos-form').style.display = 'block';
+  document.getElementById('sos-sent').style.display = 'none';
+  showScreen('screen1');
+}
+
+function resetSosScreen(){
+  document.getElementById('sos-form').style.display = 'block';
+  document.getElementById('sos-sent').style.display = 'none';
+}
+
+function toggleParticipate(el){
+  const joined = el.classList.toggle('joined');
+  el.textContent = joined ? dict[currentLang]['solid-joined-lbl'] : dict[currentLang]['solid-join-lbl'];
+}
+
+function toggleLike(el, base){
+  const liked = el.classList.toggle('liked');
+  el.textContent = '👍 ' + (liked ? base + 1 : base);
+}
+
+const SEARCHABLE = [
+  {type:'post', title:'Perceuse à emprunter', author:'Karim B.', icon:'🤝'},
+  {type:'post', title:'Table basse à donner', author:'Amina R.', icon:'🛍️'},
+  {type:'post', title:'Nettoyage collectif samedi', author:'Association du quartier', icon:'📅'},
+  {type:'alerte', title:'Vol signalé rue des Frères Bouadou', icon:'🚨'},
+  {type:'alerte', title:"Coupure d'eau demain 8h-14h", icon:'⚠️'},
+  {type:'voisin', title:'Amina R.', icon:'👤'},
+  {type:'voisin', title:'Karim B.', icon:'👤'},
+  {type:'voisin', title:'Sofiane K.', icon:'👤'}
+];
+
+function performJiranSearch(query){
+  const q = query.trim().toLowerCase();
+  const hint = document.getElementById('jiran-search-hint');
+  const box = document.getElementById('jiran-search-results');
+  if(!q){
+    hint.style.display = 'block';
+    box.innerHTML = '';
+    return;
+  }
+  hint.style.display = 'none';
+  const results = SEARCHABLE.filter(r => r.title.toLowerCase().includes(q) || (r.author && r.author.toLowerCase().includes(q)));
+  if(!results.length){
+    box.innerHTML = `<div class="search-result-empty">${currentLang==='ar' ? 'لا توجد نتائج' : 'Aucun résultat'}</div>`;
+    return;
+  }
+  box.innerHTML = results.map(r => `
+    <div class="menu-row">
+      <span class="menu-icon">${r.icon}</span>
+      <span>${r.title}${r.author ? ' · ' + r.author : ''}</span>
+    </div>`).join('');
+}
+
+let currentLang = 'fr';
+
+const dict = {
+  fr: {
+    loc:"📍 Bab Ezzouar, Alger",
+    'cat-tout':"🏘️ Tout", 'cat-securite':"🚨 Sécurité", 'cat-entraide':"🤝 Entraide",
+    'cat-annonces':"🛍️ Annonces", 'cat-evenements':"📅 Événements",
+    'alert1-title':"Vol signalé rue des Frères Bouadou", 'alert1-sub':"Il y a 20 min · 8 voisins prévenus",
+    'post1-meta':"Immeuble C · il y a 40 min", 'badge-entraide':"Entraide",
+    'post1-text':"Quelqu'un aurait une perceuse à me prêter pour ce week-end ? Je vous la rends lundi 🙏",
+    'post1-replies':"💬 3 réponses",
+    'post2-meta':"Immeuble A · il y a 2 h", 'badge-annonce':"Annonce",
+    'post2-text':"Je donne une table basse en bon état, à venir chercher chez moi. Premier arrivé, premier servi !",
+    'post2-replies':"💬 5 réponses",
+    'post3-name':"Association du quartier", 'post3-meta':"Officiel · il y a 5 h", 'badge-evenement':"Événement",
+    'post3-text':"Journée de nettoyage collectif du quartier samedi matin, 9h devant la mosquée. Tout le monde est bienvenu !",
+    'post3-replies':"💬 11 réponses",
+    'annonces-title':"Annonces du quartier",
+    'tag-don':"À donner", 'tag-vente':"À vendre · 8 000 DA",
+    'listing1-title':"Table basse en bon état", 'listing1-meta':"Amina R. · Immeuble A · il y a 2 h",
+    'listing2-title':"Vélo enfant 6-9 ans", 'listing2-meta':"Yacine O. · Immeuble B · hier",
+    'listing3-title':"Livres scolaires 3AM", 'listing3-meta':"Nadia H. · Immeuble C · il y a 3 jours",
+    'alertes-title':"Alertes du quartier", 'alertes-sub':"Aujourd'hui",
+    'alertrow1-title':"Vol signalé rue des Frères Bouadou", 'alertrow1-meta':"Il y a 20 min · 8 voisins prévenus",
+    'alertrow2-title':"Coupure d'eau prévue demain 8h-14h", 'alertrow2-meta':"Il y a 3 h · Info SEAAL",
+    'alertrow3-title':"Chien perdu près du parc, collier bleu", 'alertrow3-meta':"Hier · 15 voisins prévenus",
+    'profil-title':"Mon profil", 'profil-name':"Hafid", 'profil-verif':"✅ Voisin vérifié · Bab Ezzouar",
+    'stat-pub':"Publications", 'stat-mois':"Mois dans Jiran", 'stat-voisins':"Voisins connectés",
+    'reglages-title':"Réglages", 'menu-pub':"Mes publications", 'menu-notif':"Notifications", 'menu-quartier':"Mon quartier",
+    'newpost-title':"Nouvelle publication",
+    'cs-securite':"Sécurité", 'cs-entraide':"Entraide", 'cs-annonce':"Annonce", 'cs-evenement':"Événement",
+    'photo-add':"Ajouter une photo (optionnel)", 'publish-btn':"Publier",
+    'detail-meta':"Immeuble C · il y a 40 min",
+    'detail-text':"Quelqu'un aurait une perceuse à me prêter pour ce week-end ? Je vous la rends lundi 🙏",
+    'detail-replies':"💬 3 réponses", 'reponses-title':"Réponses",
+    'comment1-text':"J'en ai une, je te l'apporte ce soir vers 19h !", 'comment1-time':"Il y a 25 min",
+    'comment2-text':"Merci beaucoup Sofiane, à ce soir 🙏", 'comment2-time':"Il y a 18 min",
+    'comment-ph':"Écrire une réponse...",
+    'nav-accueil':"Accueil", 'nav-annonces':"Annonces", 'nav-publier':"Publier", 'nav-alertes':"Alertes", 'nav-profil':"Profil",
+    'ob-tagline':"Le réseau de ton quartier, entre voisins",
+    'ob-h2':"Créer ton compte", 'ob-sub2':"Pour publier et échanger avec tes voisins en confiance",
+    'ob-prenom-lbl':"Prénom", 'ob-phone-lbl':"Numéro de téléphone", 'ob-createacc':"Créer mon compte",
+    'ob-h3':"Où habites-tu ?", 'ob-sub3':"Pour te connecter uniquement avec tes vrais voisins",
+    'ob-quartier-lbl':"Quartier", 'ob-cite-lbl':"Cité / Immeuble (optionnel)",
+    'ob-geoloc':"📍 Confirmer ma position", 'ob-continue':"Continuer",
+    'ob-h4':"Trois choses à savoir",
+    'ob-f1t':"Un fil réservé à ton quartier", 'ob-f1s':"Seuls tes vrais voisins peuvent voir et publier ici",
+    'ob-f2t':"Alertes sécurité en temps réel", 'ob-f2s':"Sois prévenu rapidement de ce qui se passe près de chez toi",
+    'ob-f3t':"Entraide et annonces", 'ob-f3s':"Emprunte, donne, vends, demande un coup de main",
+    'ob-finish':"Découvrir mon quartier",
+    'q-title':"Bab Ezzouar", 'q-members':"voisins vérifiés",
+    'q-linked-title':"Cités jumelées",
+    'q-linked-explain':"Ces cités partagent le même fil pour l'instant, le temps d'avoir assez de voisins actifs. L'origine reste toujours affichée sur chaque publication.",
+    'q-linked1-meta':"38 voisins · seuil : 50", 'q-linked2-meta':"22 voisins · seuil : 50",
+    'q-mod-title':"Modération", 'q-mod-report':"Signalements en attente", 'q-mod-rules':"Règles du quartier",
+    'report-title':"Signaler cette publication",
+    'report-1':"Spam ou publicité", 'report-2':"Contenu inapproprié",
+    'report-3':"Fausse alerte", 'report-4':"Autre raison",
+    'home-search-ph':"Chercher une publication ou un voisin",
+    'jiran-search-hint':"Essaie « perceuse », « Amina » ou « alerte »…",
+    'notif-title':"Notifications", 'notif-cat-securite':"Sécurité", 'notif-alertes':"Alertes du quartier",
+    'notif-cat-social':"Vie de quartier", 'notif-reponses':"Réponses à mes publications",
+    'notif-annonces':"Nouvelles annonces", 'notif-evenements':"Événements à venir",
+    'mypubs-title':"Mes publications",
+    'mypub1-meta':"Immeuble B · il y a 40 min",
+    'mypub1-text':"Quelqu'un aurait un escabeau à me prêter pour changer une ampoule ?",
+    'mypub1-replies':"💬 1 réponse",
+    'mypub2-meta':"Immeuble B · il y a 5 jours",
+    'mypub2-text':"Je vends une machine à café, très peu servie, 4 500 DA.",
+    'mypub2-replies':"💬 4 réponses",
+    'rules-title':"Règles du quartier",
+    'rule1-title':"Respect entre voisins",
+    'rule1-text':"Pas d'insultes, de propos discriminatoires ou de harcèlement, même en cas de désaccord.",
+    'rule2-title':"Informations vérifiées",
+    'rule2-text':"Ne publie une alerte sécurité que si tu es sûr de l'information — une fausse alerte peut être signalée.",
+    'rule3-title':"Pas de publicité commerciale",
+    'rule3-text':"Jiran est un espace entre voisins, pas une vitrine publicitaire pour des entreprises extérieures.",
+    'rule4-title':"Vie privée",
+    'rule4-text':"Ne partage pas les coordonnées personnelles d'un voisin sans son accord.",
+    'menu-jeux':"Jeux entre voisins",
+    'games-title':"Jeux entre voisins", 'games-active-title':"Tes défis en cours",
+    'game1-name':"Échecs · contre Amina R.", 'game1-meta':"À toi de jouer · tour 14",
+    'game2-name':"Dames · contre Yacine O.", 'game2-meta':"En attente de son tour",
+    'games-choose-title':"Défier un voisin",
+    'gt-echecs':"Échecs", 'gt-dames':"Dames", 'gt-belote':"Belote", 'gt-dominos':"Dominos",
+    'gt-morpion':"Morpion", 'gt-quiz':"Quiz",
+    'leaderboard-title':"Classement du quartier", 'leaderboard-sub':"ce mois-ci",
+    'chess-vs':"Contre Amina R.", 'chess-turn':"🟢 À toi de jouer",
+    'game-draw':"🤝 Proposer nulle", 'game-resign':"🏳️ Abandonner",
+    'gb-title':"Jeux entre voisins", 'gb-sub':"2 défis en cours · à toi de jouer aux échecs",
+    'gt-scrabble':"Scrabble",
+    'quiz-cat-title':"Quiz à thème",
+    'gt-quiz-algerie':"Culture Algérie", 'gt-quiz-sport':"Sport",
+    'gt-quiz-religion':"Religion", 'gt-quiz-general':"Culture générale",
+    'cat-sondages':"📊 Sondages", 'cat-covoit':"🚗 Covoiturage", 'cat-solidarite':"❤️ Solidarité",
+    'cs-sondage':"Sondage", 'cs-covoit':"Covoiturage", 'cs-solidarite':"Solidarité",
+    'story-add':"Ta story", 'story-assoc':"Association",
+    'poll-author':"Association du quartier", 'poll-meta':"Officiel · il y a 1 jour",
+    'badge-sondage':"Sondage",
+    'poll-question':"Pour l'entretien des espaces verts, tu préfères qu'on embauche :",
+    'poll-opt1':"Un jardinier fixe du quartier", 'poll-opt2':"Une entreprise externe",
+    'poll-votes':"🗳️ 47 votes", 'poll-time':"⏱️ 2 jours restants",
+    'post4-meta':"Immeuble D · il y a 6 h", 'badge-covoit':"Covoiturage",
+    'post4-text':"Je descends au centre-ville tous les matins à 8h en voiture, une place libre si ça intéresse quelqu'un du quartier 🚗",
+    'post4-replies':"💬 2 réponses",
+    'post5-meta':"Immeuble A · il y a 1 jour", 'badge-solidarite':"Solidarité",
+    'post5-text':"Qui peut passer voir Mme Fatiha cette semaine ? Elle vit seule au 2e étage et n'est pas sortie depuis quelques jours ❤️",
+    'post5-replies':"💬 6 réponses",
+    'story-who':"Amina R. · il y a 2 h",
+    'story-caption':"Marché du vendredi bien animé ce matin au quartier 🍊🥬",
+    'menu-services':"Services recommandés",
+    'services-title':"Services recommandés",
+    'services-sub':"Des professionnels recommandés par de vrais voisins de Bab Ezzouar.",
+    'service1-cat':"Plombier", 'service1-meta':"★ 4.9 · recommandé par 12 voisins",
+    'service2-cat':"Électricien", 'service2-meta':"★ 4.7 · recommandé par 8 voisins",
+    'service3-cat':"Professeur de maths", 'service3-meta':"★ 5.0 · recommandé par 5 voisins",
+    'welcome-title':"Souhaite la bienvenue à Rachid D. !",
+    'welcome-sub':"Nouveau voisin · Immeuble D · arrivé cette semaine",
+    'msgs-title':"Messages",
+    'conv1-last':"D'accord, je te la garde jusqu'à demain 👍", 'conv1-time':"14:02",
+    'conv2-last':"Ça marche pour 19h, à ce soir !", 'conv2-time':"Hier",
+    'conv3-last':"Je suis dispo à 8h précises devant l'arrêt", 'conv3-time':"Lun",
+    'chat-msg1':"Bonjour ! La table basse est toujours dispo si ça t'intéresse",
+    'chat-msg2':"Oui carrément, je peux passer ce soir ?",
+    'chat-msg3':"D'accord, je te la garde jusqu'à demain 👍",
+    'chat-input-ph':"Écrire un message...",
+    'menu-objets':"Objets à emprunter",
+    'lend-title':"Objets à emprunter",
+    'lend-sub':"Emprunte au lieu d'acheter — ces voisins prêtent volontiers leurs outils.",
+    'lend1-owner':"Prêtée par Ahmed B.", 'lend1-status':"Disponible",
+    'lend2-owner':"Prêté par Nadia H. · emprunté par Karim B.", 'lend2-status':"À rendre le 15",
+    'lend3-owner':"Prêtée par Yacine O.", 'lend3-status':"Disponible",
+    'menu-groupes':"Groupes d'intérêt",
+    'groups-title':"Groupes d'intérêt",
+    'group1-name':"Parents d'élèves", 'group1-meta':"86 membres",
+    'group2-name':"Jardinage", 'group2-meta':"34 membres",
+    'group3-name':"Foot du quartier", 'group3-meta':"52 membres",
+    'group4-name':"Cercle d'étude religieuse", 'group4-meta':"29 membres",
+    'grp-joined-lbl':"Rejoint", 'grp-join-lbl':"Rejoindre",
+    'menu-carte':"Carte du quartier",
+    'map-title':"Carte du quartier",
+    'poi1-name':"Pharmacie de garde", 'poi1-meta':"Pharmacie El Amel · 350 m",
+    'poi2-name':"École primaire", 'poi2-meta':"École Ibn Khaldoun · 420 m",
+    'poi3-name':"Mosquée", 'poi3-meta':"Mosquée El Nour · 200 m",
+    'poi4-name':"Arrêt de bus", 'poi4-meta':"Ligne 12 · 150 m",
+    'ob-h5':"Les règles du quartier", 'ob-sub5':"À lire avant de commencer — merci de les respecter",
+    'ob-rule1':"Respect entre voisins, pas d'insultes ni de harcèlement.",
+    'ob-rule2':"N'alerte que sur des informations vérifiées.",
+    'ob-rule3':"Pas de publicité commerciale ni de contenu inapproprié.",
+    'ob-rule4':"3 signalements = contenu bloqué 3 jours. Une 2ᵉ fois = blocage définitif.",
+    'ob-agree':"J'ai compris, je m'engage à les respecter",
+    'rule5-title':"Modération automatique",
+    'rule5-text':"Un contenu signalé par 3 voisins différents est automatiquement masqué pendant 3 jours. En cas de récidive, le blocage devient définitif.",
+    'mod-warning-text':"Ce message contient des termes potentiellement inappropriés. Merci de reformuler.",
+    'menu-vacances':"Mode vacances", 'menu-dechets':"Collecte des déchets", 'menu-solidaire':"Actions solidaires",
+    'vac-title':"Mode vacances",
+    'vac-sub':"Un voisin de confiance surveille ton logement pendant ton absence.",
+    'vac-toggle-lbl':"Activer le mode vacances",
+    'vac-trust-title':"Voisins de confiance",
+    'trust1-meta':"Immeuble A", 'trust2-meta':"Immeuble C",
+    'vac-notice-text':"✅ Mode vacances actif — Amina R. surveillera ton logement jusqu'à ta désactivation manuelle.",
+    'waste-title':"Collecte des déchets",
+    'waste1-name':"Ordures ménagères", 'waste1-meta':"Dimanche, mardi, jeudi · à sortir la veille au soir",
+    'waste2-name':"Recyclable (plastique, carton)", 'waste2-meta':"Mercredi",
+    'waste3-name':"Encombrants", 'waste3-meta':"1er samedi de chaque mois",
+    'waste-reminder':"Rappel la veille au soir",
+    'solid-title':"Actions solidaires",
+    'solid1-name':"Collecte de don du sang", 'solid1-meta':"Samedi 14, devant la polyclinique · 9h-15h",
+    'solid2-name':"Collecte de vêtements chauds", 'solid2-meta':"Dépose chez Nadia H., Immeuble C, avant le 20",
+    'solid3-name':"Panier Ramadan pour familles du quartier", 'solid3-meta':"Organisé par l'association du quartier",
+    'solid-join-lbl':"Je participe", 'solid-joined-lbl':"✓ Inscrit",
+    'sos-title':"Alerte SOS", 'sos-sub':"Choisis les voisins à alerter immédiatement",
+    'sos-select-all':"Alerter tous mes voisins de confiance",
+    'sos-n1-meta':"Immeuble A · 350 m", 'sos-n2-meta':"Immeuble C · 200 m", 'sos-n3-meta':"Immeuble C · 180 m",
+    'sos-send':"🆘 Envoyer l'alerte maintenant",
+    'sos-sent-title':"Alerte envoyée !",
+    'sos-cancel':"C'était une fausse alerte / annuler"
+  },
+  ar: {
+    loc:"📍 باب الزوار، الجزائر",
+    'cat-tout':"🏘️ الكل", 'cat-securite':"🚨 أمن", 'cat-entraide':"🤝 تعاون",
+    'cat-annonces':"🛍️ إعلانات", 'cat-evenements':"📅 فعاليات",
+    'alert1-title':"بلاغ سرقة في شارع الإخوة بوعدو", 'alert1-sub':"قبل 20 د · تم إبلاغ 8 جيران",
+    'post1-meta':"عمارة C · قبل 40 د", 'badge-entraide':"تعاون",
+    'post1-text':"عندكم مثقاب يمكن تسلفوني إياه لهذا الويكاند؟ نرجعهولكم نهار الإثنين 🙏",
+    'post1-replies':"💬 3 ردود",
+    'post2-meta':"عمارة A · قبل ساعتين", 'badge-annonce':"إعلان",
+    'post2-text':"نهدي طاولة صالون بحالة جيدة، تجيو تاخدوها عندي. أول واحد يجي ياخدها.",
+    'post2-replies':"💬 5 ردود",
+    'post3-name':"جمعية الحي", 'post3-meta':"رسمي · قبل 5 سا", 'badge-evenement':"فعالية",
+    'post3-text':"يوم تنظيف جماعي للحي نهار السبت الصباح، الساعة 9 قدام المسجد. الجميع مرحب به !",
+    'post3-replies':"💬 11 رد",
+    'annonces-title':"إعلانات الحي",
+    'tag-don':"للهبة", 'tag-vente':"للبيع · 8000 د.ج",
+    'listing1-title':"طاولة صالون بحالة جيدة", 'listing1-meta':"أمينة ر. · عمارة A · قبل ساعتين",
+    'listing2-title':"دراجة أطفال 6-9 سنوات", 'listing2-meta':"ياسين و. · عمارة B · البارح",
+    'listing3-title':"كتب مدرسية 3 متوسط", 'listing3-meta':"نادية ح. · عمارة C · قبل 3 أيام",
+    'alertes-title':"تنبيهات الحي", 'alertes-sub':"اليوم",
+    'alertrow1-title':"بلاغ سرقة في شارع الإخوة بوعدو", 'alertrow1-meta':"قبل 20 د · تم إبلاغ 8 جيران",
+    'alertrow2-title':"انقطاع الماء غداً من 8 إلى 14", 'alertrow2-meta':"قبل 3 سا · معلومة سيال",
+    'alertrow3-title':"كلب ضائع قرب الحديقة، طوق أزرق", 'alertrow3-meta':"البارح · تم إبلاغ 15 جار",
+    'profil-title':"حسابي", 'profil-name':"حفيظ", 'profil-verif':"✅ جار موثّق · باب الزوار",
+    'stat-pub':"منشورات", 'stat-mois':"أشهر في Jiran", 'stat-voisins':"جيران متصلون",
+    'reglages-title':"الإعدادات", 'menu-pub':"منشوراتي", 'menu-notif':"الإشعارات", 'menu-quartier':"حيّي",
+    'newpost-title':"منشور جديد",
+    'cs-securite':"أمن", 'cs-entraide':"تعاون", 'cs-annonce':"إعلان", 'cs-evenement':"فعالية",
+    'photo-add':"إضافة صورة (اختياري)", 'publish-btn':"نشر",
+    'detail-meta':"عمارة C · قبل 40 د",
+    'detail-text':"عندكم مثقاب يمكن تسلفوني إياه لهذا الويكاند؟ نرجعهولكم نهار الإثنين 🙏",
+    'detail-replies':"💬 3 ردود", 'reponses-title':"الردود",
+    'comment1-text':"عندي واحد، نجيبهولك الليلة الساعة 7 !", 'comment1-time':"قبل 25 د",
+    'comment2-text':"شكراً بزاف سفيان، نتلاقاو الليلة 🙏", 'comment2-time':"قبل 18 د",
+    'comment-ph':"اكتب ردّاً...",
+    'nav-accueil':"الرئيسية", 'nav-annonces':"إعلانات", 'nav-publier':"نشر", 'nav-alertes':"تنبيهات", 'nav-profil':"حسابي",
+    'ob-tagline':"شبكة حيّك، بين الجيران",
+    'ob-h2':"أنشئ حسابك", 'ob-sub2':"لنشر المحتوى والتواصل مع جيرانك بثقة",
+    'ob-prenom-lbl':"الاسم", 'ob-phone-lbl':"رقم الهاتف", 'ob-createacc':"إنشاء حسابي",
+    'ob-h3':"أين تسكن؟", 'ob-sub3':"للتواصل فقط مع جيرانك الحقيقيين",
+    'ob-quartier-lbl':"الحي", 'ob-cite-lbl':"الحي السكني / العمارة (اختياري)",
+    'ob-geoloc':"📍 تأكيد موقعي", 'ob-continue':"متابعة",
+    'ob-h4':"ثلاثة أشياء يجب معرفتها",
+    'ob-f1t':"خيط مخصص لحيّك", 'ob-f1s':"فقط جيرانك الحقيقيون يمكنهم الرؤية والنشر هنا",
+    'ob-f2t':"تنبيهات أمنية فورية", 'ob-f2s':"كن على علم سريعاً بما يحدث قرب منزلك",
+    'ob-f3t':"تعاون وإعلانات", 'ob-f3s':"استعر، أعطِ، بع، اطلب المساعدة",
+    'ob-finish':"اكتشف حيّك",
+    'q-title':"باب الزوار", 'q-members':"جار موثّق",
+    'q-linked-title':"أحياء مرتبطة",
+    'q-linked-explain':"هذه الأحياء تتشارك نفس الخيط حالياً، إلى حين توفر عدد كافٍ من الجيران النشطين. الأصل يبقى دائماً ظاهراً في كل منشور.",
+    'q-linked1-meta':"38 جار · الحد: 50", 'q-linked2-meta':"22 جار · الحد: 50",
+    'q-mod-title':"الإشراف", 'q-mod-report':"بلاغات قيد المراجعة", 'q-mod-rules':"قواعد الحي",
+    'report-title':"الإبلاغ عن هذا المنشور",
+    'report-1':"سبام أو إشهار", 'report-2':"محتوى غير لائق",
+    'report-3':"تنبيه كاذب", 'report-4':"سبب آخر",
+    'home-search-ph':"ابحث عن منشور أو جار",
+    'jiran-search-hint':"جرّب « مثقاب »، « أمينة » أو « تنبيه »…",
+    'notif-title':"الإشعارات", 'notif-cat-securite':"الأمن", 'notif-alertes':"تنبيهات الحي",
+    'notif-cat-social':"حياة الحي", 'notif-reponses':"الردود على منشوراتي",
+    'notif-annonces':"إعلانات جديدة", 'notif-evenements':"فعاليات قادمة",
+    'mypubs-title':"منشوراتي",
+    'mypub1-meta':"عمارة B · قبل 40 د",
+    'mypub1-text':"عندكم سلم يمكن تسلفوني إياه باش نبدل لمبة؟",
+    'mypub1-replies':"💬 رد واحد",
+    'mypub2-meta':"عمارة B · قبل 5 أيام",
+    'mypub2-text':"نبيع آلة قهوة، مستعملة قليلاً، ب 4500 د.ج.",
+    'mypub2-replies':"💬 4 ردود",
+    'rules-title':"قواعد الحي",
+    'rule1-title':"احترام الجيران",
+    'rule1-text':"ممنوع الشتم أو الكلام العنصري أو المضايقة، حتى في حالة الخلاف.",
+    'rule2-title':"معلومات موثوقة",
+    'rule2-text':"لا تنشر تنبيهاً أمنياً إلا إذا كنت متأكداً من المعلومة — التنبيه الكاذب يمكن الإبلاغ عنه.",
+    'rule3-title':"ممنوع الإشهار التجاري",
+    'rule3-text':"Jiran فضاء بين الجيران، وليس واجهة إشهارية لشركات خارجية.",
+    'rule4-title':"الخصوصية",
+    'rule4-text':"لا تشارك المعلومات الشخصية لجار دون موافقته.",
+    'menu-jeux':"ألعاب بين الجيران",
+    'games-title':"ألعاب بين الجيران", 'games-active-title':"تحدياتك الجارية",
+    'game1-name':"شطرنج · ضد أمينة ر.", 'game1-meta':"دورك للعب · النقلة 14",
+    'game2-name':"داما · ضد ياسين و.", 'game2-meta':"في انتظار دوره",
+    'games-choose-title':"تحدَّ جاراً",
+    'gt-echecs':"شطرنج", 'gt-dames':"داما", 'gt-belote':"بلوت", 'gt-dominos':"دومينو",
+    'gt-morpion':"إكس أو", 'gt-quiz':"مسابقة",
+    'leaderboard-title':"ترتيب الحي", 'leaderboard-sub':"هذا الشهر",
+    'chess-vs':"ضد أمينة ر.", 'chess-turn':"🟢 دورك للعب",
+    'game-draw':"🤝 اقتراح تعادل", 'game-resign':"🏳️ الاستسلام",
+    'gb-title':"ألعاب بين الجيران", 'gb-sub':"تحديان جاريان · دورك للعب الشطرنج",
+    'gt-scrabble':"سكرابل",
+    'quiz-cat-title':"مسابقات حسب الموضوع",
+    'gt-quiz-algerie':"ثقافة جزائرية", 'gt-quiz-sport':"رياضة",
+    'gt-quiz-religion':"دين", 'gt-quiz-general':"ثقافة عامة",
+    'cat-sondages':"📊 استطلاعات", 'cat-covoit':"🚗 تقاسم السيارة", 'cat-solidarite':"❤️ تضامن",
+    'cs-sondage':"استطلاع", 'cs-covoit':"تقاسم السيارة", 'cs-solidarite':"تضامن",
+    'story-add':"قصتك", 'story-assoc':"جمعية",
+    'poll-author':"جمعية الحي", 'poll-meta':"رسمي · قبل يوم",
+    'badge-sondage':"استطلاع",
+    'poll-question':"لصيانة المساحات الخضراء، تفضل أن نوظف:",
+    'poll-opt1':"بستاني ثابت للحي", 'poll-opt2':"شركة خارجية",
+    'poll-votes':"🗳️ 47 صوت", 'poll-time':"⏱️ يومان متبقيان",
+    'post4-meta':"عمارة D · قبل 6 سا", 'badge-covoit':"تقاسم السيارة",
+    'post4-text':"ننزل لوسط المدينة كل صباح الساعة 8 بالسيارة، عندي مكان فارغ إذا يهم حد من الحي 🚗",
+    'post4-replies':"💬 ردّان",
+    'post5-meta':"عمارة A · قبل يوم", 'badge-solidarite':"تضامن",
+    'post5-text':"شكون يقدر يمر يشوف مدام فاطحة هذا الأسبوع؟ تعيش وحدها في الطابق 2 وما خرجتش من كم يوم ❤️",
+    'post5-replies':"💬 6 ردود",
+    'story-who':"أمينة ر. · قبل ساعتين",
+    'story-caption':"سوق الجمعة نشيط هذا الصباح في الحي 🍊🥬",
+    'menu-services':"خدمات موصى بها",
+    'services-title':"خدمات موصى بها",
+    'services-sub':"محترفون موصى بهم من طرف جيران حقيقيين في باب الزوار.",
+    'service1-cat':"سباك", 'service1-meta':"★ 4.9 · أوصى به 12 جار",
+    'service2-cat':"كهربائي", 'service2-meta':"★ 4.7 · أوصى به 8 جيران",
+    'service3-cat':"أستاذ رياضيات", 'service3-meta':"★ 5.0 · أوصى به 5 جيران",
+    'welcome-title':"رحّب برشيد د.!",
+    'welcome-sub':"جار جديد · عمارة D · وصل هذا الأسبوع",
+    'msgs-title':"الرسائل",
+    'conv1-last':"حسناً، نخبيهالك حتى غداً 👍", 'conv1-time':"14:02",
+    'conv2-last':"ماشي على الساعة 7، نتلاقاو الليلة!", 'conv2-time':"البارح",
+    'conv3-last':"راني موجود على الساعة 8 بالضبط قدام المحطة", 'conv3-time':"الإثنين",
+    'chat-msg1':"صباح الخير! الطاولة مازالت موجودة إذا يهمك الأمر",
+    'chat-msg2':"إيه بالتأكيد، نقدر نجي الليلة؟",
+    'chat-msg3':"حسناً، نخبيهالك حتى غداً 👍",
+    'chat-input-ph':"اكتب رسالة...",
+    'menu-objets':"أدوات للاستعارة",
+    'lend-title':"أدوات للاستعارة",
+    'lend-sub':"استعر بدل ما تشري — هذوما الجيران يسلفو أدواتهم بكل رحابة صدر.",
+    'lend1-owner':"من أحمد ب.", 'lend1-status':"متوفرة",
+    'lend2-owner':"من نادية ح. · مستعارة عند كريم ب.", 'lend2-status':"ترجع يوم 15",
+    'lend3-owner':"من ياسين و.", 'lend3-status':"متوفرة",
+    'menu-groupes':"مجموعات الاهتمام",
+    'groups-title':"مجموعات الاهتمام",
+    'group1-name':"أولياء التلاميذ", 'group1-meta':"86 عضو",
+    'group2-name':"البستنة", 'group2-meta':"34 عضو",
+    'group3-name':"كرة القدم في الحي", 'group3-meta':"52 عضو",
+    'group4-name':"حلقة دراسة دينية", 'group4-meta':"29 عضو",
+    'grp-joined-lbl':"منضم", 'grp-join-lbl':"انضمام",
+    'menu-carte':"خريطة الحي",
+    'map-title':"خريطة الحي",
+    'poi1-name':"صيدلية مناوبة", 'poi1-meta':"صيدلية الأمل · 350 م",
+    'poi2-name':"مدرسة ابتدائية", 'poi2-meta':"مدرسة ابن خلدون · 420 م",
+    'poi3-name':"مسجد", 'poi3-meta':"مسجد النور · 200 م",
+    'poi4-name':"محطة الحافلة", 'poi4-meta':"خط 12 · 150 م",
+    'ob-h5':"قواعد الحي", 'ob-sub5':"يرجى قراءتها قبل البدء واحترامها",
+    'ob-rule1':"احترام الجيران، ممنوع الشتم أو المضايقة.",
+    'ob-rule2':"لا تنبّه إلا بمعلومات موثوقة.",
+    'ob-rule3':"ممنوع الإشهار التجاري أو المحتوى غير اللائق.",
+    'ob-rule4':"3 بلاغات = حظر المحتوى 3 أيام. تكرار = حظر نهائي.",
+    'ob-agree':"فهمت، وألتزم باحترامها",
+    'rule5-title':"الإشراف التلقائي",
+    'rule5-text':"المحتوى الذي يبلّغ عنه 3 جيران مختلفين يُخفى تلقائياً لمدة 3 أيام. في حالة التكرار، يصبح الحظر نهائياً.",
+    'mod-warning-text':"هذه الرسالة تحتوي على كلمات قد تكون غير لائقة. يرجى إعادة الصياغة.",
+    'menu-vacances':"وضع العطلة", 'menu-dechets':"جمع النفايات", 'menu-solidaire':"أعمال تضامنية",
+    'vac-title':"وضع العطلة",
+    'vac-sub':"جار موثوق يراقب منزلك خلال غيابك.",
+    'vac-toggle-lbl':"تفعيل وضع العطلة",
+    'vac-trust-title':"جيران موثوقون",
+    'trust1-meta':"عمارة A", 'trust2-meta':"عمارة C",
+    'vac-notice-text':"✅ وضع العطلة مفعّل — أمينة ر. ستراقب منزلك حتى تعطيله يدوياً.",
+    'waste-title':"جمع النفايات",
+    'waste1-name':"النفايات المنزلية", 'waste1-meta':"الأحد، الثلاثاء، الخميس · تُخرج مساء اليوم السابق",
+    'waste2-name':"قابل لإعادة التدوير (بلاستيك، كرتون)", 'waste2-meta':"الأربعاء",
+    'waste3-name':"الأثاث الكبير", 'waste3-meta':"أول سبت من كل شهر",
+    'waste-reminder':"تذكير مساء اليوم السابق",
+    'solid-title':"أعمال تضامنية",
+    'solid1-name':"حملة التبرع بالدم", 'solid1-meta':"السبت 14، أمام العيادة المتعددة · 9-15",
+    'solid2-name':"حملة جمع الملابس الشتوية", 'solid2-meta':"التسليم عند نادية ح.، عمارة C، قبل يوم 20",
+    'solid3-name':"سلة رمضان لعائلات الحي", 'solid3-meta':"تنظيم جمعية الحي",
+    'solid-join-lbl':"أشارك", 'solid-joined-lbl':"✓ مسجَّل",
+    'sos-title':"تنبيه طوارئ", 'sos-sub':"اختر الجيران الذين تريد تنبيههم فوراً",
+    'sos-select-all':"تنبيه جميع جيراني الموثوقين",
+    'sos-n1-meta':"عمارة A · 350 م", 'sos-n2-meta':"عمارة C · 200 م", 'sos-n3-meta':"عمارة C · 180 م",
+    'sos-send':"🆘 إرسال التنبيه الآن",
+    'sos-sent-title':"تم إرسال التنبيه!",
+    'sos-cancel':"كان إنذاراً كاذباً / إلغاء"
+  }
+};
+
+function setLang(l){
+  currentLang = l;
+  const d = dict[l];
+  const dirVal = l === 'ar' ? 'rtl' : 'ltr';
+  ALL_SCREENS.forEach(id => document.getElementById(id).setAttribute('dir', dirVal));
+  document.getElementById('onboarding').setAttribute('dir', dirVal);
+  document.getElementById('btn-fr').classList.toggle('active', l==='fr');
+  document.getElementById('btn-ar').classList.toggle('active', l==='ar');
+
+  const map = {
+    't-loc':'loc',
+    't-cat-tout':'cat-tout','t-cat-securite':'cat-securite','t-cat-entraide':'cat-entraide',
+    't-cat-annonces':'cat-annonces','t-cat-evenements':'cat-evenements',
+    't-alert1-title':'alert1-title','t-alert1-sub':'alert1-sub',
+    't-post1-meta':'post1-meta','t-badge-entraide-1':'badge-entraide','t-post1-text':'post1-text','t-post1-replies':'post1-replies',
+    't-post2-meta':'post2-meta','t-badge-annonce-1':'badge-annonce','t-post2-text':'post2-text','t-post2-replies':'post2-replies',
+    't-post3-name':'post3-name','t-post3-meta':'post3-meta','t-badge-evenement-1':'badge-evenement','t-post3-text':'post3-text','t-post3-replies':'post3-replies',
+    't-annonces-title':'annonces-title',
+    't-tag-don-1':'tag-don','t-tag-vente-1':'tag-vente','t-tag-don-2':'tag-don',
+    't-listing1-title':'listing1-title','t-listing1-meta':'listing1-meta',
+    't-listing2-title':'listing2-title','t-listing2-meta':'listing2-meta',
+    't-listing3-title':'listing3-title','t-listing3-meta':'listing3-meta',
+    't-alertes-title':'alertes-title','t-alertes-sub':'alertes-sub',
+    't-alertrow1-title':'alertrow1-title','t-alertrow1-meta':'alertrow1-meta',
+    't-alertrow2-title':'alertrow2-title','t-alertrow2-meta':'alertrow2-meta',
+    't-alertrow3-title':'alertrow3-title','t-alertrow3-meta':'alertrow3-meta',
+    't-profil-title':'profil-title','t-profil-name':'profil-name','t-profil-verif':'profil-verif',
+    't-stat-pub':'stat-pub','t-stat-mois':'stat-mois','t-stat-voisins':'stat-voisins',
+    't-reglages-title':'reglages-title','t-menu-pub':'menu-pub','t-menu-notif':'menu-notif','t-menu-quartier':'menu-quartier',
+    't-newpost-title':'newpost-title',
+    't-cs-securite':'cs-securite','t-cs-entraide':'cs-entraide','t-cs-annonce':'cs-annonce','t-cs-evenement':'cs-evenement',
+    't-photo-add':'photo-add','t-publish-btn':'publish-btn',
+    't-detail-meta':'detail-meta','t-badge-entraide-2':'badge-entraide','t-detail-text':'detail-text','t-detail-replies':'detail-replies',
+    't-reponses-title':'reponses-title',
+    't-comment1-text':'comment1-text','t-comment1-time':'comment1-time',
+    't-comment2-text':'comment2-text','t-comment2-time':'comment2-time',
+    't-nav-accueil':'nav-accueil','t-nav-annonces':'nav-annonces','t-nav-publier':'nav-publier',
+    't-nav-alertes':'nav-alertes','t-nav-profil':'nav-profil',
+    't-ob-tagline':'ob-tagline',
+    't-ob-h2':'ob-h2','t-ob-sub2':'ob-sub2','t-ob-prenom-lbl':'ob-prenom-lbl','t-ob-phone-lbl':'ob-phone-lbl','t-ob-createacc':'ob-createacc',
+    't-ob-h3':'ob-h3','t-ob-sub3':'ob-sub3','t-ob-quartier-lbl':'ob-quartier-lbl','t-ob-cite-lbl':'ob-cite-lbl',
+    't-ob-geoloc':'ob-geoloc','t-ob-continue':'ob-continue',
+    't-ob-h4':'ob-h4','t-ob-f1t':'ob-f1t','t-ob-f1s':'ob-f1s','t-ob-f2t':'ob-f2t','t-ob-f2s':'ob-f2s','t-ob-f3t':'ob-f3t','t-ob-f3s':'ob-f3s',
+    't-ob-finish':'ob-finish',
+    't-q-title':'q-title','t-q-members':'q-members','t-q-linked-title':'q-linked-title',
+    't-q-linked-explain':'q-linked-explain','t-q-linked1-meta':'q-linked1-meta','t-q-linked2-meta':'q-linked2-meta',
+    't-q-mod-title':'q-mod-title','t-q-mod-report':'q-mod-report','t-q-mod-rules':'q-mod-rules',
+    't-report-title':'report-title','t-report-1':'report-1','t-report-2':'report-2','t-report-3':'report-3','t-report-4':'report-4',
+    't-home-search-ph':'home-search-ph','t-jiran-search-hint':'jiran-search-hint',
+    't-notif-title':'notif-title','t-notif-cat-securite':'notif-cat-securite','t-notif-alertes':'notif-alertes',
+    't-notif-cat-social':'notif-cat-social','t-notif-reponses':'notif-reponses',
+    't-notif-annonces':'notif-annonces','t-notif-evenements':'notif-evenements',
+    't-mypubs-title':'mypubs-title',
+    't-profil-name-2':'profil-name','t-mypub1-meta':'mypub1-meta','t-badge-entraide-3':'badge-entraide',
+    't-mypub1-text':'mypub1-text','t-mypub1-replies':'mypub1-replies',
+    't-profil-name-3':'profil-name','t-mypub2-meta':'mypub2-meta','t-badge-annonce-2':'badge-annonce',
+    't-mypub2-text':'mypub2-text','t-mypub2-replies':'mypub2-replies',
+    't-rules-title':'rules-title',
+    't-rule1-title':'rule1-title','t-rule1-text':'rule1-text',
+    't-rule2-title':'rule2-title','t-rule2-text':'rule2-text',
+    't-rule3-title':'rule3-title','t-rule3-text':'rule3-text',
+    't-rule4-title':'rule4-title','t-rule4-text':'rule4-text',
+    't-menu-jeux':'menu-jeux',
+    't-games-title':'games-title','t-games-active-title':'games-active-title',
+    't-game1-name':'game1-name','t-game1-meta':'game1-meta',
+    't-game2-name':'game2-name','t-game2-meta':'game2-meta',
+    't-games-choose-title':'games-choose-title',
+    't-gt-echecs':'gt-echecs','t-gt-dames':'gt-dames','t-gt-belote':'gt-belote','t-gt-dominos':'gt-dominos',
+    't-gt-morpion':'gt-morpion','t-gt-quiz':'gt-quiz',
+    't-leaderboard-title':'leaderboard-title','t-leaderboard-sub':'leaderboard-sub',
+    't-chess-vs':'chess-vs','t-chess-turn':'chess-turn',
+    't-game-draw':'game-draw','t-game-resign':'game-resign',
+    't-gb-title':'gb-title','t-gb-sub':'gb-sub',
+    't-gt-scrabble':'gt-scrabble',
+    't-quiz-cat-title':'quiz-cat-title',
+    't-gt-quiz-algerie':'gt-quiz-algerie','t-gt-quiz-sport':'gt-quiz-sport',
+    't-gt-quiz-religion':'gt-quiz-religion','t-gt-quiz-general':'gt-quiz-general',
+    't-cat-sondages':'cat-sondages','t-cat-covoit':'cat-covoit','t-cat-solidarite':'cat-solidarite',
+    't-cs-sondage':'cs-sondage','t-cs-covoit':'cs-covoit','t-cs-solidarite':'cs-solidarite',
+    't-story-add':'story-add','t-story-assoc':'story-assoc',
+    't-poll-author':'poll-author','t-poll-meta':'poll-meta','t-badge-sondage':'badge-sondage',
+    't-poll-question':'poll-question','t-poll-opt1':'poll-opt1','t-poll-opt2':'poll-opt2',
+    't-poll-votes':'poll-votes','t-poll-time':'poll-time',
+    't-post4-meta':'post4-meta','t-badge-covoit':'badge-covoit','t-post4-text':'post4-text','t-post4-replies':'post4-replies',
+    't-post5-meta':'post5-meta','t-badge-solidarite':'badge-solidarite','t-post5-text':'post5-text','t-post5-replies':'post5-replies',
+    't-story-who':'story-who','t-story-caption':'story-caption',
+    't-menu-services':'menu-services','t-services-title':'services-title','t-services-sub':'services-sub',
+    't-service1-cat':'service1-cat','t-service1-meta':'service1-meta',
+    't-service2-cat':'service2-cat','t-service2-meta':'service2-meta',
+    't-service3-cat':'service3-cat','t-service3-meta':'service3-meta',
+    't-welcome-title':'welcome-title','t-welcome-sub':'welcome-sub',
+    't-msgs-title':'msgs-title',
+    't-conv1-last':'conv1-last','t-conv1-time':'conv1-time',
+    't-conv2-last':'conv2-last','t-conv2-time':'conv2-time',
+    't-conv3-last':'conv3-last','t-conv3-time':'conv3-time',
+    't-chat-msg1':'chat-msg1','t-chat-msg2':'chat-msg2','t-chat-msg3':'chat-msg3',
+    't-menu-objets':'menu-objets','t-lend-title':'lend-title','t-lend-sub':'lend-sub',
+    't-lend1-owner':'lend1-owner','t-lend1-status':'lend1-status',
+    't-lend2-owner':'lend2-owner','t-lend2-status':'lend2-status',
+    't-lend3-owner':'lend3-owner','t-lend3-status':'lend3-status',
+    't-menu-groupes':'menu-groupes','t-groups-title':'groups-title',
+    't-group1-name':'group1-name','t-group1-meta':'group1-meta',
+    't-group2-name':'group2-name','t-group2-meta':'group2-meta',
+    't-group3-name':'group3-name','t-group3-meta':'group3-meta',
+    't-group4-name':'group4-name','t-group4-meta':'group4-meta',
+    't-grp-joined':'grp-joined-lbl','t-grp-join1':'grp-join-lbl','t-grp-join2':'grp-join-lbl','t-grp-join3':'grp-join-lbl',
+    't-menu-carte':'menu-carte','t-map-title':'map-title',
+    't-poi1-name':'poi1-name','t-poi1-meta':'poi1-meta',
+    't-poi2-name':'poi2-name','t-poi2-meta':'poi2-meta',
+    't-poi3-name':'poi3-name','t-poi3-meta':'poi3-meta',
+    't-poi4-name':'poi4-name','t-poi4-meta':'poi4-meta',
+    't-ob-h5':'ob-h5','t-ob-sub5':'ob-sub5',
+    't-ob-rule1':'ob-rule1','t-ob-rule2':'ob-rule2','t-ob-rule3':'ob-rule3','t-ob-rule4':'ob-rule4',
+    't-ob-agree':'ob-agree',
+    't-rule5-title':'rule5-title','t-rule5-text':'rule5-text',
+    't-mod-warning-text':'mod-warning-text',
+    't-menu-vacances':'menu-vacances','t-menu-dechets':'menu-dechets','t-menu-solidaire':'menu-solidaire',
+    't-vac-title':'vac-title','t-vac-sub':'vac-sub','t-vac-toggle-lbl':'vac-toggle-lbl',
+    't-vac-trust-title':'vac-trust-title','t-trust1-meta':'trust1-meta','t-trust2-meta':'trust2-meta',
+    't-vac-notice-text':'vac-notice-text',
+    't-waste-title':'waste-title',
+    't-waste1-name':'waste1-name','t-waste1-meta':'waste1-meta',
+    't-waste2-name':'waste2-name','t-waste2-meta':'waste2-meta',
+    't-waste3-name':'waste3-name','t-waste3-meta':'waste3-meta',
+    't-waste-reminder':'waste-reminder',
+    't-solid-title':'solid-title',
+    't-solid1-name':'solid1-name','t-solid1-meta':'solid1-meta','t-solid1-btn':'solid-join-lbl',
+    't-solid2-name':'solid2-name','t-solid2-meta':'solid2-meta','t-solid2-btn':'solid-join-lbl',
+    't-solid3-name':'solid3-name','t-solid3-meta':'solid3-meta','t-solid3-btn':'solid-join-lbl',
+    't-sos-title':'sos-title','t-sos-sub':'sos-sub','t-sos-select-all':'sos-select-all',
+    't-sos-n1-meta':'sos-n1-meta','t-sos-n2-meta':'sos-n2-meta','t-sos-n3-meta':'sos-n3-meta',
+    't-sos-send':'sos-send','t-sos-sent-title':'sos-sent-title','t-sos-cancel':'sos-cancel'
+  };
+  for(const id in map){
+    const el = document.getElementById(id);
+    if(el) el.textContent = d[map[id]];
+  }
+  document.getElementById('compose-textarea').placeholder = l === 'ar' ? 'شنو تحب تشارك مع جيرانك؟' : "Qu'est-ce que tu veux partager avec tes voisins ?";
+  document.getElementById('comment-input').placeholder = d['comment-ph'];
+  document.getElementById('jiran-search-input').placeholder = d['home-search-ph'];
+  document.getElementById('t-chat-input-ph').placeholder = d['chat-input-ph'];
+  if(document.getElementById('screen12').style.display !== 'none'){
+    renderGameLeaderboard();
+  }
+}
+
+const GAME_LEADERBOARD = [
+  {name:'Sofiane K.', wins:22},
+  {name:'Amina R.', wins:19},
+  {name:'Yacine O.', wins:15},
+  {name:'Hafid', wins:11, me:true},
+  {name:'Nadia H.', wins:7}
+];
+
+function renderGameLeaderboard(){
+  const medals = ['🥇','🥈','🥉'];
+  const winsWord = currentLang === 'ar' ? 'فوز' : 'victoires';
+  document.getElementById('game-leaderboard').innerHTML = GAME_LEADERBOARD.map((u,i) => `
+    <div class="lb-row ${i===0 ? 'champion' : ''}">
+      <div class="lb-rank">${i < 3 ? medals[i] : '#'+(i+1)}</div>
+      <div class="lb-avatar">${u.me ? '⭐' : '👤'}</div>
+      <div class="lb-name">${u.name}</div>
+      <div class="lb-count">${u.wins} ${winsWord}</div>
+    </div>`).join('');
+}
+
+function renderChessboard(){
+  const board = [
+    ['♜','♞','♝','♛','♚','♝','♞','♜'],
+    ['♟','♟','♟','♟','','♟','♟','♟'],
+    ['','','','','','','',''],
+    ['','','','','♟','','',''],
+    ['','','','','♙','','',''],
+    ['','','','','','♘','',''],
+    ['♙','♙','♙','♙','','♙','♙','♙'],
+    ['♖','♘','♗','♕','♔','♗','','♖']
+  ];
+  const el = document.getElementById('chessboard');
+  let html = '';
+  for(let r = 0; r < 8; r++){
+    for(let c = 0; c < 8; c++){
+      const isLight = (r + c) % 2 === 0;
+      html += `<div class="cb-sq ${isLight ? 'light' : 'dark'}">${board[r][c]}</div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+renderChessboard();
+</script>
+
+</body>
+</html>
