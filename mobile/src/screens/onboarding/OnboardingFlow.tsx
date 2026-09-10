@@ -1,0 +1,445 @@
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import * as Location from 'expo-location';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Field } from '../../components/Field';
+import { PrimaryButton } from '../../components/PrimaryButton';
+import { NEIGHBORHOODS, findNeighborhood } from '../../data/neighborhoods';
+import { checkPosition } from '../../domain/location';
+import { isValidAlgerianMobile, normalizePhone } from '../../domain/phone';
+import { formatDistance } from '../../domain/time';
+import type { Language, Neighborhood, Session } from '../../domain/types';
+import { useI18n, useLocalizedName } from '../../i18n/I18nProvider';
+import { colors, fontSizes, radii, spacing } from '../../theme/theme';
+import { useRulesCountdown } from './useRulesCountdown';
+
+type Step = 1 | 2 | 3 | 4 | 5;
+
+type PositionStatus =
+  | { kind: 'idle' }
+  | { kind: 'checking' }
+  | { kind: 'verified' }
+  | { kind: 'too-far'; distance: number; suggestion?: Neighborhood }
+  | { kind: 'denied' }
+  | { kind: 'unavailable' };
+
+/**
+ * Parcours d'inscription en 5 étapes (§4.1). La dernière — les règles du
+ * quartier — est obligatoire et son bouton reste verrouillé quelques secondes,
+ * pour garantir une vraie lecture avant l'entrée dans l'application (§3).
+ */
+export function OnboardingFlow({ onDone }: { onDone: (session: Session) => Promise<void> }) {
+  const { s, format, language, setLanguage, rtl } = useI18n();
+  const localizedName = useLocalizedName();
+
+  const [step, setStep] = useState<Step>(1);
+  const [firstName, setFirstName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [errors, setErrors] = useState<{ firstName?: string; phone?: string }>({});
+  const [neighborhoodId, setNeighborhoodId] = useState(NEIGHBORHOODS[0].id);
+  const [building, setBuilding] = useState('');
+  const [position, setPosition] = useState<PositionStatus>({ kind: 'idle' });
+  const [submitting, setSubmitting] = useState(false);
+
+  const neighborhood = useMemo(
+    () => findNeighborhood(neighborhoodId) ?? NEIGHBORHOODS[0],
+    [neighborhoodId]
+  );
+
+  const chooseLanguage = (next: Language) => {
+    setLanguage(next);
+    setStep(2);
+  };
+
+  const submitAccount = () => {
+    const nextErrors: typeof errors = {};
+    if (!firstName.trim()) nextErrors.firstName = s.onboarding.firstNameError;
+    if (!isValidAlgerianMobile(phone)) nextErrors.phone = s.onboarding.phoneError;
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length === 0) setStep(3);
+  };
+
+  /**
+   * Vérification par géolocalisation plutôt que par courrier postal (§2) : on
+   * compare la position réelle au quartier déclaré.
+   */
+  const confirmPosition = useCallback(async () => {
+    setPosition({ kind: 'checking' });
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (permission.status !== Location.PermissionStatus.GRANTED) {
+        setPosition({ kind: 'denied' });
+        return;
+      }
+
+      const reading = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const result = checkPosition(reading.coords, neighborhood, NEIGHBORHOODS);
+
+      setPosition(
+        result.verified
+          ? { kind: 'verified' }
+          : { kind: 'too-far', distance: result.distanceMeters, suggestion: result.suggestion }
+      );
+    } catch {
+      setPosition({ kind: 'unavailable' });
+    }
+  }, [neighborhood]);
+
+  const rules = useRulesCountdown(step === 5);
+
+  const finish = async () => {
+    setSubmitting(true);
+    try {
+      await onDone({
+        firstName: firstName.trim(),
+        phone: normalizePhone(phone),
+        neighborhoodId,
+        building: building.trim() || undefined,
+        language,
+        locationVerified: position.kind === 'verified',
+        rulesAcceptedAt: new Date().toISOString(),
+        joinedAt: new Date().toISOString(),
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={[styles.dots, rtl.row]}>
+          {[1, 2, 3, 4, 5].map((index) => (
+            <View key={index} style={[styles.dot, index === step && styles.dotActive]} />
+          ))}
+        </View>
+
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {step === 1 ? (
+            <View style={styles.center}>
+              <View style={styles.logo}>
+                <Text style={styles.logoText}>🏘️</Text>
+              </View>
+              <Text style={styles.brand}>Jiran</Text>
+              <Text style={styles.tagline}>{s.onboarding.tagline}</Text>
+              <View style={styles.langButtons}>
+                <PrimaryButton
+                  label={`🇩🇿 ${s.onboarding.langFr}`}
+                  tone="ghost"
+                  onPress={() => chooseLanguage('fr')}
+                />
+                <PrimaryButton
+                  label={`🇩🇿 ${s.onboarding.langAr}`}
+                  tone="ghost"
+                  onPress={() => chooseLanguage('ar')}
+                />
+              </View>
+            </View>
+          ) : null}
+
+          {step === 2 ? (
+            <View>
+              <Text style={styles.stepEmoji}>👤</Text>
+              <Text style={[styles.heading, rtl.text]}>{s.onboarding.accountTitle}</Text>
+              <Text style={[styles.sub, rtl.text]}>{s.onboarding.accountSubtitle}</Text>
+
+              <Field
+                label={s.onboarding.firstNameLabel}
+                placeholder={s.onboarding.firstNamePlaceholder}
+                value={firstName}
+                onChangeText={setFirstName}
+                autoCapitalize="words"
+                error={errors.firstName}
+              />
+              <Field
+                label={s.onboarding.phoneLabel}
+                placeholder={s.onboarding.phonePlaceholder}
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+                error={errors.phone}
+                hint={s.onboarding.phoneHint}
+              />
+
+              <PrimaryButton label={s.onboarding.createAccount} onPress={submitAccount} />
+            </View>
+          ) : null}
+
+          {step === 3 ? (
+            <View>
+              <Text style={styles.stepEmoji}>📍</Text>
+              <Text style={[styles.heading, rtl.text]}>{s.onboarding.locationTitle}</Text>
+              <Text style={[styles.sub, rtl.text]}>{s.onboarding.locationSubtitle}</Text>
+
+              <Text style={[styles.label, rtl.text]}>{s.onboarding.neighborhoodLabel}</Text>
+              <View style={styles.neighborhoodList}>
+                {NEIGHBORHOODS.map((item) => {
+                  const active = item.id === neighborhoodId;
+                  return (
+                    <Pressable
+                      key={item.id}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      onPress={() => {
+                        setNeighborhoodId(item.id);
+                        setPosition({ kind: 'idle' });
+                      }}
+                      style={[styles.neighborhoodRow, active && styles.neighborhoodRowActive]}
+                    >
+                      <Text style={[styles.neighborhoodName, rtl.text]}>
+                        {localizedName(item)}
+                      </Text>
+                      <Text style={[styles.neighborhoodWilaya, rtl.text]}>
+                        {language === 'ar' ? item.wilayaAr : item.wilaya}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <Field
+                label={s.onboarding.buildingLabel}
+                placeholder={s.onboarding.buildingPlaceholder}
+                value={building}
+                onChangeText={setBuilding}
+              />
+
+              <PrimaryButton
+                label={
+                  position.kind === 'checking'
+                    ? s.onboarding.positionChecking
+                    : s.onboarding.confirmPosition
+                }
+                tone="ghost"
+                loading={position.kind === 'checking'}
+                onPress={confirmPosition}
+                style={styles.spaced}
+              />
+
+              {position.kind === 'verified' ? (
+                <Text style={[styles.positionOk, rtl.text]}>
+                  {format(s.onboarding.positionOk, { neighborhood: localizedName(neighborhood) })}
+                </Text>
+              ) : null}
+
+              {position.kind === 'too-far' ? (
+                <View>
+                  <Text style={[styles.positionError, rtl.text]}>
+                    {format(s.onboarding.positionTooFar, {
+                      distance: formatDistance(position.distance, language),
+                      neighborhood: localizedName(neighborhood),
+                    })}
+                  </Text>
+                  {position.suggestion ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => {
+                        setNeighborhoodId(position.suggestion!.id);
+                        setPosition({ kind: 'idle' });
+                      }}
+                    >
+                      <Text style={[styles.positionSuggestion, rtl.text]}>
+                        {format(s.onboarding.positionSuggestion, {
+                          neighborhood: localizedName(position.suggestion),
+                        })}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
+
+              {position.kind === 'denied' ? (
+                <Text style={[styles.positionError, rtl.text]}>
+                  {s.onboarding.positionDenied}
+                </Text>
+              ) : null}
+
+              {position.kind === 'unavailable' ? (
+                <Text style={[styles.positionError, rtl.text]}>
+                  {s.onboarding.positionUnavailable}
+                </Text>
+              ) : null}
+
+              <PrimaryButton
+                label={s.onboarding.continue}
+                disabled={position.kind !== 'verified'}
+                onPress={() => setStep(4)}
+                style={styles.spaced}
+              />
+              {position.kind !== 'verified' ? (
+                <Text style={[styles.hint, rtl.text]}>{s.onboarding.mustVerify}</Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          {step === 4 ? (
+            <View>
+              <Text style={[styles.heading, rtl.text]}>{s.onboarding.introTitle}</Text>
+              {[
+                { emoji: '🏘️', title: s.onboarding.intro1Title, text: s.onboarding.intro1Text },
+                { emoji: '🚨', title: s.onboarding.intro2Title, text: s.onboarding.intro2Text },
+                { emoji: '🤝', title: s.onboarding.intro3Title, text: s.onboarding.intro3Text },
+              ].map((feature) => (
+                <View key={feature.title} style={[styles.feature, rtl.row]}>
+                  <Text style={styles.featureEmoji}>{feature.emoji}</Text>
+                  <View style={styles.flex}>
+                    <Text style={[styles.featureTitle, rtl.text]}>{feature.title}</Text>
+                    <Text style={[styles.featureText, rtl.text]}>{feature.text}</Text>
+                  </View>
+                </View>
+              ))}
+              <PrimaryButton
+                label={s.onboarding.discover}
+                onPress={() => setStep(5)}
+                style={styles.spaced}
+              />
+            </View>
+          ) : null}
+
+          {step === 5 ? (
+            <View>
+              <Text style={styles.stepEmoji}>📜</Text>
+              <Text style={[styles.heading, rtl.text]}>{s.onboarding.rulesTitle}</Text>
+              <Text style={[styles.sub, rtl.text]}>{s.onboarding.rulesSubtitle}</Text>
+
+              {[
+                { emoji: '🤝', text: s.onboarding.rule1 },
+                { emoji: '✅', text: s.onboarding.rule2 },
+                { emoji: '🚫', text: s.onboarding.rule3 },
+                { emoji: '⚠️', text: s.onboarding.rule4 },
+              ].map((rule) => (
+                <View key={rule.text} style={[styles.rule, rtl.row]}>
+                  <Text style={styles.ruleEmoji}>{rule.emoji}</Text>
+                  <Text style={[styles.ruleText, rtl.text]}>{rule.text}</Text>
+                </View>
+              ))}
+
+              <PrimaryButton
+                label={
+                  rules.unlocked
+                    ? s.onboarding.agree
+                    : format(s.onboarding.agreeCountdown, { seconds: rules.remaining })
+                }
+                disabled={!rules.unlocked}
+                loading={submitting}
+                onPress={finish}
+                style={styles.spaced}
+              />
+            </View>
+          ) : null}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.paper },
+  flex: { flex: 1 },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl, flexGrow: 1 },
+  dots: {
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+  },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.line },
+  dotActive: { backgroundColor: colors.brand, width: 20 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+  logo: {
+    width: 76,
+    height: 76,
+    borderRadius: radii.lg,
+    backgroundColor: colors.brand,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: { fontSize: 36 },
+  brand: { fontSize: fontSizes.display, fontWeight: '700', color: colors.ink },
+  tagline: {
+    fontSize: fontSizes.body,
+    color: colors.muted,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  langButtons: { alignSelf: 'stretch', gap: spacing.md },
+  stepEmoji: { fontSize: 34, marginBottom: spacing.sm, textAlign: 'center' },
+  heading: { fontSize: fontSizes.heading, fontWeight: '700', color: colors.ink },
+  sub: { fontSize: fontSizes.small, color: colors.muted, marginBottom: spacing.lg, marginTop: 4 },
+  label: {
+    fontSize: fontSizes.small,
+    fontWeight: '600',
+    color: colors.muted,
+    marginBottom: spacing.xs,
+  },
+  neighborhoodList: {
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radii.sm,
+    overflow: 'hidden',
+    marginBottom: spacing.md,
+    backgroundColor: colors.card,
+  },
+  neighborhoodRow: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.line,
+  },
+  neighborhoodRowActive: { backgroundColor: colors.sand },
+  neighborhoodName: { fontSize: fontSizes.body, color: colors.ink, fontWeight: '600' },
+  neighborhoodWilaya: { fontSize: fontSizes.caption, color: colors.muted, marginTop: 2 },
+  spaced: { marginTop: spacing.md },
+  positionOk: { marginTop: spacing.sm, color: colors.aid, fontSize: fontSizes.small },
+  positionError: { marginTop: spacing.sm, color: colors.alert, fontSize: fontSizes.small },
+  positionSuggestion: {
+    marginTop: spacing.xs,
+    color: colors.brand,
+    fontSize: fontSizes.small,
+    fontWeight: '600',
+  },
+  hint: {
+    marginTop: spacing.sm,
+    fontSize: fontSizes.small,
+    color: colors.muted,
+    textAlign: 'center',
+  },
+  feature: {
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    marginTop: spacing.md,
+  },
+  featureEmoji: { fontSize: 22 },
+  featureTitle: { fontSize: fontSizes.body, fontWeight: '700', color: colors.ink },
+  featureText: { fontSize: fontSizes.small, color: colors.muted, marginTop: 2 },
+  rule: {
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  ruleEmoji: { fontSize: fontSizes.title },
+  ruleText: { flex: 1, fontSize: fontSizes.small, lineHeight: 19, color: colors.ink },
+});

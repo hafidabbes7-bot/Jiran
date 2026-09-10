@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Jiran",
+    "slug": "jiran",
+    "scheme": "jiran",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FBF7EF",
+    "locales": {
+      "ar": "./locales/ar.json",
+      "fr": "./locales/fr.json"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Jiran utilise ta position pour vérifier que tu habites bien dans le quartier que tu déclares, et pour joindre ta position à une alerte SOS."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#B5502E",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Jiran utilise ta position pour vérifier ton quartier et pour joindre ta position à une alerte SOS."
+        }
+      ]
+    ]
+  }
+}
