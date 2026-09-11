@@ -13,6 +13,7 @@ import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Field } from '../../components/Field';
+import { NeighborhoodPicker } from '../../components/NeighborhoodPicker';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import type { AuthService, Channel, VerifiedSession } from '../../data/authService';
 import { NEIGHBORHOODS, findNeighborhood } from '../../data/neighborhoods';
@@ -49,16 +50,6 @@ type PositionStatus =
   | { kind: 'denied' }
   | { kind: 'unavailable' };
 
-/** Lignes de quartier affichées d'un coup — au-delà, la recherche prend le relais. */
-const VISIBLE_NEIGHBORHOODS = 12;
-
-/** Compare sans se soucier des accents ni de la casse : « bejaia » trouve Béjaïa. */
-const fold = (value: string) =>
-  value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-
 /**
  * Parcours d'inscription en 5 étapes (§4.1). La dernière — les règles du
  * quartier — est obligatoire et son bouton reste verrouillé quelques secondes,
@@ -87,36 +78,14 @@ export function OnboardingFlow({
   const [availableChannels, setAvailableChannels] = useState<Channel[]>(['sms']);
   const [verified, setVerified] = useState<VerifiedSession | null>(null);
   const [errors, setErrors] = useState<{ firstName?: string; phone?: string }>({});
-  const [neighborhoodId, setNeighborhoodId] = useState(NEIGHBORHOODS[0].id);
+  // Rien n'est choisi d'avance : un quartier pré-sélectionné serait accepté
+  // par distraction, et ce choix décide de qui sont « tes voisins ».
+  const [neighborhoodId, setNeighborhoodId] = useState('');
   const [building, setBuilding] = useState('');
-  const [neighborhoodQuery, setNeighborhoodQuery] = useState('');
   const [position, setPosition] = useState<PositionStatus>({ kind: 'idle' });
   const [submitting, setSubmitting] = useState(false);
 
-  const neighborhood = useMemo(
-    () => findNeighborhood(neighborhoodId) ?? NEIGHBORHOODS[0],
-    [neighborhoodId]
-  );
-
-  // 97 quartiers ne tiennent pas dans une liste qu'on parcourt : on filtre sur
-  // le nom et sur la wilaya, dans les deux langues.
-  const matching = useMemo(() => {
-    const query = neighborhoodQuery.trim();
-    if (!query) return NEIGHBORHOODS;
-    const needle = fold(query);
-    return NEIGHBORHOODS.filter((item) =>
-      [item.name, item.nameAr, item.daira, item.wilaya, item.wilayaAr].some((field) =>
-        fold(field).includes(needle)
-      )
-    );
-  }, [neighborhoodQuery]);
-
-  // Le quartier choisi reste visible même s'il sort du filtre : sans ça, on ne
-  // voit plus ce qu'on a sélectionné.
-  const visible = useMemo(() => {
-    const head = matching.slice(0, VISIBLE_NEIGHBORHOODS);
-    return head.some((item) => item.id === neighborhoodId) ? head : [neighborhood, ...head];
-  }, [matching, neighborhood, neighborhoodId]);
+  const neighborhood = useMemo(() => findNeighborhood(neighborhoodId), [neighborhoodId]);
 
   const selectNeighborhood = useCallback((id: string) => {
     setNeighborhoodId(id);
@@ -262,6 +231,7 @@ export function OnboardingFlow({
    * compare la position réelle au quartier déclaré.
    */
   const confirmPosition = useCallback(async () => {
+    if (!neighborhood) return;
     setPosition({ kind: 'checking' });
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
@@ -324,7 +294,6 @@ export function OnboardingFlow({
       }
 
       setNeighborhoodId(coverage.neighborhood.id);
-      setNeighborhoodQuery('');
       setPosition({ kind: 'verified' });
     } catch {
       setPosition({ kind: 'unavailable' });
@@ -574,53 +543,14 @@ export function OnboardingFlow({
               />
 
               <View style={styles.spaced}>
-                <Field
-                  label={s.onboarding.neighborhoodLabel}
-                  placeholder={s.onboarding.neighborhoodSearchPlaceholder}
-                  value={neighborhoodQuery}
-                  onChangeText={setNeighborhoodQuery}
-                  autoCapitalize="none"
-                  autoCorrect={false}
+                <NeighborhoodPicker
+                  value={neighborhoodId}
+                  onChange={(id) => {
+                    setNeighborhoodId(id);
+                    setPosition({ kind: 'idle' });
+                  }}
                 />
               </View>
-
-              {matching.length === 0 ? (
-                <Text style={[styles.listHint, rtl.text]}>
-                  {format(s.onboarding.neighborhoodNoMatch, { query: neighborhoodQuery.trim() })}
-                </Text>
-              ) : (
-                <View style={styles.neighborhoodList}>
-                  {visible.map((item) => {
-                    const active = item.id === neighborhoodId;
-                    return (
-                      <Pressable
-                        key={item.id}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: active }}
-                        onPress={() => selectNeighborhood(item.id)}
-                        style={[styles.neighborhoodRow, active && styles.neighborhoodRowActive]}
-                      >
-                        <Text style={[styles.neighborhoodName, rtl.text]}>
-                          {localizedName(item)}
-                        </Text>
-                        <Text style={[styles.neighborhoodWilaya, rtl.text]}>
-                          {language === 'ar'
-                            ? item.wilayaAr
-                            : `${item.daira} · ${item.wilaya}`}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              )}
-
-              {matching.length > VISIBLE_NEIGHBORHOODS ? (
-                <Text style={[styles.listHint, rtl.text]}>
-                  {format(s.onboarding.neighborhoodMore, {
-                    count: matching.length - VISIBLE_NEIGHBORHOODS,
-                  })}
-                </Text>
-              ) : null}
 
               <Field
                 label={s.onboarding.buildingLabel}
@@ -637,13 +567,16 @@ export function OnboardingFlow({
                 }
                 tone="ghost"
                 loading={position.kind === 'checking'}
+                disabled={!neighborhood}
                 onPress={confirmPosition}
                 style={styles.spaced}
               />
 
               {position.kind === 'verified' ? (
                 <Text style={[styles.positionOk, rtl.text]}>
-                  {format(s.onboarding.positionOk, { neighborhood: localizedName(neighborhood) })}
+                  {format(s.onboarding.positionOk, {
+                    neighborhood: neighborhood ? localizedName(neighborhood) : '',
+                  })}
                 </Text>
               ) : null}
 
@@ -652,7 +585,7 @@ export function OnboardingFlow({
                   <Text style={[styles.positionError, rtl.text]}>
                     {format(s.onboarding.positionTooFar, {
                       distance: formatDistance(position.distance, language),
-                      neighborhood: localizedName(neighborhood),
+                      neighborhood: neighborhood ? localizedName(neighborhood) : '',
                     })}
                   </Text>
                   {position.suggestion ? (

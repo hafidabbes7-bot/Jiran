@@ -154,8 +154,16 @@ chez les voisins choisis comme chez son auteur, qui peut l'annuler de là.
 
 ## Couverture du territoire
 
-`mobile/src/data/neighborhoods.ts` contient **les 1541 communes d'Algérie**, avec
-leur daïra et leur wilaya — les 69 wilayas du découpage de 2026 (loi n° 26-06),
+Jiran couvre deux pays. `mobile/src/data/neighborhoods.ts` contient **les 1541
+communes d'Algérie** et **les 13 provinces et territoires du Canada**, où vivent
+des proches des premiers voisins. Le choix du lieu se fait par paliers : wilaya →
+daïra → commune en Algérie, province au Canada — le découpage canadien n'a pas
+d'équivalent utile de la commune, et la position n'y confirme donc que la
+province, ce que l'écran dit franchement. Une recherche libre court-circuite les
+paliers.
+
+Côté algérien, cette liste contient donc, avec
+leur daïra et leur wilaya, les 69 wilayas du découpage de 2026 (loi n° 26-06),
 dont les 11 dernières, codes 59 à 69. Les noms bilingues, les daïras et les
 coordonnées viennent du jeu de données public `geoalgeria`. La recherche de
 l'inscription porte sur les trois : commune, daïra, wilaya, en français comme en

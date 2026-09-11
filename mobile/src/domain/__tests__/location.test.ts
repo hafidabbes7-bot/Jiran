@@ -57,7 +57,9 @@ describe('findCoverage', () => {
 
 describe('couverture du territoire', () => {
   it('propose une entrée pour chacune des 69 wilayas', () => {
-    const codes = new Set(NEIGHBORHOODS.map((n) => n.wilayaCode));
+    const codes = new Set(
+      NEIGHBORHOODS.filter((n) => n.country === 'DZ').map((n) => n.regionCode)
+    );
     for (let i = 1; i <= 69; i += 1) {
       expect(codes.has(String(i).padStart(2, '0'))).toBe(true);
     }
@@ -65,17 +67,37 @@ describe('couverture du territoire', () => {
 
   it('connaît les wilayas créées en 2026', () => {
     const bouSaada = NEIGHBORHOODS.find((n) => n.id === 'bou-saada');
-    expect(bouSaada?.wilayaCode).toBe('68');
-    expect(bouSaada?.wilaya).toBe('Bou Saâda');
+    expect(bouSaada?.regionCode).toBe('68');
+    expect(bouSaada?.region).toBe('Bou Saâda');
   });
 
-  it('ne place aucun quartier hors d’Algérie', () => {
+  it('ne place aucun lieu hors de son pays', () => {
+    const limites = {
+      DZ: { lat: [18, 38], lon: [-9, 12] },
+      CA: { lat: [41, 84], lon: [-142, -52] },
+    } as const;
+
     for (const n of NEIGHBORHOODS) {
-      expect(n.latitude).toBeGreaterThan(18);
-      expect(n.latitude).toBeLessThan(38);
-      expect(n.longitude).toBeGreaterThan(-9);
-      expect(n.longitude).toBeLessThan(12);
+      const limite = limites[n.country];
+      expect(n.latitude).toBeGreaterThan(limite.lat[0]);
+      expect(n.latitude).toBeLessThan(limite.lat[1]);
+      expect(n.longitude).toBeGreaterThan(limite.lon[0]);
+      expect(n.longitude).toBeLessThan(limite.lon[1]);
     }
+  });
+
+  it('couvre les 13 provinces et territoires du Canada', () => {
+    const canada = NEIGHBORHOODS.filter((n) => n.country === 'CA');
+    expect(canada).toHaveLength(13);
+    expect(canada.map((n) => n.regionCode)).toContain('QC');
+    // Au Canada on s'arrête à la province : pas de palier en dessous.
+    expect(canada.every((n) => n.subRegion === undefined)).toBe(true);
+  });
+
+  it('garde la daïra pour chaque commune algérienne', () => {
+    const algerie = NEIGHBORHOODS.filter((n) => n.country === 'DZ');
+    expect(algerie).toHaveLength(1541);
+    expect(algerie.every((n) => Boolean(n.subRegion))).toBe(true);
   });
 
   it('ne jumelle qu’avec des quartiers existants', () => {

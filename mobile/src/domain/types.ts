@@ -6,17 +6,22 @@ export type CategoryFilter = Category | 'tout';
 
 export type Language = 'fr' | 'ar';
 
+/** Pays couverts par Jiran. */
+export type Country = 'DZ' | 'CA';
+
 export interface Neighborhood {
   id: string;
+  country: Country;
   /** Nom du quartier / de la commune, tel qu'utilisé aussi par As3ar. */
   name: string;
   nameAr: string;
-  wilaya: string;
-  wilayaAr: string;
-  /** Code de wilaya officiel, de 01 à 69 (16 = Alger, 06 = Béjaïa...). */
-  wilayaCode: string;
-  /** Daïra dont dépend la commune — sert à s'y retrouver dans la recherche. */
-  daira: string;
+  /** Wilaya en Algérie, province au Canada. */
+  region: string;
+  regionAr: string;
+  /** Code officiel : « 06 » pour Béjaïa, « QC » pour le Québec. */
+  regionCode: string;
+  /** Daïra en Algérie ; absent au Canada, où le découpage s'arrête à la province. */
+  subRegion?: string;
   latitude: number;
   longitude: number;
   /** Rayon accepté pour la vérification par géolocalisation, en mètres. */

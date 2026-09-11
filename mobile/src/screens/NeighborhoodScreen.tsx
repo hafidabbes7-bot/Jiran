@@ -60,7 +60,7 @@ export function NeighborhoodScreen({ navigation }: Props) {
             <View key={item.id} style={styles.twinRow}>
               <Text style={[styles.twinName, rtl.text]}>{localizedName(item)}</Text>
               <Text style={[styles.twinMeta, rtl.text]}>
-                {item.daira} · {language === 'ar' ? item.wilayaAr : item.wilaya}
+                {item.subRegion} · {language === 'ar' ? item.regionAr : item.region}
               </Text>
             </View>
           ))}

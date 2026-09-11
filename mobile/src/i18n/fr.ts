@@ -418,6 +418,19 @@ export const fr = {
     leaveAction: 'Je me retire',
   },
 
+  places: {
+    countries: { DZ: 'Algérie', CA: 'Canada' },
+    label: { DZ: 'Wilaya, daïra, commune', CA: 'Province' },
+    search: { DZ: 'Chercher une commune, une daïra, une wilaya', CA: 'Chercher une province' },
+    communes: '{count} communes',
+    provinceHint: 'Province',
+    more: '+{count} autres — précise ta recherche.',
+    noMatch: 'Rien ne correspond à « {query} ».',
+    chosen: 'Choisi : {place}',
+    provinceScale:
+      'Au Canada, Jiran s’arrête à la province : la position confirme que tu y es, pas que tu habites tel quartier.',
+  },
+
   nav: {
     feed: 'Accueil',
     alerts: 'Alertes',

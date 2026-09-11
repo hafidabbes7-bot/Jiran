@@ -95,7 +95,7 @@ export function FeedScreen({ navigation }: Props) {
                 <Text style={[styles.title, rtl.text]}>Jiran</Text>
                 <Text style={[styles.location, rtl.text]}>
                   📍 {neighborhood ? localizedName(neighborhood) : ''}
-                  {neighborhood ? ` · ${language === 'ar' ? neighborhood.wilayaAr : neighborhood.wilaya}` : ''}
+                  {neighborhood ? ` · ${language === 'ar' ? neighborhood.regionAr : neighborhood.region}` : ''}
                 </Text>
               </View>
 

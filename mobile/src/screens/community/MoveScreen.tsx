@@ -4,6 +4,7 @@ import * as Location from 'expo-location';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { Field } from '../../components/Field';
+import { NeighborhoodPicker } from '../../components/NeighborhoodPicker';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { NEIGHBORHOODS, findNeighborhood } from '../../data/neighborhoods';
 import { checkPosition, findCoverage } from '../../domain/location';
@@ -15,15 +16,6 @@ import type { RootStackParamList } from '../../navigation/types';
 import { Card, CommunityScreen, styles } from './shared';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Move'>;
-
-/** Lignes affichées d'un coup — au-delà, la recherche prend le relais. */
-const VISIBLE = 12;
-
-const fold = (value: string) =>
-  value
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase();
 
 type Position =
   | { kind: 'idle' }
@@ -52,7 +44,6 @@ export function MoveScreen({ navigation }: Props) {
   const localizedName = useLocalizedName();
   const { session, move } = useApp();
 
-  const [query, setQuery] = useState('');
   const [choix, setChoix] = useState(session?.neighborhoodId ?? NEIGHBORHOODS[0]!.id);
   const [building, setBuilding] = useState(session?.building ?? '');
   const [position, setPosition] = useState<Position>({ kind: 'idle' });
@@ -60,22 +51,6 @@ export function MoveScreen({ navigation }: Props) {
   const [failed, setFailed] = useState(false);
 
   const quartier = useMemo(() => findNeighborhood(choix) ?? NEIGHBORHOODS[0]!, [choix]);
-
-  const matching = useMemo(() => {
-    const needle = query.trim();
-    if (!needle) return NEIGHBORHOODS;
-    const folded = fold(needle);
-    return NEIGHBORHOODS.filter((item) =>
-      [item.name, item.nameAr, item.daira, item.wilaya, item.wilayaAr].some((field) =>
-        fold(field).includes(folded)
-      )
-    );
-  }, [query]);
-
-  const visible = useMemo(() => {
-    const head = matching.slice(0, VISIBLE);
-    return head.some((item) => item.id === choix) ? head : [quartier, ...head];
-  }, [matching, quartier, choix]);
 
   const lirePosition = useCallback(async () => {
     const permission = await Location.requestForegroundPermissionsAsync();
@@ -103,7 +78,6 @@ export function MoveScreen({ navigation }: Props) {
       }
 
       setChoix(coverage.neighborhood.id);
-      setQuery('');
       setPosition({ kind: 'verified' });
     } catch {
       setPosition({ kind: 'unavailable' });
@@ -167,44 +141,14 @@ export function MoveScreen({ navigation }: Props) {
       />
 
       <View style={styles.spaced}>
-        <Field
-          label={s.onboarding.neighborhoodLabel}
-          placeholder={s.onboarding.neighborhoodSearchPlaceholder}
-          value={query}
-          onChangeText={setQuery}
-          autoCapitalize="none"
-          autoCorrect={false}
+        <NeighborhoodPicker
+          value={choix}
+          onChange={(id) => {
+            setChoix(id);
+            setPosition({ kind: 'idle' });
+          }}
         />
       </View>
-
-      {visible.map((item) => {
-        const active = item.id === choix;
-        return (
-          <Pressable
-            key={item.id}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-            accessibilityLabel={localizedName(item)}
-            onPress={() => {
-              setChoix(item.id);
-              setPosition({ kind: 'idle' });
-            }}
-          >
-            <Card style={active ? styles.pillActive : undefined}>
-              <Text style={[styles.title, rtl.text]}>{localizedName(item)}</Text>
-              <Text style={[styles.meta, rtl.text]}>
-                {language === 'ar' ? item.wilayaAr : `${item.daira} · ${item.wilaya}`}
-              </Text>
-            </Card>
-          </Pressable>
-        );
-      })}
-
-      {matching.length > VISIBLE ? (
-        <Text style={[styles.meta, rtl.text]}>
-          {format(s.onboarding.neighborhoodMore, { count: matching.length - VISIBLE })}
-        </Text>
-      ) : null}
 
       <View style={styles.spaced}>
         <Field

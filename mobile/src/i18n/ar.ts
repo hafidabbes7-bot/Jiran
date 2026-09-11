@@ -410,6 +410,19 @@ export const ar: Strings = {
     leaveAction: 'أنسحب',
   },
 
+  places: {
+    countries: { DZ: 'الجزائر', CA: 'كندا' },
+    label: { DZ: 'الولاية، الدائرة، البلدية', CA: 'المقاطعة' },
+    search: { DZ: 'ابحث عن بلدية أو دائرة أو ولاية', CA: 'ابحث عن مقاطعة' },
+    communes: '{count} بلدية',
+    provinceHint: 'مقاطعة',
+    more: '+{count} أخرى — دقّق بحثك.',
+    noMatch: 'لا شيء يطابق « {query} ».',
+    chosen: 'المختار : {place}',
+    provinceScale:
+      'في كندا يتوقف جيران عند المقاطعة : الموقع يؤكد أنك فيها، لا أنك تسكن حياً بعينه.',
+  },
+
   nav: {
     feed: 'الرئيسية',
     alerts: 'تنبيهات',
