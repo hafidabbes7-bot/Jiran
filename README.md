@@ -66,6 +66,13 @@ cahier des charges pour la liste exacte de ce qui est factice.
 Il sert de référence visuelle et fonctionnelle pour le développement réel — il
 n'est **pas destiné à être réutilisé tel quel** comme base de code.
 
+## Mettre en ligne, sans ordinateur
+
+L'application complète peut être déployée depuis un navigateur de téléphone :
+elle tourne alors à une adresse `https://` publique, que vos voisins ouvrent
+sans rien installer. Dix minutes, pas à pas :
+[`docs/mettre-en-ligne.md`](docs/mettre-en-ligne.md).
+
 ## Essayer sur un vrai téléphone
 
 Tout a été vérifié depuis un navigateur ; la géolocalisation réelle, le rendu

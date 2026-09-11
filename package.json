@@ -5,6 +5,11 @@
   "scripts": {
     "install:all": "npm install --prefix server && npm install --prefix mobile",
     "essai": "node scripts/essai.mjs",
-    "test": "npm test --prefix server && npm test --prefix mobile"
+    "test": "npm test --prefix server && npm test --prefix mobile",
+    "build": "npm ci --prefix server && npm ci --prefix mobile && npm run build:web --prefix mobile",
+    "start": "WEB_DIR=\"$PWD/mobile/dist\" npm start --prefix server"
+  },
+  "engines": {
+    "node": ">=22.7"
   }
 }

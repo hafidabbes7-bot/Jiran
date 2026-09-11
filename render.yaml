@@ -1,0 +1,44 @@
+# Déploiement en un clic, depuis un navigateur — aucun ordinateur nécessaire.
+#
+# ⚠️ CONFIGURATION D'ESSAI, pas de production. Aucun SMS n'est envoyé : le code
+# de vérification est rempli automatiquement dans l'application, pour pouvoir
+# faire essayer à des voisins sans contrat d'agrégateur. Pour un vrai
+# lancement, il faut renseigner SMS_PROVIDER et retirer EXPOSE_DEV_CODE
+# (voir server/README.md).
+services:
+  - type: web
+    name: jiran-essai
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.20.0
+
+      # Secrets tirés au hasard par l'hébergeur : ils ne passent jamais par le
+      # dépôt ni par un écran.
+      - key: OTP_SECRET
+        generateValue: true
+      - key: SESSION_SECRET
+        generateValue: true
+
+      # Le code s'affiche dans l'application au lieu d'être envoyé par SMS.
+      - key: SMS_PROVIDER
+        value: console
+      - key: EXPOSE_DEV_CODE
+        value: 'true'
+      - key: PUSH_PROVIDER
+        value: console
+
+      # L'application et l'API partagent la même adresse : rien à configurer
+      # côté téléphone, le navigateur trouve le serveur tout seul.
+      - key: CORS_ORIGINS
+        value: ''
+
+      # Numéros des modérateurs, séparés par des virgules. À renseigner dans le
+      # tableau de bord de l'hébergeur avec votre propre numéro.
+      - key: MODERATOR_PHONES
+        value: ''
