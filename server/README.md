@@ -40,10 +40,37 @@ promettre un message qui n'arrivera jamais.
 Tout passe par l'interface `MessageProvider` (`src/messaging/provider.ts`) :
 ajouter un canal ou changer d'agrégateur, c'est écrire un fichier.
 
-| Canal | Ouvert quand | Fournisseur |
+| Canal | Coût | Ouvert quand |
 | --- | --- | --- |
-| SMS | `SMS_PROVIDER` vaut `console`, `http` ou `twilio` (`none` le ferme) | agrégateur local, Twilio, ou console en développement |
-| WhatsApp | `WHATSAPP_PHONE_NUMBER_ID` et `WHATSAPP_ACCESS_TOKEN` sont renseignés | WhatsApp Cloud API (Meta) |
+| **WhatsApp gratuit** | **aucun envoi, donc rien à payer** | `WHATSAPP_BUSINESS_NUMBER`, `WHATSAPP_APP_SECRET` et `WHATSAPP_VERIFY_TOKEN` sont renseignés |
+| SMS | facturé au message par l'agrégateur | `SMS_PROVIDER` vaut `console`, `http` ou `twilio` (`none` le ferme) |
+| WhatsApp (modèle) | facturé au message par Meta | `WHATSAPP_PHONE_NUMBER_ID` et `WHATSAPP_ACCESS_TOKEN` sont renseignés |
+
+### Le canal gratuit, et pourquoi il est aussi le plus sûr
+
+Aucun fournisseur ne délivre de SMS gratuitement, et les modèles WhatsApp
+« authentification » sont facturés au message. Le canal gratuit inverse donc le
+sens du message : **c'est le voisin qui nous écrit**, pas nous.
+
+1. L'application demande un défi ; le serveur prépare un jeton et renvoie un
+   lien `wa.me` au message pré-rempli. **Rien n'est envoyé.**
+2. Le voisin touche le bouton, WhatsApp s'ouvre, il envoie le message.
+3. Meta nous notifie sur `POST /webhooks/whatsapp`. Recevoir un message ne
+   coûte rien — la facturation de Meta porte sur les messages que l'entreprise
+   **envoie**. Jiran ne répond pas, donc la note reste à zéro.
+4. L'application, qui interrogeait `POST /auth/verify-link`, reçoit la session.
+
+La preuve est même meilleure qu'un code recopié : le numéro d'origine nous est
+donné par Meta, il n'est pas saisi par l'utilisateur. Deux conditions sont
+exigées avant de confirmer — le jeton doit correspondre **et** le message doit
+venir du numéro déclaré. Sans le second contrôle, quelqu'un qui devinerait un
+jeton ferait valider sa propre ligne à la place du voisin, dont l'application
+s'ouvrirait alors sur le compte de l'inconnu.
+
+Limites à connaître : il faut un compte WhatsApp Business (l'accès à la
+plateforme est gratuit) et une URL publique en HTTPS pour le webhook ; et cela
+ne sert que les voisins qui ont WhatsApp — d'où l'intérêt de garder le SMS en
+second choix.
 
 En développement avec `SMS_PROVIDER=console`, **les deux canaux sont ouverts**
 et rien n'est envoyé : le choix à l'inscription se teste sans compte WhatsApp
@@ -68,9 +95,12 @@ complément au SMS, pas un remplacement.
 
 | Route | Effet |
 | --- | --- |
-| `GET /auth/channels` | Canaux proposés à l'inscription (`sms`, `whatsapp`) |
+| `GET /auth/channels` | Canaux proposés à l'inscription (`whatsapp_link`, `sms`, `whatsapp`) |
 | `POST /auth/request-code` `{ phone, channel }` | Envoie un code par le canal demandé (SMS par défaut), renvoie `challengeId` |
 | `POST /auth/verify-code` `{ challengeId, code }` | Vérifie le code, renvoie `{ phone, token }` |
+| `POST /auth/verify-link` `{ challengeId }` | Relève le défi gratuit : `202` tant que le message n'est pas arrivé, sinon `{ phone, token }` |
+| `GET /webhooks/whatsapp` | Validation de l'URL par Meta |
+| `POST /webhooks/whatsapp` | Messages entrants — signature `X-Hub-Signature-256` vérifiée avant toute lecture |
 | `GET /auth/me` (`Authorization: Bearer …`) | Renvoie le numéro associé au jeton |
 | `GET /health` | État du serveur et fournisseur SMS actif |
 
@@ -94,6 +124,11 @@ projet, et un code à 6 chiffres se devine en quelques milliers d'essais.
 - Comparaison à **temps constant**, codes tirés avec `crypto.randomInt`.
 - Les journaux ne contiennent **jamais le numéro entier** ni le code.
 - Le jeton de session est signé (HMAC-SHA256), avec un seul algorithme accepté.
+- Les webhooks entrants sont **rejetés sans signature Meta valide** : sans ce
+  contrôle, quiconque connaît l'URL déclarerait n'importe quel numéro vérifié.
+- Le jeton du canal gratuit fait 12 caractères tirés au hasard : il voyage dans
+  un message imitable et n'est pas protégé par un compteur d'essais, il doit
+  donc être hors de portée d'une recherche exhaustive.
 
 ## À reprendre avant la mise en production
 

@@ -89,6 +89,16 @@ export const config = {
     accessToken: process.env.WHATSAPP_ACCESS_TOKEN ?? '',
     templateName: process.env.WHATSAPP_TEMPLATE_NAME ?? 'jiran_verification',
     templateLanguage: process.env.WHATSAPP_TEMPLATE_LANGUAGE ?? 'fr',
+
+    /**
+     * Numéro WhatsApp de Jiran, au format international sans « + ». C'est vers
+     * lui que le voisin envoie son jeton dans la vérification gratuite.
+     */
+    businessNumber: process.env.WHATSAPP_BUSINESS_NUMBER ?? '',
+    /** Secret de l'application Meta, qui signe les webhooks entrants. */
+    appSecret: process.env.WHATSAPP_APP_SECRET ?? '',
+    /** Jeton choisi par vous, que Meta renvoie pour valider l'URL du webhook. */
+    verifyToken: process.env.WHATSAPP_VERIFY_TOKEN ?? '',
   },
 
   /**

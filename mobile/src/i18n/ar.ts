@@ -32,7 +32,19 @@ export const ar: Strings = {
     channelLabel: 'استلام الرمز عبر',
     channelSms: '💬 رسالة قصيرة',
     channelWhatsapp: '🟢 واتساب',
+    channelWhatsappLink: '🟢 واتساب (مجاني)',
+    channelFreeHint:
+      'مع واتساب المجاني، أنت من يرسل لنا الرسالة: واتساب نفسه يؤكّد رقمك.',
     channelUnavailable: 'هذه القناة غير متاحة حالياً. جرّب الأخرى.',
+
+    linkTitle: 'أرسل لنا رسالة',
+    linkSubtitle:
+      'اضغط الزر: يفتح واتساب برسالة جاهزة. أرسلها كما هي، وسنتعرّف على رقمك تلقائياً.',
+    linkOpen: 'فتح واتساب',
+    linkWaiting: 'في انتظار رسالتك…',
+    linkOpenFailed: 'تعذّر فتح واتساب. هل هو مثبّت على هذا الهاتف؟',
+    linkExpired: 'انتهت صلاحية الطلب. أعد المحاولة.',
+    linkManual: 'أو أرسل هذه الرسالة إلى {number} : {message}',
 
     codeTitle: 'تأكيد رقمك',
     codeSubtitle: 'أرسلنا رمزاً من {length} أرقام إلى {phone} عبر {channel}.',

@@ -7,13 +7,25 @@
  * de lire le code dans le trafic ou de contourner l'écran.
  */
 
-/** Canal par lequel le voisin reçoit son code. */
-export type Channel = 'sms' | 'whatsapp';
+/**
+ * Manière de prouver le numéro :
+ * - `sms` et `whatsapp` : on reçoit un code (le projet paie l'envoi) ;
+ * - `whatsapp_link` : c'est le voisin qui envoie un message depuis son
+ *   WhatsApp, donc rien n'est facturé.
+ */
+export type Channel = 'sms' | 'whatsapp' | 'whatsapp_link';
+
+/** Liste de référence des canaux : un canal ajouté ici l'est partout. */
+export const CHANNELS: readonly Channel[] = ['whatsapp_link', 'sms', 'whatsapp'];
+
+const isChannel = (value: unknown): value is Channel => CHANNELS.includes(value as Channel);
 
 /** Adresse de l'API, injectée à la compilation par Expo (`EXPO_PUBLIC_*`). */
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000';
 
-export interface Challenge {
+/** Défi classique : un code a été envoyé, il faut le recopier. */
+export interface CodeChallenge {
+  mode: 'code';
   challengeId: string;
   /** Fin de validité du code, en millisecondes Unix. */
   expiresAt: number;
@@ -22,6 +34,18 @@ export interface Challenge {
   /** Présent uniquement quand le serveur tourne en mode développement. */
   devCode?: string;
 }
+
+/** Défi gratuit : c'est le voisin qui envoie le jeton depuis WhatsApp. */
+export interface LinkChallenge {
+  mode: 'link';
+  challengeId: string;
+  expiresAt: number;
+  /** Lien `wa.me` à ouvrir, message déjà rempli. */
+  link: string;
+  token: string;
+}
+
+export type Challenge = CodeChallenge | LinkChallenge;
 
 export type RequestCodeResult =
   | ({ ok: true } & Challenge)
@@ -42,11 +66,17 @@ export type VerifyCodeResult =
       reason: 'expired' | 'consumed' | 'not_found' | 'too_many_attempts' | 'network';
     };
 
+export type ClaimLinkResult =
+  | ({ ok: true } & VerifiedSession)
+  | { ok: false; reason: 'pending' | 'expired' | 'consumed' | 'not_found' | 'network' };
+
 export interface AuthService {
   /** Canaux réellement ouverts côté serveur. */
   listChannels(): Promise<Channel[]>;
   requestCode(phone: string, channel: Channel): Promise<RequestCodeResult>;
   verifyCode(challengeId: string, code: string): Promise<VerifyCodeResult>;
+  /** Interrogé en boucle pendant que le voisin envoie son message WhatsApp. */
+  claimLink(challengeId: string): Promise<ClaimLinkResult>;
 }
 
 /** Coupe l'attente : sans cela, un serveur injoignable fige l'inscription. */
@@ -96,9 +126,7 @@ export class HttpAuthService implements AuthService {
     try {
       const { data } = await requestJson('/auth/channels', { method: 'GET' });
       const channels = Array.isArray(data.channels) ? data.channels : [];
-      return channels.filter(
-        (channel): channel is Channel => channel === 'sms' || channel === 'whatsapp'
-      );
+      return channels.filter(isChannel);
     } catch {
       // Serveur injoignable : on garde le SMS, le message d'erreur viendra de
       // la tentative d'envoi elle-même.
@@ -111,8 +139,20 @@ export class HttpAuthService implements AuthService {
       const { status, data } = await postJson('/auth/request-code', { phone, channel });
 
       if (status === 200) {
+        if (data.mode === 'link') {
+          return {
+            ok: true,
+            mode: 'link',
+            challengeId: asString(data.challengeId),
+            expiresAt: asNumber(data.expiresAt),
+            link: asString(data.link),
+            token: asString(data.token),
+          };
+        }
+
         return {
           ok: true,
+          mode: 'code',
           challengeId: asString(data.challengeId),
           expiresAt: asNumber(data.expiresAt),
           resendAfter: asNumber(data.resendAfter),
@@ -151,6 +191,24 @@ export class HttpAuthService implements AuthService {
 
       const known = ['expired', 'consumed', 'not_found', 'too_many_attempts'] as const;
       const reason = known.find((value) => value === error);
+      return { ok: false, reason: reason ?? 'not_found' };
+    } catch {
+      return { ok: false, reason: 'network' };
+    }
+  }
+
+  async claimLink(challengeId: string): Promise<ClaimLinkResult> {
+    try {
+      const { status, data } = await postJson('/auth/verify-link', { challengeId });
+
+      if (status === 200) {
+        return { ok: true, phone: asString(data.phone), token: asString(data.token) };
+      }
+      // 202 : le message n'est pas encore arrivé, il faut redemander.
+      if (status === 202) return { ok: false, reason: 'pending' };
+
+      const known = ['expired', 'consumed', 'not_found'] as const;
+      const reason = known.find((value) => value === asString(data.error));
       return { ok: false, reason: reason ?? 'not_found' };
     } catch {
       return { ok: false, reason: 'network' };

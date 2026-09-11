@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -57,7 +58,7 @@ export function OnboardingFlow({
   const localizedName = useLocalizedName();
 
   const [step, setStep] = useState<Step>(1);
-  const [accountPane, setAccountPane] = useState<'phone' | 'code'>('phone');
+  const [accountPane, setAccountPane] = useState<'phone' | 'code' | 'link'>('phone');
   const [firstName, setFirstName] = useState('');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
@@ -96,8 +97,11 @@ export function OnboardingFlow({
     };
   }, [auth]);
 
-  const channelName = (value: Channel) =>
-    value === 'whatsapp' ? s.onboarding.channelWhatsapp : s.onboarding.channelSms;
+  const channelName = (value: Channel) => {
+    if (value === 'whatsapp') return s.onboarding.channelWhatsapp;
+    if (value === 'whatsapp_link') return s.onboarding.channelWhatsappLink;
+    return s.onboarding.channelSms;
+  };
 
   /** Message d'erreur de la vérification, dans la langue courante. */
   const verificationMessage = (failure: VerificationError): string => {
@@ -126,6 +130,8 @@ export function OnboardingFlow({
         return s.onboarding.codeTooManyAttempts;
       case 'not_found':
         return s.onboarding.codeExpired;
+      case 'link_expired':
+        return s.onboarding.linkExpired;
     }
   };
 
@@ -143,31 +149,64 @@ export function OnboardingFlow({
     if (Object.keys(nextErrors).length > 0) return;
 
     const challenge = await verification.requestCode(phone, channel);
-    if (challenge) {
-      // En développement, le serveur renvoie le code : on le pré-remplit pour
-      // ne pas avoir à le recopier depuis la console.
-      setCode(challenge.devCode ?? '');
-      setAccountPane('code');
+    if (!challenge) return;
+
+    if (challenge.mode === 'link') {
+      setAccountPane('link');
+      openWhatsApp(challenge.link);
+      return;
+    }
+
+    // En développement, le serveur renvoie le code : on le pré-remplit pour
+    // ne pas avoir à le recopier depuis la console.
+    setCode(challenge.devCode ?? '');
+    setAccountPane('code');
+  };
+
+  const [linkOpenFailed, setLinkOpenFailed] = useState(false);
+
+  const openWhatsApp = async (link: string) => {
+    setLinkOpenFailed(false);
+    try {
+      await Linking.openURL(link);
+    } catch {
+      // WhatsApp absent : l'écran propose alors d'envoyer le message à la main.
+      setLinkOpenFailed(true);
     }
   };
 
+  const onVerified = useCallback((session: VerifiedSession) => {
+    setVerified(session);
+    setStep(3);
+  }, []);
+
+  // Le serveur ne peut pas nous prévenir : on redemande régulièrement tant que
+  // le message du voisin n'est pas arrivé.
+  const { waitForLink } = verification;
+  useEffect(() => {
+    if (accountPane !== 'link' || verification.status.kind !== 'awaiting-link') return;
+
+    const interval = setInterval(() => {
+      waitForLink(onVerified);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [accountPane, verification.status.kind, waitForLink, onVerified]);
+
   const submitCode = async () => {
     const session = await verification.verifyCode(code);
-    if (session) {
-      setVerified(session);
-      setStep(3);
-    }
+    if (session) onVerified(session);
   };
 
   /** Renvoi d'un code, sans repasser par la saisie du numéro. */
   const requestNewCode = async () => {
     const challenge = await verification.requestCode(phone, channel);
-    if (challenge) setCode(challenge.devCode ?? '');
+    if (challenge && challenge.mode === 'code') setCode(challenge.devCode ?? '');
   };
 
   const editPhone = () => {
     verification.reset();
     setCode('');
+    setLinkOpenFailed(false);
     setAccountPane('phone');
   };
 
@@ -305,6 +344,11 @@ export function OnboardingFlow({
                       );
                     })}
                   </View>
+                  {channel === 'whatsapp_link' ? (
+                    <Text style={[styles.channelHint, rtl.text]}>
+                      {s.onboarding.channelFreeHint}
+                    </Text>
+                  ) : null}
                 </View>
               ) : null}
 
@@ -319,6 +363,41 @@ export function OnboardingFlow({
                   {verificationMessage(verification.error)}
                 </Text>
               ) : null}
+            </View>
+          ) : null}
+
+          {step === 2 && accountPane === 'link' ? (
+            <View>
+              <Text style={styles.stepEmoji}>🟢</Text>
+              <Text style={[styles.heading, rtl.text]}>{s.onboarding.linkTitle}</Text>
+              <Text style={[styles.sub, rtl.text]}>{s.onboarding.linkSubtitle}</Text>
+
+              <PrimaryButton
+                label={s.onboarding.linkOpen}
+                onPress={() => {
+                  if (verification.status.kind === 'awaiting-link') {
+                    openWhatsApp(verification.status.challenge.link);
+                  }
+                }}
+              />
+
+              <Text style={[styles.linkWaiting, rtl.text]}>{s.onboarding.linkWaiting}</Text>
+
+              {linkOpenFailed ? (
+                <Text style={[styles.positionError, rtl.text]}>
+                  {s.onboarding.linkOpenFailed}
+                </Text>
+              ) : null}
+
+              {verification.error ? (
+                <Text style={[styles.positionError, rtl.text]}>
+                  {verificationMessage(verification.error)}
+                </Text>
+              ) : null}
+
+              <Pressable accessibilityRole="button" onPress={editPhone}>
+                <Text style={[styles.linkButton, rtl.text]}>{s.onboarding.changeNumber}</Text>
+              </Pressable>
             </View>
           ) : null}
 
@@ -622,6 +701,18 @@ const styles = StyleSheet.create({
   },
   channelButtonActive: { borderColor: colors.brand, backgroundColor: colors.sand },
   channelText: { fontSize: fontSizes.body, fontWeight: '600', color: colors.muted },
+  channelHint: {
+    marginTop: spacing.sm,
+    fontSize: fontSizes.small,
+    color: colors.muted,
+    lineHeight: 18,
+  },
+  linkWaiting: {
+    marginTop: spacing.lg,
+    textAlign: 'center',
+    color: colors.muted,
+    fontSize: fontSizes.small,
+  },
   channelTextActive: { color: colors.brand },
   codeInput: {
     fontSize: fontSizes.heading,

@@ -9,7 +9,7 @@ espace dédié, vérifié et organisé par quartier.
 | Chemin | Contenu |
 | --- | --- |
 | `mobile/` | Application Expo / React Native — socle V1 en cours de développement ([README](mobile/README.md)) |
-| `server/` | API de vérification du numéro par SMS ou WhatsApp ([README](server/README.md)) |
+| `server/` | API de vérification du numéro — WhatsApp gratuit, SMS ou WhatsApp par modèle ([README](server/README.md)) |
 | `docs/cahier-des-charges.md` | Toutes les décisions de conception validées (concept, regroupement par quartier, modération, 24 écrans, périmètre V1) |
 | `prototype/jiran-accueil.html` | Prototype visuel HTML autonome — 24 écrans navigables, bilingue FR/AR avec bascule RTL |
 
@@ -30,8 +30,11 @@ objets à emprunter, services recommandés, carte, mode vacances, collecte des
 déchets, messagerie privée) viendront ensuite, pour ne pas retarder le lancement
 ni diluer le positionnement sécurité / entraide.
 
-L'inscription vérifie le numéro par un code à 6 chiffres, que le voisin choisit
-de recevoir **par SMS ou sur WhatsApp**, comme dans la plupart des applications. Le choix du canal d'envoi et ce qu'il faut obtenir
+L'inscription vérifie le numéro, et le voisin choisit comment. Le canal
+recommandé est **gratuit** : au lieu de lui envoyer un code, c'est lui qui nous
+envoie un message depuis WhatsApp, et c'est WhatsApp qui nous confirme son
+numéro — rien n'est envoyé par le serveur, donc rien n'est facturé. Le SMS et le
+modèle WhatsApp restent disponibles, tous deux facturés au message. Le choix du canal d'envoi et ce qu'il faut obtenir
 auprès des opérateurs sont expliqués dans [`server/README.md`](server/README.md).
 
 Ce qui reste à brancher côté services externes (modération d'image,

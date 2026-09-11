@@ -31,7 +31,19 @@ export const fr = {
     channelLabel: 'Recevoir le code par',
     channelSms: '💬 SMS',
     channelWhatsapp: '🟢 WhatsApp',
+    channelWhatsappLink: '🟢 WhatsApp (gratuit)',
+    channelFreeHint:
+      'Avec WhatsApp gratuit, c’est toi qui nous envoies un message : ton numéro est confirmé par WhatsApp lui-même.',
     channelUnavailable: 'Ce canal n’est pas disponible pour le moment. Essaie l’autre.',
+
+    linkTitle: 'Envoie-nous un message',
+    linkSubtitle:
+      'Touche le bouton : WhatsApp s’ouvre avec un message déjà écrit. Envoie-le sans rien changer, on reconnaît ton numéro tout seuls.',
+    linkOpen: 'Ouvrir WhatsApp',
+    linkWaiting: 'En attente de ton message…',
+    linkOpenFailed: 'WhatsApp n’a pas pu s’ouvrir. Est-il installé sur ce téléphone ?',
+    linkExpired: 'La demande a expiré. Recommence.',
+    linkManual: 'Ou envoie ce message au {number} : {message}',
 
     codeTitle: 'Vérifie ton numéro',
     codeSubtitle: 'Nous avons envoyé un code à {length} chiffres au {phone} par {channel}.',

@@ -32,3 +32,20 @@ export function safeEqual(a: string, b: string): boolean {
   if (bufferA.length !== bufferB.length) return false;
   return crypto.timingSafeEqual(bufferA, bufferB);
 }
+
+/**
+ * Jeton de la vérification par lien WhatsApp.
+ *
+ * Bien plus long qu'un code à 6 chiffres : il voyage dans un message que
+ * n'importe qui peut tenter d'imiter, et il n'est pas protégé par un compteur
+ * d'essais. Il doit donc être hors de portée d'une recherche exhaustive.
+ */
+export function generateLinkToken(): string {
+  // Alphabet sans les caractères qui se confondent à la lecture (0/O, 1/I).
+  const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let token = '';
+  for (let i = 0; i < 12; i += 1) {
+    token += alphabet[crypto.randomInt(0, alphabet.length)];
+  }
+  return token;
+}

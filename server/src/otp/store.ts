@@ -1,12 +1,25 @@
-/** Défi en cours : un code envoyé à un numéro, en attente de vérification. */
+/**
+ * Manière dont le numéro est prouvé :
+ * - `code` : le serveur envoie un code, le voisin le recopie ;
+ * - `link` : le voisin nous envoie lui-même un jeton depuis WhatsApp, et c'est
+ *   Meta qui nous dit de quel numéro il provient. Rien n'est envoyé, donc rien
+ *   n'est facturé.
+ */
+export type ChallengeMode = 'code' | 'link';
+
+/** Défi en cours, en attente de vérification. */
 export interface Challenge {
   id: string;
   phone: string;
+  mode: ChallengeMode;
+  /** Empreinte du code (mode `code`) ou du jeton à envoyer (mode `link`). */
   codeHash: string;
   expiresAt: number;
   attemptsLeft: number;
   createdAt: number;
   consumed: boolean;
+  /** Mode `link` : vrai une fois le message reçu depuis le bon numéro. */
+  linkConfirmed?: boolean;
 }
 
 /** Trace des envois faits à un numéro, pour la limitation de débit. */
@@ -24,6 +37,8 @@ export interface SendLog {
 export interface ChallengeStore {
   save(challenge: Challenge): Promise<void>;
   find(id: string): Promise<Challenge | undefined>;
+  /** Défis encore vivants, pour retrouver celui que porte un message WhatsApp. */
+  findAllPending(): Promise<Challenge[]>;
   update(challenge: Challenge): Promise<void>;
   sendLog(phone: string): Promise<SendLog>;
   recordSend(phone: string, at: number): Promise<void>;
@@ -46,6 +61,13 @@ export class InMemoryChallengeStore implements ChallengeStore {
 
   async find(id: string): Promise<Challenge | undefined> {
     return this.challenges.get(id);
+  }
+
+  async findAllPending(): Promise<Challenge[]> {
+    const now = this.now();
+    return [...this.challenges.values()].filter(
+      (challenge) => !challenge.consumed && challenge.expiresAt >= now
+    );
   }
 
   async update(challenge: Challenge): Promise<void> {

@@ -1,13 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { AuthService, Challenge, Channel, VerifiedSession } from '../../data/authService';
+import type {
+  AuthService,
+  Challenge,
+  Channel,
+  CodeChallenge,
+  LinkChallenge,
+  VerifiedSession,
+} from '../../data/authService';
 import { normalizePhone } from '../../domain/phone';
 
 export type VerificationStatus =
   | { kind: 'idle' }
   | { kind: 'sending' }
-  | { kind: 'awaiting-code'; challenge: Challenge }
-  | { kind: 'verifying'; challenge: Challenge };
+  | { kind: 'awaiting-code'; challenge: CodeChallenge }
+  | { kind: 'verifying'; challenge: CodeChallenge }
+  /** Canal gratuit : on attend que le voisin envoie son message WhatsApp. */
+  | { kind: 'awaiting-link'; challenge: LinkChallenge };
 
 export interface VerificationError {
   /** Clé de message, résolue en texte par l'écran. */
@@ -21,7 +30,8 @@ export interface VerificationError {
     | 'expired'
     | 'consumed'
     | 'not_found'
-    | 'too_many_attempts';
+    | 'too_many_attempts'
+    | 'link_expired';
   attemptsLeft?: number;
   retryAfterSeconds?: number;
 }
@@ -81,8 +91,13 @@ export function usePhoneVerification(auth: AuthService) {
       }
 
       const { ok: _ignored, ...challenge } = result;
-      setStatus({ kind: 'awaiting-code', challenge });
-      startCountdown(challenge.resendAfter);
+
+      if (challenge.mode === 'link') {
+        setStatus({ kind: 'awaiting-link', challenge });
+      } else {
+        setStatus({ kind: 'awaiting-code', challenge });
+        startCountdown(challenge.resendAfter);
+      }
       // Le défi est renvoyé plutôt que lu dans `status` juste après l'appel :
       // l'état n'est pas encore à jour dans la fonction qui vient d'appeler.
       return challenge;
@@ -116,6 +131,29 @@ export function usePhoneVerification(auth: AuthService) {
     [auth, status, stopCountdown]
   );
 
+  /**
+   * Attend le message WhatsApp du voisin : le serveur ne peut pas nous
+   * prévenir, on redemande donc régulièrement jusqu'à confirmation.
+   */
+  const waitForLink = useCallback(
+    async (onVerified: (session: VerifiedSession) => void) => {
+      if (status.kind !== 'awaiting-link') return;
+      const { challengeId } = status.challenge;
+
+      const result = await auth.claimLink(challengeId);
+      if (result.ok) {
+        onVerified({ phone: result.phone, token: result.token });
+        return;
+      }
+
+      // « pending » est le cas normal tant que rien n'est arrivé ; une panne
+      // réseau passagère ne doit pas non plus interrompre l'attente.
+      if (result.reason === 'pending' || result.reason === 'network') return;
+      setError({ key: 'link_expired' });
+    },
+    [auth, status]
+  );
+
   /** Retour à la saisie du numéro, par exemple pour corriger une faute. */
   const reset = useCallback(() => {
     stopCountdown();
@@ -124,5 +162,5 @@ export function usePhoneVerification(auth: AuthService) {
     setSecondsBeforeResend(0);
   }, [stopCountdown]);
 
-  return { status, error, secondsBeforeResend, requestCode, verifyCode, reset };
+  return { status, error, secondsBeforeResend, requestCode, verifyCode, waitForLink, reset };
 }

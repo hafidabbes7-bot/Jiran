@@ -25,10 +25,47 @@ describe('HttpAuthService', () => {
 
     expect(result).toEqual({
       ok: true,
+      mode: 'code',
       challengeId: 'abc',
       expiresAt: 1000,
       resendAfter: 500,
     });
+  });
+
+  it('lit un défi gratuit et son lien WhatsApp', async () => {
+    stubFetch(200, {
+      mode: 'link',
+      challengeId: 'abc',
+      expiresAt: 1000,
+      link: 'https://wa.me/213555000111?text=JIRAN%20ABCD',
+      token: 'ABCD',
+    });
+
+    expect(await auth.requestCode('0555123456', 'whatsapp_link')).toEqual({
+      ok: true,
+      mode: 'link',
+      challengeId: 'abc',
+      expiresAt: 1000,
+      link: 'https://wa.me/213555000111?text=JIRAN%20ABCD',
+      token: 'ABCD',
+    });
+  });
+
+  it('distingue l’attente du message de sa réception', async () => {
+    stubFetch(202, { status: 'pending' });
+    expect(await auth.claimLink('abc')).toEqual({ ok: false, reason: 'pending' });
+
+    stubFetch(200, { phone: '0555123456', token: 'jeton' });
+    expect(await auth.claimLink('abc')).toEqual({
+      ok: true,
+      phone: '0555123456',
+      token: 'jeton',
+    });
+  });
+
+  it('ne coupe pas l’attente sur une panne réseau', async () => {
+    (globalThis as { fetch: unknown }).fetch = jest.fn().mockRejectedValue(new Error('offline'));
+    expect(await auth.claimLink('abc')).toEqual({ ok: false, reason: 'network' });
   });
 
   it('retient le code de développement quand le serveur le renvoie', async () => {
@@ -36,7 +73,7 @@ describe('HttpAuthService', () => {
 
     const result = await auth.requestCode('0555123456', 'sms');
 
-    expect(result.ok && result.devCode).toBe('123456');
+    expect(result.ok && result.mode === 'code' && result.devCode).toBe('123456');
   });
 
   it('transmet le canal choisi au serveur', async () => {
@@ -49,8 +86,8 @@ describe('HttpAuthService', () => {
   });
 
   it('ne retient que les canaux connus annoncés par le serveur', async () => {
-    stubFetch(200, { channels: ['sms', 'whatsapp', 'pigeon'] });
-    expect(await auth.listChannels()).toEqual(['sms', 'whatsapp']);
+    stubFetch(200, { channels: ['whatsapp_link', 'sms', 'whatsapp', 'pigeon'] });
+    expect(await auth.listChannels()).toEqual(['whatsapp_link', 'sms', 'whatsapp']);
   });
 
   it('se rabat sur le SMS quand les canaux sont introuvables', async () => {

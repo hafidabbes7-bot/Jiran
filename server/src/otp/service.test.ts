@@ -21,6 +21,7 @@ const codeFromMessage = (message: string) => message.match(/\b(\d{6})\b/)![1]!;
 
 const OPTIONS: VerificationOptions = {
   length: 6,
+  whatsappBusinessNumber: '213555000111',
   ttlSeconds: 300,
   maxAttempts: 3,
   resendCooldownSeconds: 60,
@@ -88,7 +89,7 @@ describe('VerificationService', () => {
       () => clock
     );
 
-    assert.deepEqual(smsOnly.channels, ['sms']);
+    assert.deepEqual(smsOnly.channels, ['whatsapp_link', 'sms']);
     assert.deepEqual(await smsOnly.requestCode('0555123456', 'whatsapp'), {
       ok: false,
       reason: 'channel_unavailable',
@@ -119,6 +120,98 @@ describe('VerificationService', () => {
     assert.deepEqual(await service.verifyCode(second.challengeId, smsCode), {
       ok: true,
       phone: '0555123456',
+    });
+  });
+
+  it('prépare un lien WhatsApp sans rien envoyer', async () => {
+    const request = await service.requestCode('0555123456', 'whatsapp_link');
+
+    assert.equal(request.ok, true);
+    assert.equal(request.ok && request.mode, 'link');
+    // Le canal gratuit ne passe par aucun fournisseur : rien n'est facturé.
+    assert.equal(sms.sent.length, 0);
+    assert.equal(whatsapp.sent.length, 0);
+
+    if (request.ok && request.mode === 'link') {
+      assert.match(request.link, /^https:\/\/wa\.me\/213555000111\?text=/);
+      assert.ok(request.token.length >= 10);
+    }
+  });
+
+  it('confirme le défi quand le message vient du bon numéro', async () => {
+    const request = await service.requestCode('0555123456', 'whatsapp_link');
+    assert.equal(request.ok && request.mode, 'link');
+    if (!request.ok || request.mode !== 'link') return;
+
+    assert.deepEqual(await service.claimLink(request.challengeId), {
+      ok: false,
+      reason: 'pending',
+    });
+
+    assert.equal(await service.confirmLink(`JIRAN ${request.token}`, '213555123456'), true);
+    assert.deepEqual(await service.claimLink(request.challengeId), {
+      ok: true,
+      phone: '0555123456',
+    });
+  });
+
+  it('refuse un jeton envoyé depuis un autre numéro', async () => {
+    const request = await service.requestCode('0555123456', 'whatsapp_link');
+    if (!request.ok || request.mode !== 'link') return assert.fail('défi non créé');
+
+    // Sans ce contrôle, un inconnu ferait valider sa propre ligne à la place
+    // du voisin, dont l'application s'ouvrirait sur le compte de l'inconnu.
+    assert.equal(await service.confirmLink(`JIRAN ${request.token}`, '213661234567'), false);
+    assert.deepEqual(await service.claimLink(request.challengeId), {
+      ok: false,
+      reason: 'pending',
+    });
+  });
+
+  it('ignore un jeton inconnu ou un message quelconque', async () => {
+    await service.requestCode('0555123456', 'whatsapp_link');
+
+    assert.equal(await service.confirmLink('JIRAN ZZZZZZZZZZZZ', '213555123456'), false);
+    assert.equal(await service.confirmLink('bonjour', '213555123456'), false);
+  });
+
+  it('ne relève qu’une fois un défi confirmé', async () => {
+    const request = await service.requestCode('0555123456', 'whatsapp_link');
+    if (!request.ok || request.mode !== 'link') return assert.fail('défi non créé');
+
+    await service.confirmLink(`JIRAN ${request.token}`, '+213555123456');
+    assert.equal((await service.claimLink(request.challengeId)).ok, true);
+    assert.deepEqual(await service.claimLink(request.challengeId), {
+      ok: false,
+      reason: 'consumed',
+    });
+  });
+
+  it('refuse un jeton arrivé après expiration', async () => {
+    const request = await service.requestCode('0555123456', 'whatsapp_link');
+    if (!request.ok || request.mode !== 'link') return assert.fail('défi non créé');
+
+    advance(OPTIONS.ttlSeconds + 1);
+
+    assert.equal(await service.confirmLink(`JIRAN ${request.token}`, '213555123456'), false);
+    assert.deepEqual(await service.claimLink(request.challengeId), {
+      ok: false,
+      reason: 'expired',
+    });
+  });
+
+  it('ferme le canal gratuit sans numéro WhatsApp configuré', async () => {
+    const withoutNumber = new VerificationService(
+      new InMemoryChallengeStore(() => clock),
+      { sms },
+      { ...OPTIONS, whatsappBusinessNumber: undefined },
+      () => clock
+    );
+
+    assert.deepEqual(withoutNumber.channels, ['sms']);
+    assert.deepEqual(await withoutNumber.requestCode('0555123456', 'whatsapp_link'), {
+      ok: false,
+      reason: 'channel_unavailable',
     });
   });
 
