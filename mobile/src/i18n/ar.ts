@@ -111,6 +111,7 @@ export const ar: Strings = {
     title: 'حيّي',
     searchPlaceholder: 'ابحث عن منشور أو جار',
     empty: 'لا جديد في الحي حالياً.',
+    offline: 'تعذّر الاتصال بالخادم — اسحب للأسفل لإعادة المحاولة.',
     emptyFiltered: 'لا يوجد منشور في هذه الفئة.',
     twinnedNotice: '{neighborhood} يتشارك خيطه مع {twin} إلى حين بلوغ {threshold} جار موثّق.',
     origin: '{neighborhood}',
@@ -131,6 +132,7 @@ export const ar: Strings = {
     publish: 'نشر',
     photoUnavailable: '📷 ستُتاح الصور عند تفعيل نظام مراقبة الصور (البند 7.3 من دفتر الشروط).',
     published: '✓ تم إرسال المنشور إلى حيّك',
+    publishFailed: 'تعذّر النشر حالياً. أعد المحاولة بعد لحظات.',
   },
   detail: {
     repliesTitle: 'الردود',

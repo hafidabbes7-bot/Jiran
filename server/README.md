@@ -1,10 +1,24 @@
-# Jiran — API de vérification du numéro
+# Jiran — serveur
 
-Vérification du numéro de téléphone à l'inscription : le voisin saisit son
-numéro, reçoit un code à 6 chiffres, le saisit, et son compte est validé (§7.1
-du cahier des charges).
+Deux choses : la **vérification du numéro** à l'inscription (§7.1) et le **fil
+de quartier partagé**, avec sa modération (§7.4).
 
 ## Pourquoi un serveur
+
+Deux raisons, et la seconde est la plus importante.
+
+**Un réseau de quartier ne peut pas vivre sur un téléphone.** Tant que les
+publications restaient sur l'appareil, deux voisins ne voyaient pas le même fil
+— chacun avait le sien. Et la règle des trois signalements de voisins
+différents (§3) ne pouvait jamais se déclencher : un téléphone ne connaît qu'un
+seul signalant, le sien.
+
+**La modération doit être hors de portée du client.** Le filtre de texte tourne
+aussi dans l'application, pour prévenir pendant la frappe, mais une application
+modifiée l'ignore. C'est la version serveur qui refuse une publication, et
+c'est le serveur qui compte les signalements.
+
+### Pourquoi un serveur pour la vérification
 
 La vérification ne peut pas se faire dans l'application seule. Un code tiré et
 contrôlé sur le téléphone se contourne en lisant la mémoire de l'appareil, et
@@ -100,6 +114,8 @@ complément au SMS, pas un remplacement.
 
 ## Points d'entrée
 
+### Vérification du numéro
+
 | Route | Effet |
 | --- | --- |
 | `GET /auth/channels` | Canaux proposés à l'inscription (`whatsapp_link`, `sms`, `whatsapp`) |
@@ -115,6 +131,34 @@ Codes de retour utiles : `429` avec `Retry-After` pour une limitation de débit,
 `401` avec `attemptsLeft` pour un code refusé, `410` pour un code périmé ou déjà
 utilisé, `400` avec `channel_unavailable` pour un canal fermé, `502` si la
 passerelle a échoué.
+
+### Contenu du quartier
+
+Toutes ces routes exigent l'en-tête `Authorization: Bearer …` obtenu à la
+vérification. Le numéro vient du jeton signé, jamais du corps de la requête, et
+le quartier vient du membre : un client modifié ne peut ni publier au nom d'un
+autre, ni lire le fil d'un quartier où il n'habite pas.
+
+| Route | Effet |
+| --- | --- |
+| `POST /profile` | Crée ou met à jour le profil du voisin vérifié (prénom, quartier, cité) |
+| `GET /feed` | Fil du quartier, jumelage compris, avec verdict de modération par publication |
+| `GET /neighbors` | Voisins du même fil, pour la liste de confiance du SOS |
+| `POST /posts` | Publie — `422` si le texte est refusé par la modération |
+| `POST /posts/:id/like` | Ajoute ou retire un « j'aime » |
+| `GET` / `POST /posts/:id/comments` | Lit et ajoute les réponses |
+| `POST /posts/:id/report` | Signale — `409` si ce voisin avait déjà signalé ; renvoie le verdict à jour |
+
+### Stockage
+
+SQLite, par le module `node:sqlite` intégré à Node 22 — aucune dépendance à
+installer. Le fichier est désigné par `DATABASE_PATH` (`jiran.db` par défaut).
+Node marque ce module expérimental et l'annonce au démarrage ; cela n'affecte
+pas son fonctionnement.
+
+La table `reports` a pour clé primaire `(post_id, reporter_id)` : la règle « un
+voisin ne compte qu'une fois » est tenue par la base elle-même, pas seulement
+par le code.
 
 ## Ce qui protège le système
 
@@ -143,7 +187,10 @@ projet, et un code à 6 chiffres se devine en quelques milliers d'essais.
   Correct pour une instance ; passez à Redis ou une table derrière les mêmes
   interfaces (`ChallengeStore`, `SlidingWindowLimiter`) dès qu'il y en a
   plusieurs.
-- **Aucun compte utilisateur persistant** : le jeton prouve qu'un numéro a été
-  vérifié, rien de plus. Les comptes, les publications et la file de modération
-  (§7.4) restent à faire.
+- **Aucune file de modération humaine** (§7.4) : le blocage automatique
+  s'applique et les signalements sont conservés, mais aucun écran modérateur
+  n'existe encore.
+- **Pas de temps réel** (§7.5) : l'application recharge le fil à l'ouverture et
+  au tirer-pour-rafraîchir. Ni WebSocket, ni notifications push (§7.7).
+- **Pas de photos** : la modération d'image (§7.3) n'est pas branchée.
 - **HTTPS obligatoire** : le code et le jeton circulent en clair sans lui.

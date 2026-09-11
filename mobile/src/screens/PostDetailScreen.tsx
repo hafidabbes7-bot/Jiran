@@ -14,7 +14,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PostCard } from '../components/PostCard';
 import { ReportSheet } from '../components/ReportSheet';
 import { useToast } from '../components/Toast';
-import { isHidden } from '../domain/moderation/blocking';
 import { moderateText } from '../domain/moderation/textModeration';
 import { formatRelative } from '../domain/time';
 import type { Comment, ReportReason } from '../domain/types';
@@ -28,7 +27,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PostDetail'>;
 export function PostDetailScreen({ route }: Props) {
   const { postId } = route.params;
   const { s, language, rtl } = useI18n();
-  const { posts, moderation, toggleLike, loadComments, addComment, report } = useApp();
+  const { posts, toggleLike, loadComments, addComment, report } = useApp();
   const toast = useToast();
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -36,7 +35,6 @@ export function PostDetailScreen({ route }: Props) {
   const [reporting, setReporting] = useState(false);
 
   const post = posts.find((item) => item.id === postId);
-  const state = moderation[postId];
 
   const refresh = useCallback(async () => {
     setComments(await loadComments(postId));
@@ -54,9 +52,15 @@ export function PostDetailScreen({ route }: Props) {
     }
     if (draft.trim().length < 2) return;
 
-    await addComment(postId, draft);
-    setDraft('');
-    await refresh();
+    try {
+      await addComment(postId, draft);
+      setDraft('');
+      await refresh();
+    } catch {
+      // Refus du serveur (modération, contenu bloqué, coupure) : on le dit
+      // plutôt que de laisser croire que la réponse est partie.
+      toast(s.compose.publishFailed);
+    }
   };
 
   const submitReport = async (reason: ReportReason) => {
@@ -67,7 +71,7 @@ export function PostDetailScreen({ route }: Props) {
 
   if (!post) return null;
 
-  const blocked = state ? isHidden(state) : false;
+  const blocked = post.moderation.hidden;
 
   return (
     <KeyboardAvoidingView
@@ -78,7 +82,7 @@ export function PostDetailScreen({ route }: Props) {
       <ScrollView contentContainerStyle={styles.content}>
         <PostCard
           post={post}
-          moderation={state}
+          showComments={false}
           onLike={() => toggleLike(post.id)}
           onReport={() => setReporting(true)}
         />

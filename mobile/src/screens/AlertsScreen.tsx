@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -21,7 +21,7 @@ type Props = CompositeScreenProps<
 /** Fil dédié aux alertes de sécurité et aux coupures officielles (§4.5). */
 export function AlertsScreen({ navigation }: Props) {
   const { s, rtl } = useI18n();
-  const { posts, moderation, commentCounts, toggleLike, report } = useApp();
+  const { posts, toggleLike, report, refresh, loading } = useApp();
   const toast = useToast();
   const [reportTarget, setReportTarget] = useState<string | null>(null);
 
@@ -41,6 +41,9 @@ export function AlertsScreen({ navigation }: Props) {
         data={alerts}
         keyExtractor={(post) => post.id}
         contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.brand} />
+        }
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={[styles.title, rtl.text]}>{s.alerts.title}</Text>
@@ -51,8 +54,6 @@ export function AlertsScreen({ navigation }: Props) {
         renderItem={({ item }) => (
           <PostCard
             post={item}
-            moderation={moderation[item.id]}
-            commentCount={commentCounts[item.id] ?? 0}
             onPress={() => navigation.navigate('PostDetail', { postId: item.id })}
             onLike={() => toggleLike(item.id)}
             onReport={() => setReportTarget(item.id)}

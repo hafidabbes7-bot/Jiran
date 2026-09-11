@@ -104,6 +104,12 @@ export const config = {
   },
 
   /**
+   * Emplacement de la base du contenu. `:memory:` ne survit pas au
+   * redémarrage — pratique pour les tests, à proscrire ailleurs.
+   */
+  databasePath: process.env.DATABASE_PATH ?? 'jiran.db',
+
+  /**
    * Origines autorisées à appeler l'API depuis un navigateur. Nécessaire pour
    * `expo start --web` ; sans objet pour l'application native, qui n'est pas
    * soumise à la politique d'origine.

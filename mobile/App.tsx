@@ -6,7 +6,7 @@ import { getLocales } from 'expo-localization';
 
 import { ToastProvider } from './src/components/Toast';
 import { HttpAuthService } from './src/data/authService';
-import { LocalRepository } from './src/data/localRepository';
+import { HttpRepository } from './src/data/httpRepository';
 import type { Language } from './src/domain/types';
 import { I18nProvider, useI18n } from './src/i18n/I18nProvider';
 import { RootNavigator } from './src/navigation/RootNavigator';
@@ -50,7 +50,7 @@ function Root({ auth }: { auth: HttpAuthService }) {
 }
 
 export default function App() {
-  const repository = useMemo(() => new LocalRepository(), []);
+  const repository = useMemo(() => new HttpRepository(), []);
   const auth = useMemo(() => new HttpAuthService(), []);
 
   return (

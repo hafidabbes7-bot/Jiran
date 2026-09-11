@@ -1,5 +1,13 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -23,7 +31,7 @@ type Props = CompositeScreenProps<
 export function FeedScreen({ navigation }: Props) {
   const { s, format, language, setLanguage, rtl } = useI18n();
   const localizedName = useLocalizedName();
-  const { session, posts, moderation, commentCounts, toggleLike, report, updateLanguage } =
+  const { session, posts, toggleLike, report, updateLanguage, refresh, loading, loadFailed } =
     useApp();
   const toast = useToast();
 
@@ -65,6 +73,9 @@ export function FeedScreen({ navigation }: Props) {
         data={visiblePosts}
         keyExtractor={(post) => post.id}
         contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.brand} />
+        }
         ListHeaderComponent={
           <View>
             <View style={[styles.topbar, rtl.row]}>
@@ -98,6 +109,10 @@ export function FeedScreen({ navigation }: Props) {
               </View>
             </View>
 
+            {loadFailed ? (
+              <Text style={[styles.offline, rtl.text]}>{s.feed.offline}</Text>
+            ) : null}
+
             <TextInput
               placeholder={s.feed.searchPlaceholder}
               placeholderTextColor={colors.muted}
@@ -129,8 +144,6 @@ export function FeedScreen({ navigation }: Props) {
         renderItem={({ item }) => (
           <PostCard
             post={item}
-            moderation={moderation[item.id]}
-            commentCount={commentCounts[item.id] ?? 0}
             onPress={() => navigation.navigate('PostDetail', { postId: item.id })}
             onLike={() => toggleLike(item.id)}
             onReport={() => setReportTarget(item.id)}
@@ -177,6 +190,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     fontSize: fontSizes.body,
     color: colors.ink,
+  },
+  offline: {
+    backgroundColor: colors.alertSoft,
+    color: colors.alert,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    fontSize: fontSizes.small,
   },
   twinned: {
     marginTop: spacing.md,

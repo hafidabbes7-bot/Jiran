@@ -7,23 +7,15 @@ import React, {
   useState,
 } from 'react';
 
-import { computeModerationState, isHidden } from '../domain/moderation/blocking';
 import type {
   Category,
   Comment,
-  Language,
-  ModerationState,
   Neighbor,
   Post,
-  Report,
   ReportReason,
   Session,
 } from '../domain/types';
-import { sharedFeedNeighborhoodIds } from '../data/neighborhoods';
-import { CURRENT_USER_ID, type JiranRepository } from '../data/repository';
-
-let idCounter = 0;
-const newId = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${idCounter++}`;
+import { RepositoryError, type JiranRepository } from '../data/repository';
 
 export interface PublishInput {
   category: Category;
@@ -34,18 +26,18 @@ interface AppValue {
   ready: boolean;
   session: Session | null;
   posts: Post[];
-  /** État de modération par publication, recalculé à chaque signalement. */
-  moderation: Record<string, ModerationState>;
   neighbors: Neighbor[];
-  /** Nombre de réponses par publication. */
-  commentCounts: Record<string, number>;
+  /** Chargement du fil en cours (premier affichage ou rafraîchissement). */
+  loading: boolean;
+  /** Dernière erreur de chargement, à montrer sans vider le fil affiché. */
+  loadFailed: boolean;
 
   register: (session: Session) => Promise<void>;
   signOut: () => Promise<void>;
-  /** Mémorise la langue choisie depuis le fil, pour les prochains démarrages. */
-  updateLanguage: (language: Language) => Promise<void>;
+  updateLanguage: (language: Session['language']) => Promise<void>;
 
-  publish: (input: PublishInput) => Promise<Post>;
+  refresh: () => Promise<void>;
+  publish: (input: PublishInput) => Promise<void>;
   toggleLike: (postId: string) => Promise<void>;
   loadComments: (postId: string) => Promise<Comment[]>;
   addComment: (postId: string, text: string) => Promise<void>;
@@ -66,26 +58,28 @@ export function AppProvider({
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [reports, setReports] = useState<Report[]>([]);
   const [neighbors, setNeighbors] = useState<Neighbor[]>([]);
-  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
-  const refreshFeed = useCallback(
-    async (current: Session) => {
-      const ids = sharedFeedNeighborhoodIds(current.neighborhoodId);
-      const [loadedPosts, loadedReports, loadedNeighbors, counts] = await Promise.all([
-        repository.loadPosts(ids),
-        repository.loadReports(),
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [feed, people] = await Promise.all([
+        repository.loadFeed(),
         repository.loadNeighbors(),
-        repository.loadCommentCounts(),
       ]);
-      setPosts(loadedPosts);
-      setReports(loadedReports);
-      setNeighbors(loadedNeighbors);
-      setCommentCounts(counts);
-    },
-    [repository]
-  );
+      setPosts(feed);
+      setNeighbors(people);
+      setLoadFailed(false);
+    } catch {
+      // Le fil déjà affiché reste à l'écran : une coupure passagère ne doit pas
+      // vider le quartier.
+      setLoadFailed(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [repository]);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,25 +87,35 @@ export function AppProvider({
       const stored = await repository.loadSession();
       if (cancelled) return;
       setSession(stored);
-      if (stored) await refreshFeed(stored);
+      if (stored) await refresh();
       if (!cancelled) setReady(true);
     })();
     return () => {
       cancelled = true;
     };
-  }, [repository, refreshFeed]);
+  }, [repository, refresh]);
 
   const register = useCallback(
     async (next: Session) => {
+      // Le profil part au serveur avant d'être gardé en local : sans lui, le
+      // voisin aurait une session valide et un fil inaccessible.
+      await repository.saveProfile(next);
       await repository.saveSession(next);
       setSession(next);
-      await refreshFeed(next);
+      await refresh();
     },
-    [repository, refreshFeed]
+    [repository, refresh]
   );
 
+  const signOut = useCallback(async () => {
+    await repository.clearSession();
+    setSession(null);
+    setPosts([]);
+    setNeighbors([]);
+  }, [repository]);
+
   const updateLanguage = useCallback(
-    async (language: Language) => {
+    async (language: Session['language']) => {
       if (!session || session.language === language) return;
       const next = { ...session, language };
       await repository.saveSession(next);
@@ -120,49 +124,40 @@ export function AppProvider({
     [repository, session]
   );
 
-  const signOut = useCallback(async () => {
-    await repository.clearSession();
-    setSession(null);
-    setPosts([]);
-    setReports([]);
-    setNeighbors([]);
-    setCommentCounts({});
-  }, [repository]);
-
   const publish = useCallback(
-    async ({ category, text }: PublishInput) => {
-      if (!session) throw new Error('Publication impossible sans session');
-      const post: Post = {
-        id: newId('post'),
-        authorName: session.firstName,
-        category,
-        text: text.trim(),
-        neighborhoodId: session.neighborhoodId,
-        building: session.building,
-        createdAt: new Date().toISOString(),
-        likes: 0,
-        likedByMe: false,
-      };
-      await repository.createPost(post);
-      setPosts((current) => [post, ...current]);
-      return post;
+    async (input: PublishInput) => {
+      await repository.createPost(input);
+      await refresh();
     },
-    [repository, session]
+    [repository, refresh]
   );
 
   const toggleLike = useCallback(
     async (postId: string) => {
-      const post = posts.find((p) => p.id === postId);
+      const post = posts.find((item) => item.id === postId);
       if (!post) return;
       const liked = !post.likedByMe;
-      await repository.setLiked(postId, liked);
+
+      // Réponse immédiate à l'écran, corrigée par le serveur si l'appel échoue.
       setPosts((current) =>
-        current.map((p) =>
-          p.id === postId
-            ? { ...p, likedByMe: liked, likes: Math.max(0, p.likes + (liked ? 1 : -1)) }
-            : p
+        current.map((item) =>
+          item.id === postId
+            ? { ...item, likedByMe: liked, likes: Math.max(0, item.likes + (liked ? 1 : -1)) }
+            : item
         )
       );
+
+      try {
+        await repository.setLiked(postId, liked);
+      } catch {
+        setPosts((current) =>
+          current.map((item) =>
+            item.id === postId
+              ? { ...item, likedByMe: post.likedByMe, likes: post.likes }
+              : item
+          )
+        );
+      }
     },
     [posts, repository]
   );
@@ -174,68 +169,58 @@ export function AppProvider({
 
   const addComment = useCallback(
     async (postId: string, text: string) => {
-      if (!session) return;
-      await repository.addComment({
-        id: newId('comment'),
-        postId,
-        authorName: session.firstName,
-        text: text.trim(),
-        createdAt: new Date().toISOString(),
-      });
-      setCommentCounts((current) => ({ ...current, [postId]: (current[postId] ?? 0) + 1 }));
+      await repository.addComment(postId, text);
+      setPosts((current) =>
+        current.map((post) =>
+          post.id === postId ? { ...post, commentCount: post.commentCount + 1 } : post
+        )
+      );
     },
-    [repository, session]
+    [repository]
   );
 
   const report = useCallback(
     async (postId: string, reason: ReportReason) => {
-      const alreadyReported = reports.some(
-        (r) => r.postId === postId && r.reporterId === CURRENT_USER_ID
-      );
-      if (alreadyReported) return false;
-
-      const entry: Report = {
-        postId,
-        reporterId: CURRENT_USER_ID,
-        reason,
-        createdAt: new Date().toISOString(),
-      };
-      await repository.addReport(entry);
-      setReports((current) => [...current, entry]);
-      return true;
+      try {
+        const { accepted, moderation } = await repository.report(postId, reason);
+        setPosts((current) =>
+          current.map((post) =>
+            post.id === postId ? { ...post, moderation, reportedByMe: true } : post
+          )
+        );
+        return accepted;
+      } catch (error) {
+        if (error instanceof RepositoryError) return false;
+        throw error;
+      }
     },
-    [reports, repository]
+    [repository]
   );
 
   const setTrusted = useCallback(
     async (neighborId: string, trusted: boolean) => {
       await repository.setTrusted(neighborId, trusted);
       setNeighbors((current) =>
-        current.map((n) => (n.id === neighborId ? { ...n, trusted } : n))
+        current.map((neighbor) =>
+          neighbor.id === neighborId ? { ...neighbor, trusted } : neighbor
+        )
       );
     },
     [repository]
   );
-
-  const moderation = useMemo(() => {
-    const states: Record<string, ModerationState> = {};
-    for (const post of posts) {
-      states[post.id] = computeModerationState(post.id, reports);
-    }
-    return states;
-  }, [posts, reports]);
 
   const value = useMemo<AppValue>(
     () => ({
       ready,
       session,
       posts,
-      moderation,
       neighbors,
-      commentCounts,
+      loading,
+      loadFailed,
       register,
       signOut,
       updateLanguage,
+      refresh,
       publish,
       toggleLike,
       loadComments,
@@ -247,12 +232,13 @@ export function AppProvider({
       ready,
       session,
       posts,
-      moderation,
       neighbors,
-      commentCounts,
+      loading,
+      loadFailed,
       register,
       signOut,
       updateLanguage,
+      refresh,
       publish,
       toggleLike,
       loadComments,
@@ -269,12 +255,4 @@ export function useApp(): AppValue {
   const value = useContext(AppContext);
   if (!value) throw new Error('useApp doit être utilisé dans un AppProvider');
   return value;
-}
-
-/** Publications visibles dans le fil : les contenus bloqués gardent leur place, marqués comme tels. */
-export function useModerationBadge(postId: string): ModerationState | undefined {
-  const { moderation } = useApp();
-  const state = moderation[postId];
-  if (!state) return undefined;
-  return isHidden(state) ? state : undefined;
 }

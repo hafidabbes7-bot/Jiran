@@ -6,7 +6,6 @@ import {
   TWINNING_THRESHOLD,
   findNeighborhood,
 } from '../data/neighborhoods';
-import { isHidden } from '../domain/moderation/blocking';
 import { useI18n, useLocalizedName } from '../i18n/I18nProvider';
 import { useApp } from '../state/AppProvider';
 import { colors, fontSizes, radii, spacing } from '../theme/theme';
@@ -19,7 +18,7 @@ import { colors, fontSizes, radii, spacing } from '../theme/theme';
 export function NeighborhoodScreen() {
   const { s, format, rtl } = useI18n();
   const localizedName = useLocalizedName();
-  const { session, neighbors, moderation, setTrusted } = useApp();
+  const { session, neighbors, posts, setTrusted } = useApp();
 
   const neighborhood = session ? findNeighborhood(session.neighborhoodId) : undefined;
 
@@ -31,8 +30,8 @@ export function NeighborhoodScreen() {
   }, [neighborhood]);
 
   const hiddenCount = useMemo(
-    () => Object.values(moderation).filter((state) => isHidden(state)).length,
-    [moderation]
+    () => posts.filter((post) => post.moderation.hidden).length,
+    [posts]
   );
 
   if (!neighborhood) return null;

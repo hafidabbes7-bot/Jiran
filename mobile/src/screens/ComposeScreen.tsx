@@ -13,6 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CATEGORIES, CategoryChips } from '../components/CategoryChips';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { useToast } from '../components/Toast';
+import { RepositoryError } from '../data/repository';
 import { moderateText } from '../domain/moderation/textModeration';
 import type { Category } from '../domain/types';
 import { useI18n } from '../i18n/I18nProvider';
@@ -44,6 +45,12 @@ export function ComposeScreen({ navigation }: Props) {
       await publish({ category, text });
       toast(s.compose.published);
       navigation.goBack();
+    } catch (error) {
+      // Le filtre local prévient pendant la frappe, mais c'est le serveur qui
+      // décide : son refus doit être visible, pas avalé.
+      const refusedByModeration =
+        error instanceof RepositoryError && error.kind === 'inappropriate_text';
+      toast(refusedByModeration ? s.compose.moderationWarning : s.compose.publishFailed);
     } finally {
       setSubmitting(false);
     }

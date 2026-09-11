@@ -58,8 +58,8 @@ export interface Comment {
 export interface Post {
   id: string;
   authorName: string;
-  /** `true` pour les comptes officiels (association de quartier, APC...). */
-  authorOfficial?: boolean;
+  /** `true` si c'est une publication du voisin connecté. */
+  authorIsMe: boolean;
   category: Category;
   text: string;
   /** Quartier d'origine — toujours affiché, y compris sur un fil jumelé. */
@@ -68,26 +68,28 @@ export interface Post {
   createdAt: string;
   likes: number;
   likedByMe: boolean;
+  commentCount: number;
+  /** `true` si le voisin connecté a déjà signalé cette publication. */
+  reportedByMe: boolean;
+  moderation: ModerationState;
 }
 
 export type ReportReason = 'spam' | 'inapproprie' | 'fausse_alerte' | 'autre';
 
-export interface Report {
-  postId: string;
-  /** Identifiant du signalant — un même voisin ne compte qu'une fois. */
-  reporterId: string;
-  reason: ReportReason;
-  createdAt: string;
-}
-
-/** État de modération d'une publication, dérivé des signalements. */
+/**
+ * Verdict de modération, **calculé par le serveur**.
+ *
+ * L'application ne le recalcule pas : elle ne voit que ses propres
+ * signalements, alors que la règle compte trois voisins différents (§3).
+ */
 export interface ModerationState {
-  postId: string;
   /** Nombre de cycles de 3 signalements distincts déjà atteints. */
   cycles: number;
   /** Fin du masquage temporaire (ISO), absent si blocage permanent. */
   hiddenUntil?: string;
   permanent: boolean;
+  /** Verdict prêt à l'emploi : le contenu doit-il être masqué maintenant. */
+  hidden: boolean;
 }
 
 export interface Neighbor {

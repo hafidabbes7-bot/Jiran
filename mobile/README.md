@@ -39,8 +39,9 @@ remplacez-le par l'adresse de votre machine sur le réseau local
 | §2 Quartiers nommés + jumelage | ✅ fil partagé entre cités jumelées, origine affichée sur chaque publication |
 | §4.2 Fil de quartier | ✅ recherche, filtres par catégorie, likes, réponses |
 | §4.5 Alertes | ✅ fil dédié aux publications « Sécurité » |
-| §3 Filtre de texte à la rédaction | ✅ liste évolutive + normalisation anti-contournement |
-| §3 Blocage automatique par signalements | ✅ 3 voisins distincts → 3 jours ; récidive → définitif |
+| §3 Filtre de texte | ✅ dans l'application pendant la frappe, et **appliqué par le serveur** qui refuse la publication |
+| §3 Blocage automatique par signalements | ✅ tenu par le serveur : 3 voisins **réellement distincts** → 3 jours ; récidive → définitif |
+| §7.4 Fil partagé entre voisins | ✅ publications, réponses et « j'aime » sur le serveur — deux voisins voient le même quartier |
 | §4.16 Alerte SOS | ✅ bouton flottant sur tous les écrans, choix des voisins alertés, annulation |
 | Bilingue FR / AR avec RTL | ✅ bascule immédiate, sans redémarrage |
 
@@ -49,13 +50,10 @@ remplacez-le par l'adresse de votre machine sur le réseau local
 Ces points sont des **dépendances externes**, pas des oublis ; ils sont signalés
 dans le code et dans l'interface là où l'utilisateur pourrait s'y tromper.
 
-- **Pas de backend pour le contenu.** Le fil, les signalements et les voisins
-  sont stockés sur l'appareil (`LocalRepository`) ; seule la vérification du
-  numéro passe par un serveur. Le contrat `JiranRepository`
-  (`src/data/repository.ts`) est écrit pour qu'un client HTTP/WebSocket le
-  remplace sans toucher aux écrans.
 - **Aucun envoi réel de SMS tant qu'un fournisseur n'est pas branché** : voir
   le README du serveur pour le choix de l'agrégateur.
+- **Pas de temps réel** (§7.5) : le fil se recharge à l'ouverture et au
+  tirer-pour-rafraîchir, il n'arrive pas tout seul.
 - **Pas de modération d'image** (§7.3) : l'ajout de photo est annoncé comme
   indisponible plutôt que simulé — publier une image non modérée irait contre
   la règle §3.
@@ -76,7 +74,7 @@ src/
     moderation/    filtre de texte + blocage automatique par signalements
     location.ts    vérification de quartier par géolocalisation
     phone.ts       numéros algériens
-  data/            quartiers réels, contenu de démarrage, stockage
+  data/            quartiers réels, client HTTP du serveur, session locale
   state/           session, fil, signalements (AppProvider)
   i18n/            dictionnaires fr / ar et sens de lecture
   components/      briques d'interface partagées
@@ -84,9 +82,13 @@ src/
   navigation/      onglets + pile, bouton SOS global
 ```
 
-La logique sensible (modération, blocage, géolocalisation, téléphone) est dans
-`src/domain`, sans dépendance à React : c'est elle qui est couverte par les
-tests, et c'est elle qui devra être rejouée à l'identique côté serveur.
+La logique sensible côté application (filtre de texte, géolocalisation,
+téléphone) est dans `src/domain`, sans dépendance à React.
+
+Ce qui décide — refuser un texte, compter les signalements, masquer un contenu —
+vit sur le serveur. L'application affiche le verdict, elle ne le recalcule pas :
+elle ne voit que ses propres signalements, alors que la règle en compte trois de
+voisins différents.
 
 ## Données de quartier
 

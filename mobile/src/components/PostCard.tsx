@@ -2,24 +2,22 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { findNeighborhood } from '../data/neighborhoods';
-import { isHidden } from '../domain/moderation/blocking';
 import { formatRelative } from '../domain/time';
-import type { ModerationState, Post } from '../domain/types';
+import type { Post } from '../domain/types';
 import { useI18n, useLocalizedName } from '../i18n/I18nProvider';
 import { colors, fontSizes, radii, spacing } from '../theme/theme';
 import { CATEGORY_COLORS } from './CategoryChips';
 
 export function PostCard({
   post,
-  moderation,
-  commentCount,
+  showComments = true,
   onPress,
   onLike,
   onReport,
 }: {
   post: Post;
-  moderation?: ModerationState;
-  commentCount?: number;
+  /** Masque le décompte des réponses sur l'écran de détail. */
+  showComments?: boolean;
   onPress?: () => void;
   onLike?: () => void;
   onReport?: () => void;
@@ -27,12 +25,13 @@ export function PostCard({
   const { s, format, language, rtl } = useI18n();
   const localizedName = useLocalizedName();
 
-  const blocked = moderation ? isHidden(moderation) : false;
-  if (blocked) {
+  // Le verdict est calculé par le serveur : l'application l'affiche, elle ne
+  // le recalcule pas (elle ne voit que ses propres signalements).
+  if (post.moderation.hidden) {
     return (
       <View style={[styles.card, styles.blockedCard]}>
         <Text style={[styles.blockedText, rtl.text]}>
-          {moderation!.permanent ? s.feed.blockedPermanent : s.feed.blockedTemporary}
+          {post.moderation.permanent ? s.feed.blockedPermanent : s.feed.blockedTemporary}
         </Text>
       </View>
     );
@@ -60,7 +59,7 @@ export function PostCard({
     >
       <View style={[styles.head, rtl.row]}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{post.authorOfficial ? '🏛️' : '👤'}</Text>
+          <Text style={styles.avatarText}>👤</Text>
         </View>
 
         <View style={styles.who}>
@@ -106,14 +105,14 @@ export function PostCard({
           </Text>
         </Pressable>
 
-        {commentCount !== undefined ? (
+        {showComments ? (
           <Text style={styles.action}>
             💬{' '}
-            {commentCount === 0
+            {post.commentCount === 0
               ? s.feed.noReply
-              : commentCount === 1
+              : post.commentCount === 1
                 ? s.feed.reply
-                : format(s.feed.replies, { count: commentCount })}
+                : format(s.feed.replies, { count: post.commentCount })}
           </Text>
         ) : null}
       </View>

@@ -32,6 +32,7 @@ describe('API de vérification', () => {
     const app = createServer({
       store: new InMemoryChallengeStore(),
       providers: { sms, whatsapp },
+      databasePath: ':memory:',
     });
     await new Promise<void>((resolve) => {
       server = app.listen(0, () => resolve());

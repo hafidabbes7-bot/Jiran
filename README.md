@@ -9,7 +9,7 @@ espace dédié, vérifié et organisé par quartier.
 | Chemin | Contenu |
 | --- | --- |
 | `mobile/` | Application Expo / React Native — socle V1 en cours de développement ([README](mobile/README.md)) |
-| `server/` | API de vérification du numéro — WhatsApp gratuit, SMS ou WhatsApp par modèle ([README](server/README.md)) |
+| `server/` | Serveur : vérification du numéro et fil de quartier partagé ([README](server/README.md)) |
 | `docs/cahier-des-charges.md` | Toutes les décisions de conception validées (concept, regroupement par quartier, modération, 24 écrans, périmètre V1) |
 | `prototype/jiran-accueil.html` | Prototype visuel HTML autonome — 24 écrans navigables, bilingue FR/AR avec bascule RTL |
 

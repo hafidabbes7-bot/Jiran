@@ -4,6 +4,9 @@ import express, { type Request, type Response } from 'express';
 import { z } from 'zod';
 
 import { config } from './config.js';
+import { openDatabase } from './content/db.js';
+import { ContentRepository } from './content/repository.js';
+import { createContentRouter } from './content/routes.js';
 import { maskPhone } from './phone.js';
 import { VerificationService } from './otp/service.js';
 import { InMemoryChallengeStore, type ChallengeStore } from './otp/store.js';
@@ -65,9 +68,17 @@ function extractTextMessages(payload: unknown): { from: string; text: string }[]
   return messages;
 }
 
-export function createServer(options?: { store?: ChallengeStore; providers?: ChannelProviders }) {
+export function createServer(options?: {
+  store?: ChallengeStore;
+  providers?: ChannelProviders;
+  /** Base du contenu ; par défaut celle de `DATABASE_PATH`. */
+  databasePath?: string;
+}) {
   const store = options?.store ?? new InMemoryChallengeStore();
   const providers = options?.providers ?? createChannelProviders();
+  const content = new ContentRepository(
+    openDatabase(options?.databasePath ?? config.databasePath)
+  );
 
   const verification = new VerificationService(store, providers, {
     length: config.otp.length,
@@ -275,6 +286,8 @@ export function createServer(options?: { store?: ChallengeStore; providers?: Cha
       await verification.confirmLink(message.text, message.from);
     }
   });
+
+  app.use(createContentRouter(content));
 
   /** Contrôle qu'un jeton est encore valable, et à quel numéro il correspond. */
   app.get('/auth/me', (request: Request, response: Response) => {

@@ -110,6 +110,7 @@ export const fr = {
     title: 'Mon quartier',
     searchPlaceholder: 'Chercher une publication ou un voisin',
     empty: 'Rien de neuf dans le quartier pour le moment.',
+    offline: 'Serveur injoignable — tire vers le bas pour réessayer.',
     emptyFiltered: 'Aucune publication dans cette catégorie.',
     twinnedNotice:
       '{neighborhood} partage son fil avec {twin} le temps d’atteindre {threshold} voisins vérifiés.',
@@ -134,6 +135,7 @@ export const fr = {
     photoUnavailable:
       '📷 Les photos arriveront quand la modération d’image sera branchée (§7.3 du cahier des charges).',
     published: '✓ Publication envoyée à ton quartier',
+    publishFailed: 'Publication impossible pour l’instant. Réessaie dans un instant.',
   },
   detail: {
     repliesTitle: 'Réponses',

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { REPORTS_PER_CYCLE } from '../domain/moderation/blocking';
 import type { ReportReason } from '../domain/types';
 import { useI18n } from '../i18n/I18nProvider';
 import { colors, fontSizes, radii, spacing } from '../theme/theme';
@@ -14,9 +13,8 @@ const REASONS: { reason: ReportReason; emoji: string }[] = [
 ];
 
 /**
- * Feuille de signalement. Rappelle la règle au moment où le voisin s'en sert :
- * {@link REPORTS_PER_CYCLE} signalements de voisins différents masquent le
- * contenu, la récidive le bloque définitivement (§3).
+ * Feuille de signalement. Le décompte est tenu par le serveur : trois voisins
+ * différents masquent le contenu, la récidive le bloque définitivement (§3).
  */
 export function ReportSheet({
   visible,
