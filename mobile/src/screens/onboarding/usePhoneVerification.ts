@@ -8,6 +8,7 @@ import type {
   LinkChallenge,
   VerifiedSession,
 } from '../../data/authService';
+import { normalizeEmail } from '../../domain/email';
 import { normalizePhone } from '../../domain/phone';
 
 export type VerificationStatus =
@@ -78,7 +79,10 @@ export function usePhoneVerification(auth: AuthService) {
       setError(null);
       setStatus({ kind: 'sending' });
 
-      const result = await auth.requestCode(normalizePhone(phone), channel);
+      // Une adresse part telle quelle : la normalisation des numéros retire
+      // les points et les espaces, ce qui découperait « prenom.nom@… ».
+      const identifiant = channel === 'email' ? normalizeEmail(phone) : normalizePhone(phone);
+      const result = await auth.requestCode(identifiant, channel);
 
       if (!result.ok) {
         setStatus({ kind: 'idle' });
@@ -117,7 +121,7 @@ export function usePhoneVerification(auth: AuthService) {
 
       if (result.ok) {
         stopCountdown();
-        return { phone: result.phone, token: result.token };
+        return { identifier: result.identifier, token: result.token };
       }
 
       setStatus({ kind: 'awaiting-code', challenge });
@@ -142,7 +146,7 @@ export function usePhoneVerification(auth: AuthService) {
 
       const result = await auth.claimLink(challengeId);
       if (result.ok) {
-        onVerified({ phone: result.phone, token: result.token });
+        onVerified({ identifier: result.identifier, token: result.token });
         return;
       }
 

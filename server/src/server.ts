@@ -17,6 +17,7 @@ import { ContentRepository } from './content/repository.js';
 import { ModerationQueue } from './content/moderationQueue.js';
 import { createContentRouter } from './content/routes.js';
 import { createPushSender, type PushSender } from './push/index.js';
+import { kindOf, maskIdentifier } from './identity.js';
 import { maskPhone } from './phone.js';
 import { VerificationService } from './otp/service.js';
 import { InMemoryChallengeStore, type ChallengeStore } from './otp/store.js';
@@ -29,11 +30,23 @@ import {
   type ChannelProviders,
 } from './messaging/index.js';
 
-const requestCodeSchema = z.object({
-  phone: z.string().min(6).max(20),
-  /** Canal souhaité ; le SMS reste le défaut si rien n'est précisé. */
-  channel: z.enum(CHANNELS as [string, ...string[]]).optional(),
-});
+/**
+ * Demande de code.
+ *
+ * `identifier` porte le numéro ou l'adresse ; `phone` reste accepté pour les
+ * applications déjà installées, qui ne connaissent que ce nom. La longueur va
+ * jusqu'à 254 caractères, la limite d'une adresse e-mail.
+ */
+const requestCodeSchema = z
+  .object({
+    identifier: z.string().trim().min(6).max(254).optional(),
+    phone: z.string().trim().min(6).max(254).optional(),
+    /** Canal souhaité ; le SMS reste le défaut si rien n'est précisé. */
+    channel: z.enum(CHANNELS as [string, ...string[]]).optional(),
+  })
+  .refine((body) => Boolean(body.identifier ?? body.phone), {
+    message: 'identifiant manquant',
+  });
 const verifyCodeSchema = z.object({
   challengeId: z.string().min(1).max(100),
   code: z.string().min(4).max(10),
@@ -219,7 +232,8 @@ export function createServer(options?: {
     }
 
     const channel = isChannel(parsed.data.channel) ? parsed.data.channel : 'sms';
-    const result = await verification.requestCode(parsed.data.phone, channel);
+    const identifiant = parsed.data.identifier ?? parsed.data.phone!;
+    const result = await verification.requestCode(identifiant, channel);
 
     if (result.ok) {
       response.json(result);
@@ -254,10 +268,14 @@ export function createServer(options?: {
     const result = await verification.verifyCode(parsed.data.challengeId, parsed.data.code);
 
     if (result.ok) {
-      console.info(`[auth] numéro vérifié : ${maskPhone(result.phone)}`);
+      console.info(`[auth] identifiant vérifié : ${maskIdentifier(result.identifier)}`);
       response.json({
-        phone: result.phone,
-        token: issueSessionToken(result.phone, config.sessionSecret, config.session.ttlDays),
+        // `phone` reste le nom du champ pour ne pas casser les applications
+        // déjà installées ; `identifier` est le nom juste, e-mail compris.
+        phone: result.identifier,
+        identifier: result.identifier,
+        identifierKind: kindOf(result.identifier),
+        token: issueSessionToken(result.identifier, config.sessionSecret, config.session.ttlDays),
       });
       return;
     }
@@ -289,10 +307,12 @@ export function createServer(options?: {
     const result = await verification.claimLink(parsed.data.challengeId);
 
     if (result.ok) {
-      console.info(`[auth] numéro vérifié par WhatsApp : ${maskPhone(result.phone)}`);
+      console.info(`[auth] numéro vérifié par WhatsApp : ${maskPhone(result.identifier)}`);
       response.json({
-        phone: result.phone,
-        token: issueSessionToken(result.phone, config.sessionSecret, config.session.ttlDays),
+        phone: result.identifier,
+        identifier: result.identifier,
+        identifierKind: 'phone',
+        token: issueSessionToken(result.identifier, config.sessionSecret, config.session.ttlDays),
       });
       return;
     }
@@ -352,13 +372,14 @@ export function createServer(options?: {
   app.get('/auth/me', (request: Request, response: Response) => {
     const header = request.header('authorization') ?? '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : '';
-    const phone = token ? readSessionToken(token, config.sessionSecret) : null;
+    const identifier = token ? readSessionToken(token, config.sessionSecret) : null;
 
-    if (!phone) {
+    if (!identifier) {
       response.status(401).json({ error: 'invalid_token' });
       return;
     }
-    response.json({ phone });
+    // `phone` reste là pour les applications déjà installées.
+    response.json({ phone: identifier, identifier, identifierKind: kindOf(identifier) });
   });
 
   return app;

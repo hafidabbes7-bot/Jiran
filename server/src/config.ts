@@ -23,6 +23,7 @@ const trialMode = modeEssaiDemande(process.env.TRIAL_MODE);
  */
 const envoiMuet = aucunEnvoiReel({
   smsProvider: process.env.SMS_PROVIDER,
+  emailProvider: process.env.EMAIL_PROVIDER,
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
   whatsappAccessToken: process.env.WHATSAPP_ACCESS_TOKEN,
 });
@@ -104,6 +105,32 @@ export const config = {
    * compte WhatsApp Business vérifié et un modèle « authentification »
    * approuvé par Meta sont nécessaires.
    */
+  /**
+   * Canal e-mail. Gratuit dans les deux formes :
+   *  — `smtp` : une boîte existante (Gmail, Outlook) avec un mot de passe
+   *    d'application. Rien à payer, rien à contractualiser ;
+   *  — `resend` : offre gratuite de 3 000 messages par mois, sans carte.
+   * `console` n'envoie rien et n'est toléré qu'en essai assumé.
+   */
+  email: {
+    provider: (process.env.EMAIL_PROVIDER ?? 'none') as
+      | 'none'
+      | 'smtp'
+      | 'resend'
+      | 'console',
+    from: process.env.EMAIL_FROM ?? '',
+    subject: process.env.EMAIL_SUBJECT ?? 'Votre code Jiran',
+    smtp: {
+      host: process.env.EMAIL_SMTP_HOST ?? '',
+      port: intFromEnv('EMAIL_SMTP_PORT', 587),
+      user: process.env.EMAIL_SMTP_USER ?? '',
+      pass: process.env.EMAIL_SMTP_PASS ?? '',
+      // 465 est le port chiffré de bout en bout ; 587 chiffre après connexion.
+      secure: (process.env.EMAIL_SMTP_SECURE ?? '') === 'true' || intFromEnv('EMAIL_SMTP_PORT', 587) === 465,
+    },
+    resendApiKey: process.env.RESEND_API_KEY ?? '',
+  },
+
   whatsapp: {
     phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID ?? '',
     accessToken: process.env.WHATSAPP_ACCESS_TOKEN ?? '',

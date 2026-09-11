@@ -148,10 +148,11 @@ retrouvé grâce au numéro de téléphone, et l'application dit ce qui s'est pa
 au lieu d'afficher un fil vide. Pour que ça cesse, il faut un disque persistant
 (offre payante Render) ou une base PostgreSQL hébergée ailleurs.
 
-**La vérification du numéro est décorative.** `TRIAL_MODE=true` affiche le code
-à l'écran : n'importe qui peut s'inscrire avec n'importe quel numéro. Tout le
-reste du mécanisme existe et fonctionne — il ne manque qu'un compte chez un
-expéditeur. Voir [docs/verification-reelle.md](docs/verification-reelle.md) : le
+**La vérification est décorative tant qu'aucun canal n'envoie vraiment.** `TRIAL_MODE=true` affiche le code
+à l'écran : n'importe qui peut s'inscrire avec n'importe quel numéro ou
+adresse. Tout le reste du mécanisme existe et fonctionne — il ne manque qu'un
+compte chez un expéditeur, et **l'e-mail est gratuit** : une boîte Gmail avec un
+mot de passe d'application, ou l'offre gratuite de Resend, suffisent. Voir [docs/verification-reelle.md](docs/verification-reelle.md) : le
 serveur referme cette porte tout seul dès que des identifiants réels sont posés,
 même si `TRIAL_MODE` reste à `true`, et `/health` dit lequel des deux états est
 en cours (`verificationDecorative`).
@@ -183,6 +184,19 @@ donc une décision de Hafid, pas une ligne de code :
 
 Et une décision qui n'attend que vous : le nom. « Jiran » est un nom de travail
 (§1), à valider avant toute publication sur un magasin d'applications.
+
+## Un compte appartient à un identifiant vérifié
+
+Numéro de téléphone **ou** adresse e-mail : c'est cet identifiant qui possède
+l'historique — publications, messages, parties — pas l'appareil. Se reconnecter
+avec le même identifiant retrouve tout ; l'application, elle, ne fait que garder
+la session pour ne pas redemander le code à chaque ouverture.
+
+L'e-mail existe parce qu'il est le seul canal gratuit à l'envoi : un quartier
+peut donc vérifier vraiment ses comptes sans attendre un contrat d'agrégateur
+SMS. Les quatre canaux — SMS, e-mail, WhatsApp par modèle, WhatsApp entrant —
+partagent le même mécanisme : code à six chiffres haché, expiration, quotas par
+identifiant, jeton de session signé.
 
 ## Photos et stories
 

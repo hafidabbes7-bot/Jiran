@@ -40,9 +40,9 @@ describe('parties entre voisins', () => {
     const db = openDatabase(':memory:');
     const content = new ContentRepository(db);
     games = new GameService(db);
-    hafid = content.saveMember({ phone: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
-    salim = content.saveMember({ phone: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
-    karim = content.saveMember({ phone: '0555000003', firstName: 'Karim', neighborhoodId: 'oran' });
+    hafid = content.saveMember({ identifier: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
+    salim = content.saveMember({ identifier: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
+    karim = content.saveMember({ identifier: '0555000003', firstName: 'Karim', neighborhoodId: 'oran' });
   });
 
   it('ouvre une partie qui attend un adversaire', () => {

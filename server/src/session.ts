@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 
 interface SessionPayload {
   /** Numéro vérifié, forme nationale. */
-  phone: string;
+  identifier: string;
   /** Émission et expiration, en secondes Unix. */
   iat: number;
   exp: number;
@@ -23,10 +23,10 @@ function sign(data: string, secret: string): string {
   return crypto.createHmac('sha256', secret).update(data).digest('base64url');
 }
 
-export function issueSessionToken(phone: string, secret: string, ttlDays: number): string {
+export function issueSessionToken(identifier: string, secret: string, ttlDays: number): string {
   const issuedAt = Math.floor(Date.now() / 1000);
   const payload: SessionPayload = {
-    phone,
+    identifier,
     iat: issuedAt,
     exp: issuedAt + ttlDays * 24 * 3600,
   };
@@ -46,9 +46,9 @@ export function readSessionToken(token: string, secret: string): string | null {
 
   try {
     const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8')) as SessionPayload;
-    if (typeof payload.phone !== 'string' || typeof payload.exp !== 'number') return null;
+    if (typeof payload.identifier !== 'string' || typeof payload.exp !== 'number') return null;
     if (payload.exp < Math.floor(Date.now() / 1000)) return null;
-    return payload.phone;
+    return payload.identifier;
   } catch {
     return null;
   }

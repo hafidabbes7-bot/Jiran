@@ -58,7 +58,7 @@ describe('HttpAuthService', () => {
     stubFetch(200, { phone: '0555123456', token: 'jeton' });
     expect(await auth.claimLink('abc')).toEqual({
       ok: true,
-      phone: '0555123456',
+      identifier: '0555123456',
       token: 'jeton',
     });
   });
@@ -82,7 +82,7 @@ describe('HttpAuthService', () => {
     await auth.requestCode('0555123456', 'whatsapp');
 
     const body = JSON.parse(spy.mock.calls[0][1].body);
-    expect(body).toEqual({ phone: '0555123456', channel: 'whatsapp' });
+    expect(body).toEqual({ identifier: '0555123456', channel: 'whatsapp' });
   });
 
   it('ne retient que les canaux connus annoncés par le serveur', async () => {
@@ -131,7 +131,7 @@ describe('HttpAuthService', () => {
 
     expect(await auth.verifyCode('abc', '123456')).toEqual({
       ok: true,
-      phone: '0555123456',
+      identifier: '0555123456',
       token: 'jeton',
     });
   });

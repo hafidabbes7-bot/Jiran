@@ -38,6 +38,12 @@ services:
       # Le code s'affiche dans l'application au lieu d'être envoyé par SMS.
       - key: SMS_PROVIDER
         value: console
+      # Canal e-mail : le seul gratuit à l'envoi. En « console » il n'envoie
+      # rien — le code s'affiche à l'écran — mais le choix du canal est déjà
+      # visible à l'inscription. Passez à « smtp » ou « resend » en ajoutant
+      # les identifiants : voir docs/verification-reelle.md.
+      - key: EMAIL_PROVIDER
+        value: console
       - key: PUSH_PROVIDER
         value: console
 

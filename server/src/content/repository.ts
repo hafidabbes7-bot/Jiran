@@ -3,6 +3,7 @@ import type { DatabaseSync } from 'node:sqlite';
 
 import { readDecision } from './decisions.js';
 import { moderationState, type ModerationState } from './moderation.js';
+import { kindOf, type IdentifierKind } from '../identity.js';
 import { sharedFeedNeighborhoodIds } from './neighborhoods.js';
 
 export type Category = 'securite' | 'entraide' | 'annonce' | 'evenement';
@@ -15,7 +16,9 @@ export const CATEGORIES: readonly Category[] = [
 
 export interface Member {
   id: string;
-  phone: string;
+  /** Numéro de téléphone ou adresse e-mail, vérifié. C'est lui qui possède le compte. */
+  identifier: string;
+  identifierKind: IdentifierKind;
   firstName: string;
   neighborhoodId: string;
   building?: string;
@@ -56,28 +59,31 @@ export class ContentRepository {
 
   // --- Membres ---------------------------------------------------------
 
-  findMemberByPhone(phone: string): Member | undefined {
+  findMemberByIdentifier(identifier: string): Member | undefined {
     const row = this.db
       .prepare(
-        `SELECT id, phone, first_name, neighborhood_id, building, joined_at
-         FROM members WHERE phone = ?`
+        `SELECT id, identifier, identifier_kind, first_name, neighborhood_id, building, joined_at
+         FROM members WHERE identifier = ?`
       )
-      .get(phone) as Record<string, string | null> | undefined;
+      .get(identifier) as Record<string, string | null> | undefined;
 
     return row ? this.toMember(row) : undefined;
   }
 
   /**
-   * Crée le membre au premier passage, met à jour son profil ensuite. Le
-   * numéro vient du jeton de session, jamais du corps de la requête.
+   * Crée le membre au premier passage, met à jour son profil ensuite.
+   *
+   * L'identifiant — numéro ou adresse — vient du jeton de session, jamais du
+   * corps de la requête : c'est ce qui rattache l'historique à la personne
+   * vérifiée plutôt qu'à l'appareil.
    */
   saveMember(input: {
-    phone: string;
+    identifier: string;
     firstName: string;
     neighborhoodId: string;
     building?: string;
   }): Member {
-    const existing = this.findMemberByPhone(input.phone);
+    const existing = this.findMemberByIdentifier(input.identifier);
 
     if (existing) {
       this.db
@@ -90,7 +96,8 @@ export class ContentRepository {
 
     const member: Member = {
       id: newId(),
-      phone: input.phone,
+      identifier: input.identifier,
+      identifierKind: kindOf(input.identifier),
       firstName: input.firstName,
       neighborhoodId: input.neighborhoodId,
       building: input.building,
@@ -99,12 +106,13 @@ export class ContentRepository {
 
     this.db
       .prepare(
-        `INSERT INTO members (id, phone, first_name, neighborhood_id, building, joined_at)
-         VALUES (?, ?, ?, ?, ?, ?)`
+        `INSERT INTO members (id, identifier, identifier_kind, first_name, neighborhood_id, building, joined_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         member.id,
-        member.phone,
+        member.identifier,
+        member.identifierKind,
         member.firstName,
         member.neighborhoodId,
         member.building ?? null,
@@ -316,7 +324,8 @@ export class ContentRepository {
   private toMember(row: Record<string, string | null>): Member {
     return {
       id: String(row.id),
-      phone: String(row.phone),
+      identifier: String(row.identifier),
+      identifierKind: String(row.identifier_kind) as IdentifierKind,
       firstName: String(row.first_name),
       neighborhoodId: String(row.neighborhood_id),
       building: row.building ?? undefined,

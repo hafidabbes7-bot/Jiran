@@ -16,9 +16,20 @@ type Props = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
-/** Masque le milieu du numéro : il n'est montré qu'à son propriétaire, et jamais en entier. */
-function maskPhone(phone: string): string {
-  return phone.length < 8 ? phone : `${phone.slice(0, 4)}····${phone.slice(-2)}`;
+/**
+ * Masque le milieu de l'identifiant : il n'est montré qu'à son propriétaire, et
+ * jamais en entier — une capture d'écran de profil circule vite.
+ */
+function maskIdentifier(identifier: string): string {
+  const arobase = identifier.indexOf('@');
+  if (arobase > 0) {
+    const début = identifier.slice(0, Math.min(2, arobase));
+    return `${début}····${identifier.slice(arobase)}`;
+  }
+
+  return identifier.length < 8
+    ? identifier
+    : `${identifier.slice(0, 4)}····${identifier.slice(-2)}`;
 }
 
 /**
@@ -89,7 +100,7 @@ export function ProfileScreen({ navigation }: Props) {
       <View style={styles.card}>
         <Text style={[styles.cardTitle, rtl.text]}>{s.profile.checksTitle}</Text>
         <Text style={[styles.line, rtl.text]}>
-          ✅ {format(s.profile.phoneVerified, { phone: maskPhone(session.phone) })}
+          ✅ {format(s.profile.phoneVerified, { phone: maskIdentifier(session.identifier) })}
         </Text>
         <Text style={[styles.line, rtl.text]}>
           {session.locationVerified ? '✅ ' : '⚠️ '}

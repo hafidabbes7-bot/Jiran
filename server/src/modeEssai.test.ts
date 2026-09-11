@@ -38,6 +38,8 @@ describe('fermeture automatique du mode d’essai', () => {
 
   it('se referme dès qu’un fournisseur réel est configuré', () => {
     assert.equal(aucunEnvoiReel({ smsProvider: 'twilio' }), false);
+    assert.equal(aucunEnvoiReel({ emailProvider: 'smtp' }), false);
+    assert.equal(aucunEnvoiReel({ emailProvider: 'resend' }), false);
     assert.equal(aucunEnvoiReel({ smsProvider: 'http' }), false);
     assert.equal(
       aucunEnvoiReel({ whatsappPhoneNumberId: '1234', whatsappAccessToken: 'jeton' }),

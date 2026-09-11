@@ -17,10 +17,18 @@ export function openDatabase(location: string): DatabaseSync {
   db.exec('PRAGMA journal_mode = WAL');
   db.exec('PRAGMA foreign_keys = ON');
 
+  // Avant de créer quoi que ce soit : une base née quand le compte était
+  // forcément un numéro doit passer à l'identifiant, sans quoi
+  // `CREATE TABLE IF NOT EXISTS` la laisserait telle quelle pour toujours.
+  migrerVersIdentifiant(db);
+
   db.exec(`
+    -- L'identifiant vérifié — numéro de téléphone ou adresse e-mail — est ce
+    -- qui possède le compte : c'est lui qui garde l'historique, pas l'appareil.
     CREATE TABLE IF NOT EXISTS members (
       id              TEXT PRIMARY KEY,
-      phone           TEXT NOT NULL UNIQUE,
+      identifier      TEXT NOT NULL UNIQUE,
+      identifier_kind TEXT NOT NULL,
       first_name      TEXT NOT NULL,
       neighborhood_id TEXT NOT NULL,
       building        TEXT,
@@ -308,6 +316,36 @@ export function openDatabase(location: string): DatabaseSync {
   ajouterColonne(db, 'posts', 'photo_id', 'TEXT');
 
   return db;
+}
+
+/**
+ * Fait passer une base née avec `members.phone` à `members.identifier`.
+ *
+ * Les identifiants de membres sont conservés : toutes les clés étrangères
+ * — publications, messages, parties — continuent de pointer au bon endroit.
+ * Les comptes existants deviennent des comptes « téléphone », ce qu'ils sont.
+ */
+function migrerVersIdentifiant(db: DatabaseSync): void {
+  const colonnes = db.prepare('PRAGMA table_info(members)').all() as { name: string }[];
+  if (colonnes.length === 0 || colonnes.some((c) => c.name === 'identifier')) return;
+
+  db.exec('PRAGMA foreign_keys = OFF');
+  db.exec(`
+    CREATE TABLE members_migres (
+      id              TEXT PRIMARY KEY,
+      identifier      TEXT NOT NULL UNIQUE,
+      identifier_kind TEXT NOT NULL,
+      first_name      TEXT NOT NULL,
+      neighborhood_id TEXT NOT NULL,
+      building        TEXT,
+      joined_at       TEXT NOT NULL
+    );
+    INSERT INTO members_migres (id, identifier, identifier_kind, first_name, neighborhood_id, building, joined_at)
+      SELECT id, phone, 'phone', first_name, neighborhood_id, building, joined_at FROM members;
+    DROP TABLE members;
+    ALTER TABLE members_migres RENAME TO members;
+  `);
+  db.exec('PRAGMA foreign_keys = ON');
 }
 
 /**

@@ -14,8 +14,8 @@ describe('journal des notifications', () => {
     const db = openDatabase(':memory:');
     const content = new ContentRepository(db);
     service = new NotificationService(db);
-    hafid = content.saveMember({ phone: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
-    salim = content.saveMember({ phone: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
+    hafid = content.saveMember({ identifier: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
+    salim = content.saveMember({ identifier: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
   });
 
   it('dépose la même notification chez plusieurs voisins', () => {

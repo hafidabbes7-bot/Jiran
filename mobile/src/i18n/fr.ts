@@ -32,6 +32,11 @@ export const fr = {
     channelSms: 'SMS',
     channelWhatsapp: 'WhatsApp',
     channelWhatsappLink: 'WhatsApp',
+    channelEmail: 'E-mail',
+    emailLabel: 'Adresse e-mail',
+    emailPlaceholder: 'exemple@mail.com',
+    emailHint: 'Le code arrive dans ta boîte, gratuitement.',
+    emailError: 'Adresse e-mail invalide.',
     channelFreeHint:
       'Tu n’as pas reçu de SMS ? Avec cette option, c’est toi qui nous envoies un message WhatsApp, et ton numéro est confirmé par WhatsApp lui-même.',
     channelUnavailable: 'Ce canal n’est pas disponible pour le moment. Essaie l’autre.',

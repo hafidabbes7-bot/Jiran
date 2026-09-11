@@ -38,9 +38,13 @@ export interface Neighborhood {
 
 export interface Session {
   firstName: string;
-  /** Numéro au format local algérien, normalisé en 0XXXXXXXXX. */
-  phone: string;
-  /** Date de la vérification du numéro par SMS. */
+  /**
+   * Ce qui identifie le voisin, vérifié : numéro algérien normalisé, ou
+   * adresse e-mail. C'est lui qui possède l'historique du compte.
+   */
+  identifier: string;
+  identifierKind: 'phone' | 'email';
+  /** Date de la vérification de l'identifiant. */
   phoneVerifiedAt: string;
   /** Jeton de session délivré par le serveur après vérification. */
   token: string;

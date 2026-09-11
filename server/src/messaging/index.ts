@@ -1,6 +1,7 @@
 import { config } from '../config.js';
 import { fournisseurMuetAutorise } from '../modeEssai.js';
 import { ConsoleProvider } from './consoleProvider.js';
+import { ResendEmailProvider, SmtpEmailProvider } from './emailProvider.js';
 import { HttpGatewaySmsProvider } from './httpGatewayProvider.js';
 import type { Channel, ChannelProviders, MessageProvider } from './provider.js';
 import { TwilioSmsProvider } from './twilioProvider.js';
@@ -69,6 +70,50 @@ function createWhatsAppProvider(): MessageProvider | undefined {
 }
 
 /**
+ * Fournisseur du canal e-mail, d'après `EMAIL_PROVIDER`.
+ *
+ * Gratuit dans les deux cas : une boîte existante en SMTP, ou l'offre gratuite
+ * de Resend. C'est ce qui permet de vérifier vraiment les comptes sans attendre
+ * un contrat d'agrégateur SMS.
+ */
+function createEmailProvider(): MessageProvider | undefined {
+  const { provider, from, subject, smtp, resendApiKey } = config.email;
+
+  switch (provider) {
+    case 'none':
+      return undefined;
+
+    case 'smtp': {
+      if (!smtp.host || !smtp.user || !smtp.pass || !from) {
+        throw new Error(
+          'EMAIL_PROVIDER=smtp exige EMAIL_SMTP_HOST, EMAIL_SMTP_USER, EMAIL_SMTP_PASS et EMAIL_FROM.'
+        );
+      }
+      return new SmtpEmailProvider(smtp, from, subject);
+    }
+
+    case 'resend': {
+      if (!resendApiKey || !from) {
+        throw new Error('EMAIL_PROVIDER=resend exige RESEND_API_KEY et EMAIL_FROM.');
+      }
+      return new ResendEmailProvider(resendApiKey, from, subject);
+    }
+
+    case 'console': {
+      if (!fournisseurMuetAutorise(config.isProduction, config.trialMode)) {
+        throw new Error(
+          "EMAIL_PROVIDER=console n'envoie aucun message : interdit en production."
+        );
+      }
+      return new ConsoleProvider('email');
+    }
+
+    default:
+      throw new Error(`EMAIL_PROVIDER inconnu : ${provider}`);
+  }
+}
+
+/**
  * Canaux réellement ouverts. L'application interroge `/auth/channels` pour
  * n'afficher que ceux-là : proposer WhatsApp sans compte Meta configuré
  * reviendrait à promettre un message qui n'arrivera jamais.
@@ -82,9 +127,12 @@ export function createChannelProviders(): ChannelProviders {
   const whatsapp = createWhatsAppProvider();
   if (whatsapp) providers.whatsapp = whatsapp;
 
+  const email = createEmailProvider();
+  if (email) providers.email = email;
+
   if (Object.keys(providers).length === 0) {
     throw new Error(
-      "Aucun canal d'envoi configuré : renseignez SMS_PROVIDER ou les identifiants WhatsApp."
+      "Aucun canal d'envoi configuré : renseignez SMS_PROVIDER, EMAIL_PROVIDER ou les identifiants WhatsApp."
     );
   }
 

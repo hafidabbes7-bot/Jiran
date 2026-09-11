@@ -34,10 +34,13 @@ export function fournisseurMuetAutorise(enProduction: boolean, modeEssai: boolea
  */
 export function aucunEnvoiReel(env: {
   smsProvider?: string;
+  emailProvider?: string;
   whatsappPhoneNumberId?: string;
   whatsappAccessToken?: string;
 }): boolean {
-  const sms = env.smsProvider ?? 'console';
+  const muet = (fournisseur: string | undefined) =>
+    fournisseur === undefined || fournisseur === 'console' || fournisseur === 'none';
+
   const whatsapp = Boolean(env.whatsappPhoneNumberId && env.whatsappAccessToken);
-  return (sms === 'console' || sms === 'none') && !whatsapp;
+  return muet(env.smsProvider) && muet(env.emailProvider) && !whatsapp;
 }

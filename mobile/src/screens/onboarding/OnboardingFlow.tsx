@@ -19,6 +19,7 @@ import { PrimaryButton } from '../../components/PrimaryButton';
 import type { AuthService, Channel, VerifiedSession } from '../../data/authService';
 import { NEIGHBORHOODS, findNeighborhood } from '../../data/neighborhoods';
 import { checkPosition, findCoverage } from '../../domain/location';
+import { isValidEmail } from '../../domain/email';
 import { isValidAlgerianMobile } from '../../domain/phone';
 import { formatDistance } from '../../domain/time';
 import type { Language, Neighborhood, Session } from '../../domain/types';
@@ -37,6 +38,7 @@ const CHANNEL_EMOJI: Record<Channel, string> = {
   sms: '💬',
   whatsapp: '🟢',
   whatsapp_link: '🟢',
+  email: '✉️',
 };
 
 type PositionStatus =
@@ -117,6 +119,7 @@ export function OnboardingFlow({
   const channelName = (value: Channel) => {
     if (value === 'whatsapp') return s.onboarding.channelWhatsapp;
     if (value === 'whatsapp_link') return s.onboarding.channelWhatsappLink;
+    if (value === 'email') return s.onboarding.channelEmail;
     return s.onboarding.channelSms;
   };
 
@@ -161,7 +164,11 @@ export function OnboardingFlow({
   const submitAccount = async () => {
     const nextErrors: typeof errors = {};
     if (!firstName.trim()) nextErrors.firstName = s.onboarding.firstNameError;
-    if (!isValidAlgerianMobile(phone)) nextErrors.phone = s.onboarding.phoneError;
+    // Le canal décide de ce qu'on attend : une adresse, ou un numéro algérien.
+    const valide = channel === 'email' ? isValidEmail(phone) : isValidAlgerianMobile(phone);
+    if (!valide) {
+      nextErrors.phone = channel === 'email' ? s.onboarding.emailError : s.onboarding.phoneError;
+    }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -309,8 +316,10 @@ export function OnboardingFlow({
     try {
       await onDone({
         firstName: firstName.trim(),
-        // Le numéro retenu est celui que le serveur a vérifié, pas celui saisi.
-        phone: verified.phone,
+        // L'identifiant retenu est celui que le serveur a vérifié, pas celui
+        // saisi : lui seul possède l'historique du compte.
+        identifier: verified.identifier,
+        identifierKind: channel === 'email' ? 'email' : 'phone',
         phoneVerifiedAt: new Date().toISOString(),
         token: verified.token,
         neighborhoodId,
@@ -380,13 +389,19 @@ export function OnboardingFlow({
                 error={errors.firstName}
               />
               <Field
-                label={s.onboarding.phoneLabel}
-                placeholder={s.onboarding.phonePlaceholder}
+                label={channel === 'email' ? s.onboarding.emailLabel : s.onboarding.phoneLabel}
+                placeholder={
+                  channel === 'email'
+                    ? s.onboarding.emailPlaceholder
+                    : s.onboarding.phonePlaceholder
+                }
                 value={phone}
                 onChangeText={setPhone}
-                keyboardType="phone-pad"
+                keyboardType={channel === 'email' ? 'email-address' : 'phone-pad'}
+                autoCapitalize="none"
+                autoCorrect={false}
                 error={errors.phone}
-                hint={s.onboarding.phoneHint}
+                hint={channel === 'email' ? s.onboarding.emailHint : s.onboarding.phoneHint}
               />
 
               {availableChannels.length > 1 ? (
@@ -400,7 +415,12 @@ export function OnboardingFlow({
                           key={option}
                           accessibilityRole="radio"
                           accessibilityState={{ selected: active }}
-                          onPress={() => setChannel(option)}
+                          onPress={() => {
+                            // Un numéro laissé dans le champ « adresse » ne
+                            // veut plus rien dire : on repart d'un champ vide.
+                            if ((option === 'email') !== (channel === 'email')) setPhone('');
+                            setChannel(option);
+                          }}
                           style={[styles.channelButton, active && styles.channelButtonActive]}
                         >
                           <Text

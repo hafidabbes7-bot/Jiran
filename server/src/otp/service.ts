@@ -1,6 +1,13 @@
 import crypto from 'node:crypto';
 
-import { isValidAlgerianMobile, maskPhone, normalizePhone, toE164 } from '../phone.js';
+import {
+  isValidIdentifier,
+  kindOf,
+  maskIdentifier,
+  normalizeIdentifier,
+  type IdentifierKind,
+} from '../identity.js';
+import { maskPhone, normalizePhone, toE164 } from '../phone.js';
 import type { Channel, ChannelProviders } from '../messaging/provider.js';
 import { generateCode, generateLinkToken, hashCode, safeEqual } from './codes.js';
 import type { Challenge, ChallengeStore } from './store.js';
@@ -40,20 +47,21 @@ export type RequestResult =
       /** Jeton que le voisin nous envoie ; c'est son message qui prouve le numéro. */
       token: string;
     }
+  /** Numéro ou adresse qui ne ressemble à rien de vérifiable. */
   | { ok: false; reason: 'invalid_phone' }
   | { ok: false; reason: 'channel_unavailable' }
   | { ok: false; reason: 'cooldown' | 'rate_limited'; retryAfterSeconds: number }
   | { ok: false; reason: 'sms_failed' };
 
 export type VerifyResult =
-  | { ok: true; phone: string }
+  | { ok: true; identifier: string }
   | { ok: false; reason: 'not_found' | 'expired' | 'consumed' }
   | { ok: false; reason: 'invalid_code'; attemptsLeft: number }
   | { ok: false; reason: 'too_many_attempts' };
 
 /** Résultat d'une relève du défi « lien WhatsApp », interrogé en boucle. */
 export type ClaimResult =
-  | { ok: true; phone: string }
+  | { ok: true; identifier: string }
   | { ok: false; reason: 'pending' | 'not_found' | 'expired' | 'consumed' };
 
 /** Message que le voisin envoie depuis WhatsApp. */
@@ -94,18 +102,22 @@ export class VerificationService {
   get channels(): Channel[] {
     const open: Channel[] = [];
     if (this.providers.sms) open.push('sms');
+    if (this.providers.email) open.push('email');
     if (this.providers.whatsapp) open.push('whatsapp');
     if (this.options.whatsappBusinessNumber) open.push('whatsapp_link');
     return open;
   }
 
-  async requestCode(rawPhone: string, channel: Channel = 'sms'): Promise<RequestResult> {
-    if (!isValidAlgerianMobile(rawPhone)) {
+  async requestCode(rawIdentifier: string, channel: Channel = 'sms'): Promise<RequestResult> {
+    // Le canal décide de ce qu'on attend : une adresse pour l'e-mail, un
+    // numéro algérien pour tout le reste.
+    const kind: IdentifierKind = channel === 'email' ? 'email' : 'phone';
+    if (!isValidIdentifier(rawIdentifier, kind)) {
       return { ok: false, reason: 'invalid_phone' };
     }
 
     if (channel === 'whatsapp_link') {
-      return this.requestLink(normalizePhone(rawPhone));
+      return this.requestLink(normalizePhone(rawIdentifier));
     }
 
     const provider = this.providers[channel];
@@ -113,9 +125,9 @@ export class VerificationService {
       return { ok: false, reason: 'channel_unavailable' };
     }
 
-    const phone = normalizePhone(rawPhone);
+    const identifier = normalizeIdentifier(rawIdentifier, kind);
     const now = this.now();
-    const { timestamps } = await this.store.sendLog(phone);
+    const { timestamps } = await this.store.sendLog(identifier);
 
     const lastSend = timestamps.at(-1);
     if (lastSend !== undefined) {
@@ -129,8 +141,8 @@ export class VerificationService {
       }
     }
 
-    // Les quotas sont tenus par numéro, tous canaux confondus : basculer sur
-    // WhatsApp ne doit pas remettre les compteurs à zéro.
+    // Les quotas sont tenus par identifiant, tous canaux confondus : basculer
+    // de l'e-mail au SMS ne doit pas remettre les compteurs à zéro.
     const windowStart = now - this.options.windowSeconds * 1000;
     const sendsInWindow = timestamps.filter((timestamp) => timestamp > windowStart);
     if (sendsInWindow.length >= this.options.maxSendsPerWindow) {
@@ -147,12 +159,14 @@ export class VerificationService {
 
     try {
       await provider.send({
-        to: toE164(phone),
+        // Les passerelles SMS veulent la forme internationale ; une adresse
+        // e-mail, elle, part telle quelle.
+        to: kind === 'email' ? identifier : toE164(identifier),
         message: buildMessage(code, this.options.ttlSeconds),
       });
     } catch (error) {
       console.error(
-        `[otp] envoi impossible vers ${maskPhone(phone)} par ${channel} (${provider.name})`,
+        `[otp] envoi impossible vers ${maskIdentifier(identifier)} par ${channel} (${provider.name})`,
         error
       );
       return { ok: false, reason: 'sms_failed' };
@@ -160,11 +174,11 @@ export class VerificationService {
 
     // L'envoi n'est compté qu'une fois réussi : un échec de la passerelle ne
     // doit pas consommer le quota du voisin.
-    await this.store.recordSend(phone, now);
+    await this.store.recordSend(identifier, now);
 
     const challenge: Challenge = {
       id: challengeId,
-      phone,
+      identifier,
       mode: 'code',
       codeHash: hashCode(challengeId, code, this.options.secret),
       expiresAt: now + this.options.ttlSeconds * 1000,
@@ -195,7 +209,7 @@ export class VerificationService {
    * Aucun quota d'envoi n'est consommé ici — il n'y a pas d'envoi. Seule la
    * limite par adresse IP borne la création de défis.
    */
-  private async requestLink(phone: string): Promise<RequestResult> {
+  private async requestLink(identifier: string): Promise<RequestResult> {
     const businessNumber = this.options.whatsappBusinessNumber;
     if (!businessNumber) {
       return { ok: false, reason: 'channel_unavailable' };
@@ -207,7 +221,7 @@ export class VerificationService {
 
     const challenge: Challenge = {
       id: challengeId,
-      phone,
+      identifier,
       mode: 'link',
       codeHash: hashCode(challengeId, token, this.options.secret),
       expiresAt: now + this.options.ttlSeconds * 1000,
@@ -255,9 +269,9 @@ export class VerificationService {
 
     if (!match) return false;
     if (match.expiresAt < this.now() || match.consumed) return false;
-    if (match.phone !== sender) {
+    if (match.identifier !== sender) {
       console.warn(
-        `[otp] jeton WhatsApp reçu depuis ${maskPhone(sender)}, attendu ${maskPhone(match.phone)}`
+        `[otp] jeton WhatsApp reçu depuis ${maskPhone(sender)}, attendu ${maskPhone(match.identifier)}`
       );
       return false;
     }
@@ -275,7 +289,7 @@ export class VerificationService {
     if (!challenge.linkConfirmed) return { ok: false, reason: 'pending' };
 
     await this.store.update({ ...challenge, consumed: true });
-    return { ok: true, phone: challenge.phone };
+    return { ok: true, identifier: challenge.identifier };
   }
 
   async verifyCode(challengeId: string, code: string): Promise<VerifyResult> {
@@ -296,6 +310,6 @@ export class VerificationService {
 
     // Un code validé est brûlé immédiatement : il ne sert qu'une fois.
     await this.store.update({ ...challenge, consumed: true });
-    return { ok: true, phone: challenge.phone };
+    return { ok: true, identifier: challenge.identifier };
   }
 }

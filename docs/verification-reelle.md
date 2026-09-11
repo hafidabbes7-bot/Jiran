@@ -16,7 +16,54 @@ referme la porte.
 
 ---
 
-## Chemin 1 — WhatsApp, gratuit (recommandé pour commencer)
+## Chemin 1 — l'e-mail, gratuit (le plus simple)
+
+Rien à contractualiser, rien à payer, et ça marche depuis n'importe quel pays.
+Deux formes, au choix.
+
+### a) Avec une boîte que vous avez déjà (Gmail)
+
+1. Sur le compte Google : **Gérer mon compte → Sécurité → Validation en deux
+   étapes** (obligatoire pour la suite).
+2. Toujours dans Sécurité : **Mots de passe des applications**. Créer un mot de
+   passe nommé « Jiran » et copier les 16 lettres affichées.
+3. Dans **Render → jiran-essai → Environment**, ajouter :
+
+   | Clé | Valeur |
+   | --- | --- |
+   | `EMAIL_PROVIDER` | `smtp` |
+   | `EMAIL_SMTP_HOST` | `smtp.gmail.com` |
+   | `EMAIL_SMTP_PORT` | `465` |
+   | `EMAIL_SMTP_USER` | votre adresse Gmail complète |
+   | `EMAIL_SMTP_PASS` | les 16 lettres de l'étape 2 |
+   | `EMAIL_FROM` | `Jiran <votre-adresse@gmail.com>` |
+
+4. **Save**. Render redéploie, et le code part réellement par e-mail.
+
+> Gmail limite à 500 messages par jour. Pour un quartier, c'est confortable.
+> Avec Outlook, c'est `smtp-mail.outlook.com`, port 587 — Microsoft restreint
+> toutefois de plus en plus l'envoi depuis les comptes personnels.
+
+### b) Avec un service d'envoi (Resend)
+
+Offre gratuite de 3 000 messages par mois, sans carte bancaire.
+
+1. Créer un compte sur **resend.com**, confirmer son adresse.
+2. **API Keys → Create API Key**, copier la clé.
+3. Dans Render :
+
+   | Clé | Valeur |
+   | --- | --- |
+   | `EMAIL_PROVIDER` | `resend` |
+   | `RESEND_API_KEY` | la clé copiée |
+   | `EMAIL_FROM` | `Jiran <onboarding@resend.dev>` |
+
+   `onboarding@resend.dev` fonctionne tout de suite ; pour écrire depuis votre
+   propre nom de domaine, il faut le vérifier chez Resend.
+
+---
+
+## Chemin 2 — WhatsApp, gratuit aussi
 
 Meta offre 1 000 conversations de service par mois sur l'API WhatsApp Cloud.
 Pour un quartier, c'est largement au-dessus du nécessaire.
@@ -54,7 +101,7 @@ vérifier un vrai numéro d'entreprise.
 
 ---
 
-## Chemin 2 — SMS par Twilio
+## Chemin 3 — SMS par Twilio
 
 Marche partout, y compris chez qui n'a pas WhatsApp. Compte d'essai offert
 (environ 15 $ de crédit), puis quelques centimes par SMS vers l'Algérie.
@@ -81,7 +128,7 @@ Marche partout, y compris chez qui n'a pas WhatsApp. Compte d'essai offert
 
 ---
 
-## Chemin 3 — un agrégateur algérien
+## Chemin 4 — un agrégateur algérien
 
 Les opérateurs locaux passent par des agrégateurs qui exposent une simple
 adresse HTTP. Le serveur sait déjà s'y brancher :

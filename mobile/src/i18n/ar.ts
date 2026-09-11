@@ -33,6 +33,11 @@ export const ar: Strings = {
     channelSms: 'رسالة قصيرة',
     channelWhatsapp: 'واتساب',
     channelWhatsappLink: 'واتساب',
+    channelEmail: 'البريد الإلكتروني',
+    emailLabel: 'عنوان البريد الإلكتروني',
+    emailPlaceholder: 'exemple@mail.com',
+    emailHint: 'يصلك الرمز في بريدك، مجاناً.',
+    emailError: 'عنوان بريد غير صالح.',
     channelFreeHint:
       'لم تصلك الرسالة القصيرة؟ مع هذا الخيار، أنت من يرسل لنا رسالة واتساب، وواتساب نفسه يؤكّد رقمك.',
     channelUnavailable: 'هذه القناة غير متاحة حالياً. جرّب الأخرى.',

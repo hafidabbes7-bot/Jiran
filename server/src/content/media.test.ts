@@ -18,9 +18,9 @@ describe('photos et stories', () => {
     const db = openDatabase(':memory:');
     content = new ContentRepository(db);
     media = new MediaService(db);
-    hafid = content.saveMember({ phone: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
-    salim = content.saveMember({ phone: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
-    karim = content.saveMember({ phone: '0555000003', firstName: 'Karim', neighborhoodId: 'oran' });
+    hafid = content.saveMember({ identifier: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
+    salim = content.saveMember({ identifier: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
+    karim = content.saveMember({ identifier: '0555000003', firstName: 'Karim', neighborhoodId: 'oran' });
   });
 
   it('enregistre une photo et la rend au quartier, à lui seul', () => {

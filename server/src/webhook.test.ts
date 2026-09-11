@@ -109,7 +109,7 @@ describe('vérification gratuite par WhatsApp', () => {
 
   it('vérifie le numéro quand le message arrive', async () => {
     const requested = await post('/auth/request-code', {
-      phone: '0555123456',
+      identifier: '0555123456',
       channel: 'whatsapp_link',
     });
     assert.equal(requested.status, 200);
@@ -139,7 +139,11 @@ describe('vérification gratuite par WhatsApp', () => {
     const me = await fetch(`${baseUrl}/auth/me`, {
       headers: { Authorization: `Bearer ${session.token}` },
     });
-    assert.deepEqual(await me.json(), { phone: '0555123456' });
+    assert.deepEqual(await me.json(), {
+      phone: '0555123456',
+      identifier: '0555123456',
+      identifierKind: 'phone',
+    });
   });
 
   it('ne valide rien quand le message vient d’un autre numéro', async () => {

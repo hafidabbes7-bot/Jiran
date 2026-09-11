@@ -72,7 +72,7 @@ describe('API de vérification', () => {
 
   it('envoie par le canal demandé', async () => {
     const response = await post('/auth/request-code', {
-      phone: '0555999888',
+      identifier: '0555999888',
       channel: 'whatsapp',
     });
 
@@ -82,7 +82,7 @@ describe('API de vérification', () => {
 
   it('refuse un canal inconnu', async () => {
     const response = await post('/auth/request-code', {
-      phone: '0555999777',
+      identifier: '0555999777',
       channel: 'pigeon',
     });
     assert.equal(response.status, 400);
@@ -122,7 +122,11 @@ describe('API de vérification', () => {
       headers: { Authorization: `Bearer ${session.token}` },
     });
     assert.equal(me.status, 200);
-    assert.deepEqual(await me.json(), { phone: '0555123456' });
+    assert.deepEqual(await me.json(), {
+      phone: '0555123456',
+      identifier: '0555123456',
+      identifierKind: 'phone',
+    });
   });
 
   it('répond 401 sur un mauvais code, en indiquant les essais restants', async () => {

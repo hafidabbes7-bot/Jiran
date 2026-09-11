@@ -94,14 +94,14 @@ export function memberAuthenticator(repository: ContentRepository) {
     // pas poser d'en-tête, et c'est comme ça que les photos s'affichent.
     const requête = typeof request.query.t === 'string' ? request.query.t : '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : requête;
-    const phone = token ? readSessionToken(token, config.sessionSecret) : null;
+    const identifier = token ? readSessionToken(token, config.sessionSecret) : null;
 
-    if (!phone) {
+    if (!identifier) {
       response.status(401).json({ error: 'invalid_token' });
       return;
     }
 
-    const member = repository.findMemberByPhone(phone);
+    const member = repository.findMemberByIdentifier(identifier);
     if (!member) {
       // Numéro vérifié mais profil pas encore créé : l'application doit
       // d'abord appeler POST /profile.
@@ -130,9 +130,9 @@ export function createContentRouter(
   router.post('/profile', (request: MemberRequest, response: Response) => {
     const header = request.header('authorization') ?? '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : '';
-    const phone = token ? readSessionToken(token, config.sessionSecret) : null;
+    const identifier = token ? readSessionToken(token, config.sessionSecret) : null;
 
-    if (!phone) {
+    if (!identifier) {
       response.status(401).json({ error: 'invalid_token' });
       return;
     }
@@ -148,7 +148,7 @@ export function createContentRouter(
       return;
     }
 
-    const member = repository.saveMember({ phone, ...parsed.data });
+    const member = repository.saveMember({ identifier, ...parsed.data });
     response.json({
       id: member.id,
       firstName: member.firstName,
@@ -157,7 +157,7 @@ export function createContentRouter(
       joinedAt: member.joinedAt,
       // L'application n'affiche l'entrée « Modération » qu'à ceux qui en ont
       // l'usage ; c'est le serveur qui tranche, le drapeau n'ouvre aucun droit.
-      isModerator: moderation.isModerator(member.phone),
+      isModerator: moderation.isModerator(member.identifier),
     });
   });
 
@@ -324,7 +324,7 @@ export function createContentRouter(
 
   /** Réserve une route aux modérateurs déclarés. */
   const requireModerator = (request: MemberRequest, response: Response, next: () => void) => {
-    if (!moderation.isModerator(request.member!.phone)) {
+    if (!moderation.isModerator(request.member!.identifier)) {
       response.status(403).json({ error: 'not_moderator' });
       return;
     }

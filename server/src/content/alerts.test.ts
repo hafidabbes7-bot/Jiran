@@ -233,9 +233,9 @@ describe('SOS visible dans l’application', () => {
     const content = new ContentRepository(db);
     const alerts = new AlertService(db, new RecordingPush());
 
-    const hafid = content.saveMember({ phone: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
-    const salim = content.saveMember({ phone: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
-    const karim = content.saveMember({ phone: '0555000003', firstName: 'Karim', neighborhoodId: 'bejaia-centre' });
+    const hafid = content.saveMember({ identifier: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
+    const salim = content.saveMember({ identifier: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
+    const karim = content.saveMember({ identifier: '0555000003', firstName: 'Karim', neighborhoodId: 'bejaia-centre' });
 
     const result = await alerts.triggerSos(hafid, [salim.id], { latitude: 36.75, longitude: 5.06 });
     assert.equal(result.alerted, 1);
@@ -256,8 +256,8 @@ describe('SOS visible dans l’application', () => {
     const db = openDatabase(':memory:');
     const content = new ContentRepository(db);
     const alerts = new AlertService(db, new RecordingPush());
-    const hafid = content.saveMember({ phone: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
-    const salim = content.saveMember({ phone: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
+    const hafid = content.saveMember({ identifier: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
+    const salim = content.saveMember({ identifier: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
 
     await alerts.triggerSos(hafid, [salim.id]);
     const plusTard = new Date(Date.now() + 3 * 60 * 60 * 1000);

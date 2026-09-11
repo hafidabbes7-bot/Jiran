@@ -59,7 +59,7 @@ describe('VerificationService', () => {
     const code = codeFromMessage(sms.sent[0]!.message);
     const result = await service.verifyCode(request.challengeId, code);
 
-    assert.deepEqual(result, { ok: true, phone: '0555123456' });
+    assert.deepEqual(result, { ok: true, identifier: '0555123456' });
   });
 
   it('envoie par WhatsApp quand ce canal est demandé', async () => {
@@ -71,7 +71,7 @@ describe('VerificationService', () => {
     const code = codeFromMessage(whatsapp.sent[0]!.message);
     assert.deepEqual(await service.verifyCode(request.challengeId, code), {
       ok: true,
-      phone: '0555123456',
+      identifier: '0555123456',
     });
   });
 
@@ -119,7 +119,7 @@ describe('VerificationService', () => {
     const smsCode = codeFromMessage(sms.sent[0]!.message);
     assert.deepEqual(await service.verifyCode(second.challengeId, smsCode), {
       ok: true,
-      phone: '0555123456',
+      identifier: '0555123456',
     });
   });
 
@@ -151,7 +151,7 @@ describe('VerificationService', () => {
     assert.equal(await service.confirmLink(`JIRAN ${request.token}`, '213555123456'), true);
     assert.deepEqual(await service.claimLink(request.challengeId), {
       ok: true,
-      phone: '0555123456',
+      identifier: '0555123456',
     });
   });
 
@@ -328,5 +328,66 @@ describe('VerificationService', () => {
     if (result.ok) {
       assert.fail('un code émis pour un autre défi a été accepté');
     }
+  });
+});
+
+describe('vérification par e-mail', () => {
+  const horloge = Date.UTC(2026, 0, 1, 12, 0, 0);
+  const options: VerificationOptions = { ...OPTIONS, exposeCode: true };
+
+  it('envoie le code à l’adresse, puis la reconnaît comme identifiant', async () => {
+    const email = new FakeProvider('fake-email');
+    const store = new InMemoryChallengeStore(() => horloge);
+    const service = new VerificationService(store, { email }, options, () => horloge);
+
+    const requested = await service.requestCode('Hafid@Example.COM', 'email');
+    assert.equal(requested.ok, true);
+    if (!requested.ok || requested.mode !== 'code') return;
+
+    // L'adresse part telle quelle — pas de forme internationale ici — et deux
+    // graphies d'une même adresse mènent au même compte.
+    assert.equal(email.sent.at(-1)!.to, 'hafid@example.com');
+
+    const verified = await service.verifyCode(requested.challengeId, requested.devCode!);
+    assert.deepEqual(verified, { ok: true, identifier: 'hafid@example.com' });
+  });
+
+  it('refuse ce qui n’est pas une adresse quand le canal est l’e-mail', async () => {
+    const email = new FakeProvider('fake-email');
+    const store = new InMemoryChallengeStore(() => horloge);
+    const service = new VerificationService(store, { email }, options, () => horloge);
+
+    assert.deepEqual(await service.requestCode('0555123456', 'email'), {
+      ok: false,
+      reason: 'invalid_phone',
+    });
+    assert.equal(email.sent.length, 0);
+  });
+
+  it('refuse une adresse quand le canal est le SMS', async () => {
+    const sms = new FakeProvider('fake-sms');
+    const store = new InMemoryChallengeStore(() => horloge);
+    const service = new VerificationService(store, { sms }, options, () => horloge);
+
+    assert.deepEqual(await service.requestCode('hafid@example.com', 'sms'), {
+      ok: false,
+      reason: 'invalid_phone',
+    });
+  });
+});
+
+describe('canaux annoncés', () => {
+  it('annonce l’e-mail dès que le canal est ouvert', () => {
+    const store = new InMemoryChallengeStore(() => 0);
+    const avec = new VerificationService(
+      store,
+      { sms: new FakeProvider('sms'), email: new FakeProvider('email') },
+      OPTIONS,
+      () => 0
+    );
+    assert.deepEqual(avec.channels, ['sms', 'email', 'whatsapp_link']);
+
+    const sans = new VerificationService(store, { sms: new FakeProvider('sms') }, OPTIONS, () => 0);
+    assert.deepEqual(sans.channels, ['sms', 'whatsapp_link']);
   });
 });

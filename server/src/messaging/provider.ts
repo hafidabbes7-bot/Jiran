@@ -4,18 +4,20 @@
  *   fournisseur, au message) ;
  * - `whatsapp_link` : c'est lui qui nous envoie un message depuis WhatsApp.
  *   Nous n'émettons rien, donc rien n'est facturé, et c'est Meta qui nous
- *   indique le numéro d'origine.
+ *   indique le numéro d'origine ;
+ * - `email` : le code part vers une adresse. C'est le seul canal réellement
+ *   gratuit à l'envoi, donc le premier à brancher quand un quartier démarre.
  */
-export type Channel = 'sms' | 'whatsapp' | 'whatsapp_link';
+export type Channel = 'sms' | 'whatsapp' | 'whatsapp_link' | 'email';
 
-export const CHANNELS: readonly Channel[] = ['sms', 'whatsapp', 'whatsapp_link'];
+export const CHANNELS: readonly Channel[] = ['sms', 'whatsapp', 'whatsapp_link', 'email'];
 
 export function isChannel(value: unknown): value is Channel {
   return CHANNELS.includes(value as Channel);
 }
 
 /** Canaux où le serveur envoie lui-même un message, et paie pour cela. */
-export const OUTBOUND_CHANNELS: readonly Channel[] = ['sms', 'whatsapp'];
+export const OUTBOUND_CHANNELS: readonly Channel[] = ['sms', 'whatsapp', 'email'];
 
 /**
  * Contrat d'envoi d'un message court.

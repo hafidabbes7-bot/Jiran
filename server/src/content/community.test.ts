@@ -16,9 +16,9 @@ describe('vie de quartier', () => {
     const db = openDatabase(':memory:');
     content = new ContentRepository(db);
     community = new CommunityService(db);
-    hafid = content.saveMember({ phone: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
-    salim = content.saveMember({ phone: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
-    karim = content.saveMember({ phone: '0555000003', firstName: 'Karim', neighborhoodId: 'oran' });
+    hafid = content.saveMember({ identifier: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
+    salim = content.saveMember({ identifier: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
+    karim = content.saveMember({ identifier: '0555000003', firstName: 'Karim', neighborhoodId: 'oran' });
   });
 
   describe('messagerie privée', () => {
@@ -213,14 +213,14 @@ describe('déménagement', () => {
     const db = openDatabase(':memory:');
     const content = new ContentRepository(db);
     const hafid = content.saveMember({
-      phone: '0555000001',
+      identifier: '0555000001',
       firstName: 'Hafid',
       neighborhoodId: 'bejaia-centre',
     });
     content.createPost(hafid, { category: 'annonce', text: 'Table à donner' });
 
     const déménagé = content.saveMember({
-      phone: '0555000001',
+      identifier: '0555000001',
       firstName: 'Hafid',
       neighborhoodId: 'akbou',
     });
@@ -238,17 +238,17 @@ describe('déménagement', () => {
     const content = new ContentRepository(db);
     const community = new CommunityService(db);
     const hafid = content.saveMember({
-      phone: '0555000001',
+      identifier: '0555000001',
       firstName: 'Hafid',
       neighborhoodId: 'bejaia-centre',
     });
     const salim = content.saveMember({
-      phone: '0555000002',
+      identifier: '0555000002',
       firstName: 'Salim',
       neighborhoodId: 'bejaia-centre',
     });
     const karim = content.saveMember({
-      phone: '0555000003',
+      identifier: '0555000003',
       firstName: 'Karim',
       neighborhoodId: 'bejaia-centre',
     });
@@ -256,7 +256,7 @@ describe('déménagement', () => {
     community.sendMessage(hafid, salim.id, 'Salam, on se voit demain ?');
 
     const loin = content.saveMember({
-      phone: '0555000001',
+      identifier: '0555000001',
       firstName: 'Hafid',
       neighborhoodId: 'oran',
     });

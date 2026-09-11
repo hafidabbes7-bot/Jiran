@@ -15,13 +15,13 @@ import { Platform } from 'react-native';
  * - `whatsapp_link` : c'est le voisin qui envoie un message depuis son
  *   WhatsApp, donc rien n'est facturé.
  */
-export type Channel = 'sms' | 'whatsapp' | 'whatsapp_link';
+export type Channel = 'sms' | 'whatsapp' | 'whatsapp_link' | 'email';
 
 /**
  * Liste de référence des canaux, dans l'ordre d'affichage : un canal ajouté
  * ici l'est partout. Le SMS d'abord — c'est le parcours attendu.
  */
-export const CHANNELS: readonly Channel[] = ['sms', 'whatsapp', 'whatsapp_link'];
+export const CHANNELS: readonly Channel[] = ['sms', 'whatsapp', 'whatsapp_link', 'email'];
 
 const isChannel = (value: unknown): value is Channel => CHANNELS.includes(value as Channel);
 
@@ -78,7 +78,8 @@ export type RequestCodeResult =
   | { ok: false; reason: 'cooldown' | 'rate_limited'; retryAfterSeconds: number };
 
 export interface VerifiedSession {
-  phone: string;
+  /** Numéro ou adresse, tel que le serveur l'a vérifié et normalisé. */
+  identifier: string;
   /** Jeton à présenter ensuite au serveur. */
   token: string;
 }
@@ -98,7 +99,7 @@ export type ClaimLinkResult =
 export interface AuthService {
   /** Canaux réellement ouverts côté serveur. */
   listChannels(): Promise<Channel[]>;
-  requestCode(phone: string, channel: Channel): Promise<RequestCodeResult>;
+  requestCode(identifier: string, channel: Channel): Promise<RequestCodeResult>;
   verifyCode(challengeId: string, code: string): Promise<VerifyCodeResult>;
   /** Interrogé en boucle pendant que le voisin envoie son message WhatsApp. */
   claimLink(challengeId: string): Promise<ClaimLinkResult>;
@@ -159,9 +160,9 @@ export class HttpAuthService implements AuthService {
     }
   }
 
-  async requestCode(phone: string, channel: Channel): Promise<RequestCodeResult> {
+  async requestCode(identifier: string, channel: Channel): Promise<RequestCodeResult> {
     try {
-      const { status, data } = await postJson('/auth/request-code', { phone, channel });
+      const { status, data } = await postJson('/auth/request-code', { identifier, channel });
 
       if (status === 200) {
         if (data.mode === 'link') {
@@ -206,7 +207,11 @@ export class HttpAuthService implements AuthService {
       const { status, data } = await postJson('/auth/verify-code', { challengeId, code });
 
       if (status === 200) {
-        return { ok: true, phone: asString(data.phone), token: asString(data.token) };
+        return {
+          ok: true,
+          identifier: asString(data.identifier ?? data.phone),
+          token: asString(data.token),
+        };
       }
 
       const error = asString(data.error);
@@ -227,7 +232,11 @@ export class HttpAuthService implements AuthService {
       const { status, data } = await postJson('/auth/verify-link', { challengeId });
 
       if (status === 200) {
-        return { ok: true, phone: asString(data.phone), token: asString(data.token) };
+        return {
+          ok: true,
+          identifier: asString(data.identifier ?? data.phone),
+          token: asString(data.token),
+        };
       }
       // 202 : le message n'est pas encore arrivé, il faut redemander.
       if (status === 202) return { ok: false, reason: 'pending' };

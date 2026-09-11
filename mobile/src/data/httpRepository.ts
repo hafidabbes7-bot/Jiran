@@ -59,7 +59,7 @@ export class HttpRepository implements JiranRepository {
   async loadSession(): Promise<Session | null> {
     try {
       const raw = await AsyncStorage.getItem(KEYS.session);
-      const session = raw ? (JSON.parse(raw) as Session) : null;
+      const session = raw ? reprendreSession(JSON.parse(raw)) : null;
       this.token = session?.token ?? null;
       return session;
     } catch {
@@ -549,6 +549,23 @@ export class HttpRepository implements JiranRepository {
     }
     throw new RepositoryError(`Requête refusée (${status})`, 'rejected');
   }
+}
+
+/**
+ * Relit une session enregistrée, y compris celle d'une version où le compte
+ * était forcément un numéro.
+ *
+ * Sans cela, les voisins déjà inscrits se retrouveraient devant l'inscription
+ * au prochain lancement — et perdraient leur fil pour une histoire de nom de
+ * champ.
+ */
+function reprendreSession(raw: JsonObject): Session {
+  const identifier = String(raw.identifier ?? raw.phone ?? '');
+  return {
+    ...(raw as unknown as Session),
+    identifier,
+    identifierKind: raw.identifierKind === 'email' || identifier.includes('@') ? 'email' : 'phone',
+  };
 }
 
 function toStory(raw: JsonObject): Story {

@@ -10,7 +10,7 @@ export type ChallengeMode = 'code' | 'link';
 /** Défi en cours, en attente de vérification. */
 export interface Challenge {
   id: string;
-  phone: string;
+  identifier: string;
   mode: ChallengeMode;
   /** Empreinte du code (mode `code`) ou du jeton à envoyer (mode `link`). */
   codeHash: string;
@@ -24,7 +24,7 @@ export interface Challenge {
 
 /** Trace des envois faits à un numéro, pour la limitation de débit. */
 export interface SendLog {
-  phone: string;
+  identifier: string;
   /** Horodatages des envois, du plus ancien au plus récent. */
   timestamps: number[];
 }
@@ -40,8 +40,8 @@ export interface ChallengeStore {
   /** Défis encore vivants, pour retrouver celui que porte un message WhatsApp. */
   findAllPending(): Promise<Challenge[]>;
   update(challenge: Challenge): Promise<void>;
-  sendLog(phone: string): Promise<SendLog>;
-  recordSend(phone: string, at: number): Promise<void>;
+  sendLog(identifier: string): Promise<SendLog>;
+  recordSend(identifier: string, at: number): Promise<void>;
 }
 
 export class InMemoryChallengeStore implements ChallengeStore {
@@ -74,14 +74,14 @@ export class InMemoryChallengeStore implements ChallengeStore {
     this.challenges.set(challenge.id, challenge);
   }
 
-  async sendLog(phone: string): Promise<SendLog> {
-    return { phone, timestamps: this.sends.get(phone) ?? [] };
+  async sendLog(identifier: string): Promise<SendLog> {
+    return { identifier, timestamps: this.sends.get(identifier) ?? [] };
   }
 
-  async recordSend(phone: string, at: number): Promise<void> {
-    const timestamps = this.sends.get(phone) ?? [];
+  async recordSend(identifier: string, at: number): Promise<void> {
+    const timestamps = this.sends.get(identifier) ?? [];
     timestamps.push(at);
-    this.sends.set(phone, timestamps);
+    this.sends.set(identifier, timestamps);
   }
 
   /** Évite que la mémoire grossisse indéfiniment avec les défis périmés. */
