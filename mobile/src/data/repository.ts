@@ -19,6 +19,7 @@ import type {
   WatchedVacation,
   ModerationState,
   Neighbor,
+  Notification,
   Post,
   QueuedPost,
   ReportReason,
@@ -84,6 +85,11 @@ export interface JiranRepository {
     neighborIds: string[],
     position?: { latitude: number; longitude: number }
   ): Promise<SosResult>;
+
+  /** Ce qui est arrivé pendant l'absence du voisin, le plus récent d'abord. */
+  loadNotifications(): Promise<{ notifications: Notification[]; unread: number }>;
+  /** Marque une notification lue, ou toutes si aucune n'est précisée. */
+  markNotificationsRead(id?: string): Promise<void>;
 
   /** Alertes SOS en cours qui concernent ce voisin — les siennes comprises. */
   loadActiveSos(): Promise<ActiveSos[]>;

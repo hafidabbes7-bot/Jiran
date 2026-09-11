@@ -21,6 +21,7 @@ import type {
   WatchedVacation,
   ModerationState,
   Neighbor,
+  Notification,
   Post,
   QueuedPost,
   ReportReason,
@@ -450,6 +451,28 @@ export class HttpRepository implements JiranRepository {
       devices: Number(data.devices) || 0,
       delivered: Boolean(data.delivered),
     };
+  }
+
+  async loadNotifications(): Promise<{ notifications: Notification[]; unread: number }> {
+    const data = await this.request('GET', '/notifications');
+    return {
+      notifications: (Array.isArray(data.notifications) ? data.notifications : []).map(
+        (raw: JsonObject): Notification => ({
+          id: String(raw.id),
+          kind: String(raw.kind) as Notification['kind'],
+          title: String(raw.title),
+          body: String(raw.body ?? ''),
+          ref: raw.ref ? String(raw.ref) : undefined,
+          createdAt: String(raw.createdAt ?? ''),
+          read: Boolean(raw.read),
+        })
+      ),
+      unread: Number(data.unread ?? 0),
+    };
+  }
+
+  async markNotificationsRead(id?: string): Promise<void> {
+    await this.request('POST', '/notifications/read', id ? { id } : {});
   }
 
   async loadActiveSos(): Promise<ActiveSos[]> {

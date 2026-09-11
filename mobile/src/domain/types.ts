@@ -274,3 +274,22 @@ export interface Story {
   text?: string;
   createdAt: string;
 }
+
+/** Catégories de notifications réglables dans le profil (§4.17). */
+export type NotificationKind =
+  | 'securite'
+  | 'reponse'
+  | 'message'
+  | 'sos'
+  | 'annonce'
+  | 'evenement';
+
+export interface Notification {
+  id: string;
+  kind: NotificationKind;
+  title: string;
+  body: string;
+  ref?: string;
+  createdAt: string;
+  read: boolean;
+}

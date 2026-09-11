@@ -2,6 +2,7 @@ import express, { type Response, type Router } from 'express';
 import { z } from 'zod';
 
 import type { CommunityError, CommunityService } from './community.js';
+import type { NotificationService } from './notifications.js';
 import type { ContentRepository } from './repository.js';
 import { memberAuthenticator, type MemberRequest } from './routes.js';
 
@@ -62,7 +63,8 @@ function statusOf(error: CommunityError): number {
  */
 export function createCommunityRouter(
   community: CommunityService,
-  repository: ContentRepository
+  repository: ContentRepository,
+  notifications: NotificationService
 ): Router {
   const router = express.Router();
   const authenticate = memberAuthenticator(repository);
@@ -94,12 +96,20 @@ export function createCommunityRouter(
       return;
     }
 
-    send(
-      response,
-      community.sendMessage(request.member!, String(request.params.neighborId), parsed.data.text),
-      'message',
-      true
-    );
+    const member = request.member!;
+    const destinataire = String(request.params.neighborId);
+    const envoyé = community.sendMessage(member, destinataire, parsed.data.text);
+    send(response, envoyé, 'message', true);
+
+    if (typeof envoyé !== 'string') {
+      notifications.notify(
+        [destinataire],
+        'message',
+        `${member.firstName} t'a écrit`,
+        parsed.data.text.slice(0, 120),
+        member.id
+      );
+    }
   });
 
   // --- Services recommandés --------------------------------------------

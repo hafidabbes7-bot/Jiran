@@ -12,6 +12,7 @@ import { CommunityService } from './content/community.js';
 import { createCommunityRouter } from './content/communityRoutes.js';
 import { GameService } from './content/games.js';
 import { MediaService } from './content/media.js';
+import { NotificationService } from './content/notifications.js';
 import { ContentRepository } from './content/repository.js';
 import { ModerationQueue } from './content/moderationQueue.js';
 import { createContentRouter } from './content/routes.js';
@@ -128,6 +129,7 @@ export function createServer(options?: {
   const games = new GameService(database);
   const community = new CommunityService(database);
   const media = new MediaService(database);
+  const notifications = new NotificationService(database);
 
   const verification = new VerificationService(store, providers, {
     length: config.otp.length,
@@ -340,8 +342,8 @@ export function createServer(options?: {
     }
   });
 
-  app.use(createContentRouter(content, alerts, moderation, games, media));
-  app.use(createCommunityRouter(community, content));
+  app.use(createContentRouter(content, alerts, moderation, games, media, notifications));
+  app.use(createCommunityRouter(community, content, notifications));
 
   serveWebApp(app, options?.webDir ?? config.webDir);
 

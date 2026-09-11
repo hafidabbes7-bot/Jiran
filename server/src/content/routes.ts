@@ -6,6 +6,11 @@ import { readSessionToken } from '../session.js';
 import type { AlertService } from './alerts.js';
 import { GAME_KINDS, type GameError, type GameService } from './games.js';
 import {
+  NOTIFICATION_KINDS,
+  type NotificationKind,
+  type NotificationService,
+} from './notifications.js';
+import {
   MAX_PHOTO_BYTES,
   PHOTO_TYPES,
   type MediaError,
@@ -114,7 +119,8 @@ export function createContentRouter(
   alerts: AlertService,
   moderation: ModerationQueue,
   games: GameService,
-  media: MediaService
+  media: MediaService,
+  notifications: NotificationService
 ): Router {
   const router = express.Router();
 
@@ -193,6 +199,27 @@ export function createContentRouter(
     });
     response.status(201).json({ id });
 
+    // Le quartier est prévenu, chacun selon la catégorie qui l'intéresse
+    // (§4.17). L'auteur ne se prévient pas lui-même.
+    const catégorie = parsed.data.category as string;
+    if (catégorie === 'securite' || catégorie === 'annonce' || catégorie === 'evenement') {
+      const voisins = repository
+        .memberIdsOfFeed(member)
+        .filter((autre) => autre !== member.id);
+      const titres: Record<string, string> = {
+        securite: `🚨 Alerte sécurité de ${member.firstName}`,
+        annonce: `📢 Nouvelle annonce de ${member.firstName}`,
+        evenement: `📅 ${member.firstName} annonce un événement`,
+      };
+      notifications.notify(
+        voisins,
+        catégorie as NotificationKind,
+        titres[catégorie]!,
+        parsed.data.text.slice(0, 120),
+        id
+      );
+    }
+
     // Une alerte de sécurité doit arriver tout de suite, même application
     // fermée (§7.7). L'envoi ne retarde pas la réponse : la publication est
     // déjà enregistrée.
@@ -256,8 +283,22 @@ export function createContentRouter(
       return;
     }
 
-      const id = repository.addComment(postId, request.member!, parsed.data.text);
+      const member = request.member!;
+      const id = repository.addComment(postId, member, parsed.data.text);
       response.status(201).json({ id });
+
+      // L'auteur de la publication est prévenu — sauf s'il se répond à
+      // lui-même, ce qui n'apprendrait rien à personne.
+      const auteur = repository.authorOf(postId);
+      if (auteur && auteur !== member.id) {
+        notifications.notify(
+          [auteur],
+          'reponse',
+          `${member.firstName} a répondu à ta publication`,
+          parsed.data.text.slice(0, 120),
+          postId
+        );
+      }
     }
   );
 
@@ -373,6 +414,16 @@ export function createContentRouter(
       return;
     }
 
+    // Le bandeau rouge s'affiche déjà chez les voisins choisis ; la
+    // notification permet de le retrouver plus tard, avec l'heure.
+    notifications.notify(
+      parsed.data.neighborIds,
+      'sos',
+      `🚨 ${request.member!.firstName} a demandé de l'aide`,
+      request.member!.building ?? '',
+      result.alertId
+    );
+
     response.status(201).json(result);
   });
 
@@ -436,6 +487,21 @@ export function createContentRouter(
     }
 
     response.json({ game: result });
+  });
+
+  // --- Notifications (§4.17) -------------------------------------------
+
+  router.get('/notifications', authenticate, (request: MemberRequest, response: Response) => {
+    response.json({
+      notifications: notifications.list(request.member!),
+      unread: notifications.unread(request.member!),
+    });
+  });
+
+  router.post('/notifications/read', authenticate, (request: MemberRequest, response: Response) => {
+    const id = typeof request.body?.id === 'string' ? request.body.id : undefined;
+    notifications.markRead(request.member!, id);
+    response.json({ unread: notifications.unread(request.member!) });
   });
 
   // --- Photos et stories -----------------------------------------------

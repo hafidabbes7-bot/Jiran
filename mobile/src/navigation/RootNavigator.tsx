@@ -12,6 +12,7 @@ import { FeedScreen } from '../screens/FeedScreen';
 import { ModerationScreen } from '../screens/ModerationScreen';
 import { GamesScreen } from '../screens/GamesScreen';
 import { NewStoryScreen } from '../screens/NewStoryScreen';
+import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { StoryScreen } from '../screens/StoryScreen';
 import { ChatScreen } from '../screens/community/ChatScreen';
 import { GroupsScreen } from '../screens/community/GroupsScreen';
@@ -195,6 +196,11 @@ export function RootNavigator() {
             name="NewStory"
             component={NewStoryScreen}
             options={{ title: s.stories.newTitle }}
+          />
+          <Stack.Screen
+            name="Notifications"
+            component={NotificationsScreen}
+            options={{ title: s.notifications.title }}
           />
         </Stack.Navigator>
       </NavigationContainer>

@@ -158,6 +158,23 @@ deux — vit 24 heures avant de disparaître. Trois choix à connaître :
    quartier, se signalent comme une publication, et la règle des trois
    signalements les masque de la même façon. L'écran le dit.
 
+## Notifications
+
+Le profil ouvre la liste de ce qui est arrivé — alerte du quartier, réponse à
+une publication, message privé, SOS — avec le nombre de non-lus, et les
+réglages par catégorie (§4.17).
+
+Deux choses valent d'être dites. La liste est tenue par le **serveur** : elle
+reste juste même quand aucune notification n'arrive sur le téléphone, ce qui est
+le cas tant qu'aucun service de remise n'est branché. Et la notification qui
+fait sonner l'appareil est **locale** : l'application, qui se rafraîchit toutes
+les 12 secondes, la déclenche elle-même dès qu'elle voit du nouveau. Ce n'est
+pas un remplacement des notifications distantes — application fermée, rien ne
+sonne — mais c'est ce qui marche aujourd'hui, sans compte Firebase ni Apple.
+
+Le SOS d'un voisin qui vous a choisi n'est pas réglable : une demande d'aide
+n'est pas une préférence d'affichage.
+
 ## Ce qui arrive sans qu'on touche à l'écran
 
 Le fil, les alertes et les SOS se rafraîchissent toutes les 12 secondes tant que

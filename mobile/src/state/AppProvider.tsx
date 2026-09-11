@@ -15,6 +15,7 @@ import type {
   Game,
   ModerationState,
   Neighbor,
+  Notification,
   Post,
   QueuedPost,
   ReportReason,
@@ -23,6 +24,8 @@ import type {
 } from '../domain/types';
 import { AppState } from 'react-native';
 
+import { localNotify } from '../data/localNotify';
+import { loadSettings } from '../data/notificationSettings';
 import { registerForPush } from '../data/pushRegistration';
 import { RepositoryError, type JiranRepository, type SosResult } from '../data/repository';
 
@@ -59,6 +62,10 @@ interface AppValue {
   activeSos: ActiveSos[];
   /** Stories du quartier, moins de 24 heures. */
   stories: Story[];
+  /** Ce qui est arrivé au voisin, non lu en tête. */
+  notifications: Notification[];
+  unreadNotifications: number;
+  markNotificationsRead: (id?: string) => Promise<void>;
   publishStory: (input: { photoId?: string; text?: string }) => Promise<void>;
   removeStory: (storyId: string) => Promise<void>;
   /** Chargement du fil en cours (premier affichage ou rafraîchissement). */
@@ -115,6 +122,16 @@ export function AppProvider({
   const [neighbors, setNeighbors] = useState<Neighbor[]>([]);
   const [activeSos, setActiveSos] = useState<ActiveSos[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadNotifications, setUnread] = useState(0);
+
+  /**
+   * Notifications déjà signalées sur cet appareil.
+   *
+   * Sans cette mémoire, chaque rafraîchissement — toutes les 12 secondes —
+   * re-sonnerait pour les mêmes.
+   */
+  const signalées = useRef(new Set<string>());
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
 
@@ -139,20 +156,48 @@ export function AppProvider({
     setNeighbors([]);
   }, [repository]);
 
+  /** Vrai tant que le premier chargement n'a pas eu lieu. */
+  const premierChargement = useRef(true);
+
+  /**
+   * Fait sonner le téléphone pour ce qui vient d'arriver.
+   *
+   * Au premier chargement, on ne signale rien : un voisin qui ouvre
+   * l'application n'a pas besoin qu'on lui rejoue les trois derniers jours.
+   */
+  const annoncer = useCallback(async (journal: Notification[]) => {
+    const nouvelles = journal.filter((item) => !item.read && !signalées.current.has(item.id));
+    for (const item of journal) signalées.current.add(item.id);
+    if (premierChargement.current) {
+      premierChargement.current = false;
+      return;
+    }
+
+    if (nouvelles.length === 0) return;
+    const réglages = await loadSettings();
+    for (const item of nouvelles.slice(0, 3)) {
+      if (réglages[item.kind]) await localNotify(item.title, item.body);
+    }
+  }, []);
+
   const refresh = useCallback(
     async (options?: { session?: Session; allowRepair?: boolean }) => {
       setLoading(true);
       try {
-        const [feed, people, sos, récits] = await Promise.all([
+        const [feed, people, sos, récits, journal] = await Promise.all([
           repository.loadFeed(),
           repository.loadNeighbors(),
           repository.loadActiveSos(),
           repository.loadStories(),
+          repository.loadNotifications(),
         ]);
         setPosts(feed);
         setNeighbors(people);
         setActiveSos(sos);
         setStories(récits);
+        setNotifications(journal.notifications);
+        setUnread(journal.unread);
+        await annoncer(journal.notifications);
         setLoadFailed(false);
       } catch (error) {
         const kind = error instanceof RepositoryError ? error.kind : 'network';
@@ -308,6 +353,17 @@ export function AppProvider({
     [repository, refresh]
   );
 
+  const markNotificationsRead = useCallback(
+    async (id?: string) => {
+      await repository.markNotificationsRead(id);
+      setNotifications((current) =>
+        current.map((item) => (!id || item.id === id ? { ...item, read: true } : item))
+      );
+      setUnread((current) => (id ? Math.max(0, current - 1) : 0));
+    },
+    [repository]
+  );
+
   const publishStory = useCallback(
     async (input: { photoId?: string; text?: string }) => {
       await repository.addStory(input);
@@ -446,6 +502,9 @@ export function AppProvider({
       neighbors,
       activeSos,
       stories,
+      notifications,
+      unreadNotifications,
+      markNotificationsRead,
       publishStory,
       removeStory,
       loading,
@@ -478,6 +537,9 @@ export function AppProvider({
       neighbors,
       activeSos,
       stories,
+      notifications,
+      unreadNotifications,
+      markNotificationsRead,
       publishStory,
       removeStory,
       loading,

@@ -192,6 +192,24 @@ export class ContentRepository {
     });
   }
 
+  /** Auteur d'une publication, pour prévenir la bonne personne. */
+  authorOf(postId: string): string | undefined {
+    const row = this.db
+      .prepare('SELECT author_id FROM posts WHERE id = ?')
+      .get(postId) as { author_id: string } | undefined;
+    return row?.author_id;
+  }
+
+  /** Tous les membres du fil d'un voisin, lui compris. */
+  memberIdsOfFeed(member: Member): string[] {
+    const ids = sharedFeedNeighborhoodIds(member.neighborhoodId);
+    const placeholders = ids.map(() => '?').join(', ');
+    const rows = this.db
+      .prepare(`SELECT id FROM members WHERE neighborhood_id IN (${placeholders})`)
+      .all(...ids) as { id: string }[];
+    return rows.map((row) => row.id);
+  }
+
   postExists(postId: string): boolean {
     return this.db.prepare('SELECT 1 FROM posts WHERE id = ?').get(postId) !== undefined;
   }

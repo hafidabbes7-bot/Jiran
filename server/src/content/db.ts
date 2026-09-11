@@ -66,6 +66,22 @@ export function openDatabase(location: string): DatabaseSync {
     );
     CREATE INDEX IF NOT EXISTS reports_by_post ON reports (post_id, created_at);
 
+    -- Ce qui s'est passé pour un voisin pendant qu'il n'était pas là (§4.17).
+    -- La liste est tenue par le serveur : les notifications du téléphone
+    -- peuvent ne jamais arriver, l'application doit pouvoir le rattraper.
+    CREATE TABLE IF NOT EXISTS notifications (
+      id         TEXT PRIMARY KEY,
+      member_id  TEXT NOT NULL REFERENCES members(id),
+      kind       TEXT NOT NULL,
+      title      TEXT NOT NULL,
+      body       TEXT NOT NULL,
+      ref        TEXT,
+      created_at TEXT NOT NULL,
+      read_at    TEXT
+    );
+    CREATE INDEX IF NOT EXISTS notifications_by_member
+      ON notifications (member_id, created_at DESC);
+
     -- Photos partagées dans le quartier (§4.3 et §4.8 du prototype).
     -- Les octets vivent dans la base, comme le reste : un disque local ne
     -- survivrait pas au redémarrage de l'hébergement, et un stockage externe

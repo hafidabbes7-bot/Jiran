@@ -438,6 +438,27 @@ export const fr = {
     newTitle: 'Nouvelle story',
   },
 
+  notifications: {
+    title: 'Notifications',
+    recent: 'CE QUI S’EST PASSÉ',
+    empty: 'Rien de nouveau pour l’instant.',
+    markAll: 'Tout marquer comme lu',
+    settings: 'ME PRÉVENIR POUR',
+    settingsHint:
+      'Réglage propre à ce téléphone. La liste ci-dessus, elle, reste complète quoi qu’il arrive.',
+    sosAlways: 'Le SOS d’un voisin qui t’a choisi te parvient toujours : ce n’est pas un réglage.',
+    refused:
+      'Le téléphone refuse les notifications de Jiran. Tu peux les réautoriser dans ses réglages — la liste ci-dessus reste à jour.',
+    kinds: {
+      securite: 'Sécurité',
+      reponse: 'Réponses à mes publications',
+      message: 'Messages privés',
+      sos: 'SOS',
+      annonce: 'Nouvelles annonces',
+      evenement: 'Événements à venir',
+    },
+  },
+
   places: {
     countries: { DZ: 'Algérie', CA: 'Canada' },
     label: { DZ: 'Wilaya, daïra, commune', CA: 'Province' },
