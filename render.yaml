@@ -5,6 +5,10 @@
 # faire essayer à des voisins sans contrat d'agrégateur. Pour un vrai
 # lancement, il faut renseigner SMS_PROVIDER et retirer EXPOSE_DEV_CODE
 # (voir server/README.md).
+#
+# Les réglages facultatifs — numéros des modérateurs, identifiants WhatsApp —
+# ne figurent pas ici : Render refuse une variable sans valeur. Ils s'ajoutent
+# dans l'onglet Environment du service, une fois celui-ci créé.
 services:
   - type: web
     name: jiran-essai
@@ -16,7 +20,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
-        value: 22.20.0
+        value: '22.20.0'
 
       # Secrets tirés au hasard par l'hébergeur : ils ne passent jamais par le
       # dépôt ni par un écran.
@@ -33,23 +37,7 @@ services:
       - key: PUSH_PROVIDER
         value: console
 
-      # L'application et l'API partagent la même adresse : rien à configurer
-      # côté téléphone, le navigateur trouve le serveur tout seul.
-      - key: CORS_ORIGINS
-        value: ''
-
-      # Numéros des modérateurs, séparés par des virgules. À renseigner dans le
-      # tableau de bord de l'hébergeur avec votre propre numéro.
-      - key: MODERATOR_PHONES
-        value: ''
-
-      # Vérification gratuite par WhatsApp — rien à payer par message, et le
-      # numéro reste prouvé. À renseigner dans le tableau de bord une fois le
-      # compte Meta créé : voir docs/verification-whatsapp.md.
-      # Tant qu'ils sont vides, ce canal n'est pas proposé à l'inscription.
-      - key: WHATSAPP_BUSINESS_NUMBER
-        value: ''
-      - key: WHATSAPP_APP_SECRET
-        value: ''
+      # Jeton du webhook WhatsApp, généré d'avance : il servira le jour où la
+      # vérification gratuite sera activée (docs/verification-whatsapp.md).
       - key: WHATSAPP_VERIFY_TOKEN
         generateValue: true

@@ -55,10 +55,14 @@ Quand le service passe à **Live**, son adresse s'affiche en haut, du genre
 
 Pour avoir accès à la file des signalements :
 
-1. Dans le service → **Environment**
-2. Modifiez `MODERATOR_PHONES` : mettez le numéro avec lequel vous vous
+1. Dans le service → **Environment** → **Add environment variable**
+2. Nom : `MODERATOR_PHONES`, valeur : le numéro avec lequel vous vous
    inscrirez, par exemple `0555123456`
 3. **Save** — le service redémarre tout seul
+
+Cette variable ne figure pas dans le fichier de déploiement : Render refuse
+une variable sans valeur, et elle n'en a pas tant que vous n'avez pas choisi
+votre numéro.
 
 L'entrée « Signalements en attente » apparaîtra dans l'onglet *Quartier*, pour
 vous seul.
@@ -105,6 +109,7 @@ plus besoin d'un ordinateur allumé chez vous pour fonctionner.
 
 | Ce que vous voyez | Ce que c'est |
 | --- | --- |
+| **Failed sync** sur le Blueprint | Le fichier `render.yaml` a été refusé. Touchez le nom du Blueprint pour lire la raison, puis **Resync** après correction |
 | La construction échoue | Regardez l'onglet **Logs**. Le plus souvent : la mauvaise branche a été choisie — ce doit être `main` |
 | La page met une minute à s'ouvrir | Le service dormait. C'est normal sur la formule gratuite |
 | Le quartier est vide alors qu'on y avait publié | Le service a redémarré. Les données ne survivent pas sans disque |
