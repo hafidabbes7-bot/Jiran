@@ -53,6 +53,12 @@ cahier des charges pour la liste exacte de ce qui est factice.
 Il sert de référence visuelle et fonctionnelle pour le développement réel — il
 n'est **pas destiné à être réutilisé tel quel** comme base de code.
 
+## Essayer sur un vrai téléphone
+
+Tout a été vérifié depuis un navigateur ; la géolocalisation réelle, le rendu
+arabe et les notifications demandent un appareil. La marche à suivre, pas à pas :
+[`docs/lancer-sur-telephone.md`](docs/lancer-sur-telephone.md).
+
 ## Tests
 
 Les deux paquets se vérifient séparément, et l'intégration continue
