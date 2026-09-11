@@ -5,7 +5,8 @@ entraide, SOS et modération** (périmètre décidé au §5 du cahier des charge
 
 ## Démarrer
 
-L'inscription vérifie le numéro par SMS : l'**API de vérification doit tourner**
+L'inscription vérifie le numéro par un code reçu en SMS ou sur WhatsApp :
+l'**API de vérification doit tourner**
 (voir [`../server`](../server/README.md)), sinon l'onboarding s'arrête à l'étape
 du code. En développement, aucun SMS n'est réellement envoyé.
 
@@ -31,7 +32,7 @@ remplacez-le par l'adresse de votre machine sur le réseau local
 | Cahier des charges | État |
 | --- | --- |
 | §4.1 Onboarding en 5 étapes | ✅ langue, compte téléphone, quartier + géolocalisation, présentation, règles |
-| §7.1 Vérification du numéro par SMS | ✅ code à 6 chiffres, renvoi avec délai, essais limités — la décision appartient au serveur |
+| §7.1 Vérification du numéro | ✅ code à 6 chiffres reçu **par SMS ou WhatsApp, au choix du voisin** ; renvoi avec délai, essais limités — la décision appartient au serveur |
 | §3 Règles obligatoires, bouton verrouillé 3 s | ✅ `useRulesCountdown` |
 | §2 Vérification par géolocalisation | ✅ position réelle comparée au quartier déclaré, correction proposée si erreur |
 | §2 Quartiers nommés + jumelage | ✅ fil partagé entre cités jumelées, origine affichée sur chaque publication |

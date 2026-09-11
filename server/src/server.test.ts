@@ -4,10 +4,10 @@ import { after, before, describe, it } from 'node:test';
 
 import { createServer } from './server.js';
 import { InMemoryChallengeStore } from './otp/store.js';
-import type { SmsProvider } from './sms/provider.js';
+import type { MessageProvider } from './messaging/provider.js';
 
-class RecordingSms implements SmsProvider {
-  readonly name = 'recording';
+class RecordingProvider implements MessageProvider {
+  constructor(readonly name: string) {}
   readonly sent: { to: string; message: string }[] = [];
 
   async send(params: { to: string; message: string }): Promise<void> {
@@ -16,7 +16,8 @@ class RecordingSms implements SmsProvider {
 }
 
 describe('API de vérification', () => {
-  const sms = new RecordingSms();
+  const sms = new RecordingProvider('recording-sms');
+  const whatsapp = new RecordingProvider('recording-whatsapp');
   let baseUrl: string;
   let server: ReturnType<ReturnType<typeof createServer>['listen']>;
 
@@ -28,7 +29,10 @@ describe('API de vérification', () => {
     });
 
   before(async () => {
-    const app = createServer({ store: new InMemoryChallengeStore(), sms });
+    const app = createServer({
+      store: new InMemoryChallengeStore(),
+      providers: { sms, whatsapp },
+    });
     await new Promise<void>((resolve) => {
       server = app.listen(0, () => resolve());
     });
@@ -47,9 +51,36 @@ describe('API de vérification', () => {
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {
       status: 'ok',
-      smsProvider: 'recording',
+      channels: [
+        { channel: 'sms', provider: 'recording-sms' },
+        { channel: 'whatsapp', provider: 'recording-whatsapp' },
+      ],
       devCodeExposed: false,
     });
+  });
+
+  it('annonce les canaux proposés à l’inscription', async () => {
+    const response = await fetch(`${baseUrl}/auth/channels`);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { channels: ['sms', 'whatsapp'] });
+  });
+
+  it('envoie par le canal demandé', async () => {
+    const response = await post('/auth/request-code', {
+      phone: '0555999888',
+      channel: 'whatsapp',
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(whatsapp.sent.at(-1)!.to, '+213555999888');
+  });
+
+  it('refuse un canal inconnu', async () => {
+    const response = await post('/auth/request-code', {
+      phone: '0555999777',
+      channel: 'pigeon',
+    });
+    assert.equal(response.status, 400);
   });
 
   it('refuse un numéro invalide avec 400', async () => {

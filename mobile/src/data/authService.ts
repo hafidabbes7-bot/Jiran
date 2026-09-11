@@ -7,6 +7,9 @@
  * de lire le code dans le trafic ou de contourner l'écran.
  */
 
+/** Canal par lequel le voisin reçoit son code. */
+export type Channel = 'sms' | 'whatsapp';
+
 /** Adresse de l'API, injectée à la compilation par Expo (`EXPO_PUBLIC_*`). */
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000';
 
@@ -22,7 +25,7 @@ export interface Challenge {
 
 export type RequestCodeResult =
   | ({ ok: true } & Challenge)
-  | { ok: false; reason: 'invalid_phone' | 'sms_failed' | 'network' }
+  | { ok: false; reason: 'invalid_phone' | 'sms_failed' | 'network' | 'channel_unavailable' }
   | { ok: false; reason: 'cooldown' | 'rate_limited'; retryAfterSeconds: number };
 
 export interface VerifiedSession {
@@ -40,7 +43,9 @@ export type VerifyCodeResult =
     };
 
 export interface AuthService {
-  requestCode(phone: string): Promise<RequestCodeResult>;
+  /** Canaux réellement ouverts côté serveur. */
+  listChannels(): Promise<Channel[]>;
+  requestCode(phone: string, channel: Channel): Promise<RequestCodeResult>;
   verifyCode(challengeId: string, code: string): Promise<VerifyCodeResult>;
 }
 
@@ -54,20 +59,19 @@ const asString = (value: unknown, fallback = ''): string =>
 const asNumber = (value: unknown, fallback = 0): number =>
   typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 
-async function postJson(
+/**
+ * Appel HTTP borné dans le temps. Le `finally` n'est pas décoratif : sans lui,
+ * chaque requête échouée laisserait un minuteur en vie.
+ */
+async function requestJson(
   path: string,
-  body: unknown
+  init: RequestInit
 ): Promise<{ status: number; data: JsonObject }> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${API_URL}${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
+    const response = await fetch(`${API_URL}${path}`, { ...init, signal: controller.signal });
     const data = (await response.json().catch(() => ({}))) as JsonObject;
     return { status: response.status, data };
   } finally {
@@ -75,10 +79,36 @@ async function postJson(
   }
 }
 
+const postJson = (path: string, body: unknown) =>
+  requestJson(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
 export class HttpAuthService implements AuthService {
-  async requestCode(phone: string): Promise<RequestCodeResult> {
+  /**
+   * Ne proposer que les canaux ouverts : afficher WhatsApp alors qu'aucun
+   * compte Meta n'est configuré reviendrait à promettre un message qui
+   * n'arrivera jamais.
+   */
+  async listChannels(): Promise<Channel[]> {
     try {
-      const { status, data } = await postJson('/auth/request-code', { phone });
+      const { data } = await requestJson('/auth/channels', { method: 'GET' });
+      const channels = Array.isArray(data.channels) ? data.channels : [];
+      return channels.filter(
+        (channel): channel is Channel => channel === 'sms' || channel === 'whatsapp'
+      );
+    } catch {
+      // Serveur injoignable : on garde le SMS, le message d'erreur viendra de
+      // la tentative d'envoi elle-même.
+      return ['sms'];
+    }
+  }
+
+  async requestCode(phone: string, channel: Channel): Promise<RequestCodeResult> {
+    try {
+      const { status, data } = await postJson('/auth/request-code', { phone, channel });
 
       if (status === 200) {
         return {
@@ -99,6 +129,7 @@ export class HttpAuthService implements AuthService {
         };
       }
       if (error === 'sms_failed') return { ok: false, reason: 'sms_failed' };
+      if (error === 'channel_unavailable') return { ok: false, reason: 'channel_unavailable' };
       return { ok: false, reason: 'invalid_phone' };
     } catch {
       return { ok: false, reason: 'network' };

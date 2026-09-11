@@ -1,5 +1,5 @@
 import { config } from '../config.js';
-import { SmsDeliveryError, type SmsProvider } from './provider.js';
+import { MessageDeliveryError, type MessageProvider } from './provider.js';
 
 /**
  * Passerelle HTTP générique, pensée pour un agrégateur local algérien : la
@@ -10,7 +10,7 @@ import { SmsDeliveryError, type SmsProvider } from './provider.js';
  * local, avec un identifiant d'expéditeur déclaré auprès des opérateurs,
  * délivre bien mieux qu'une route internationale.
  */
-export class HttpGatewaySmsProvider implements SmsProvider {
+export class HttpGatewaySmsProvider implements MessageProvider {
   readonly name = 'http';
 
   constructor(
@@ -37,7 +37,7 @@ export class HttpGatewaySmsProvider implements SmsProvider {
 
     if (!response.ok) {
       const detail = await response.text().catch(() => '');
-      throw new SmsDeliveryError(
+      throw new MessageDeliveryError(
         `La passerelle SMS a répondu ${response.status} : ${detail}`,
         this.name
       );

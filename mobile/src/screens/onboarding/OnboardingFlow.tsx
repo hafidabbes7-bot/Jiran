@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Field } from '../../components/Field';
 import { PrimaryButton } from '../../components/PrimaryButton';
-import type { AuthService, VerifiedSession } from '../../data/authService';
+import type { AuthService, Channel, VerifiedSession } from '../../data/authService';
 import { NEIGHBORHOODS, findNeighborhood } from '../../data/neighborhoods';
 import { checkPosition } from '../../domain/location';
 import { isValidAlgerianMobile } from '../../domain/phone';
@@ -61,6 +61,8 @@ export function OnboardingFlow({
   const [firstName, setFirstName] = useState('');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
+  const [channel, setChannel] = useState<Channel>('sms');
+  const [availableChannels, setAvailableChannels] = useState<Channel[]>(['sms']);
   const [verified, setVerified] = useState<VerifiedSession | null>(null);
   const [errors, setErrors] = useState<{ firstName?: string; phone?: string }>({});
   const [neighborhoodId, setNeighborhoodId] = useState(NEIGHBORHOODS[0].id);
@@ -80,6 +82,23 @@ export function OnboardingFlow({
 
   const verification = usePhoneVerification(auth);
 
+  // Les canaux proposés dépendent de ce qui est réellement branché côté
+  // serveur : inutile d'offrir WhatsApp si aucun compte Meta n'est configuré.
+  useEffect(() => {
+    let cancelled = false;
+    auth.listChannels().then((channels) => {
+      if (cancelled || channels.length === 0) return;
+      setAvailableChannels(channels);
+      setChannel((current) => (channels.includes(current) ? current : channels[0]!));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [auth]);
+
+  const channelName = (value: Channel) =>
+    value === 'whatsapp' ? s.onboarding.channelWhatsapp : s.onboarding.channelSms;
+
   /** Message d'erreur de la vérification, dans la langue courante. */
   const verificationMessage = (failure: VerificationError): string => {
     switch (failure.key) {
@@ -87,6 +106,8 @@ export function OnboardingFlow({
         return s.onboarding.phoneError;
       case 'sms_failed':
         return s.onboarding.sendFailed;
+      case 'channel_unavailable':
+        return s.onboarding.channelUnavailable;
       case 'network':
         return s.onboarding.networkError;
       case 'rate_limited':
@@ -121,7 +142,7 @@ export function OnboardingFlow({
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    const challenge = await verification.requestCode(phone);
+    const challenge = await verification.requestCode(phone, channel);
     if (challenge) {
       // En développement, le serveur renvoie le code : on le pré-remplit pour
       // ne pas avoir à le recopier depuis la console.
@@ -140,7 +161,7 @@ export function OnboardingFlow({
 
   /** Renvoi d'un code, sans repasser par la saisie du numéro. */
   const requestNewCode = async () => {
-    const challenge = await verification.requestCode(phone);
+    const challenge = await verification.requestCode(phone, channel);
     if (challenge) setCode(challenge.devCode ?? '');
   };
 
@@ -261,6 +282,32 @@ export function OnboardingFlow({
                 hint={s.onboarding.phoneHint}
               />
 
+              {availableChannels.length > 1 ? (
+                <View style={styles.channelBlock}>
+                  <Text style={[styles.label, rtl.text]}>{s.onboarding.channelLabel}</Text>
+                  <View style={[styles.channelRow, rtl.row]}>
+                    {availableChannels.map((option) => {
+                      const active = option === channel;
+                      return (
+                        <Pressable
+                          key={option}
+                          accessibilityRole="radio"
+                          accessibilityState={{ selected: active }}
+                          onPress={() => setChannel(option)}
+                          style={[styles.channelButton, active && styles.channelButtonActive]}
+                        >
+                          <Text
+                            style={[styles.channelText, active && styles.channelTextActive]}
+                          >
+                            {channelName(option)}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : null}
+
               <PrimaryButton
                 label={s.onboarding.createAccount}
                 loading={verification.status.kind === 'sending'}
@@ -280,11 +327,15 @@ export function OnboardingFlow({
               <Text style={styles.stepEmoji}>💬</Text>
               <Text style={[styles.heading, rtl.text]}>{s.onboarding.codeTitle}</Text>
               <Text style={[styles.sub, rtl.text]}>
-                {format(s.onboarding.codeSubtitle, { length: CODE_LENGTH, phone })}
+                {format(s.onboarding.codeSubtitle, {
+                  length: CODE_LENGTH,
+                  phone,
+                  channel: channelName(channel),
+                })}
               </Text>
 
               <Field
-                label={s.onboarding.codeLabel}
+                label={format(s.onboarding.codeLabel, { channel: channelName(channel) })}
                 placeholder={s.onboarding.codePlaceholder}
                 value={code}
                 onChangeText={(value) => setCode(value.replace(/\D/g, '').slice(0, CODE_LENGTH))}
@@ -558,6 +609,20 @@ const styles = StyleSheet.create({
   neighborhoodName: { fontSize: fontSizes.body, color: colors.ink, fontWeight: '600' },
   neighborhoodWilaya: { fontSize: fontSizes.caption, color: colors.muted, marginTop: 2 },
   spaced: { marginTop: spacing.md },
+  channelBlock: { marginBottom: spacing.md },
+  channelRow: { gap: spacing.sm },
+  channelButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radii.sm,
+    backgroundColor: colors.card,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  channelButtonActive: { borderColor: colors.brand, backgroundColor: colors.sand },
+  channelText: { fontSize: fontSizes.body, fontWeight: '600', color: colors.muted },
+  channelTextActive: { color: colors.brand },
   codeInput: {
     fontSize: fontSizes.heading,
     letterSpacing: 6,

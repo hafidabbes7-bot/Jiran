@@ -1,4 +1,4 @@
-import { SmsDeliveryError, type SmsProvider } from './provider.js';
+import { MessageDeliveryError, type MessageProvider } from './provider.js';
 
 /**
  * WhatsApp Cloud API (Meta).
@@ -12,7 +12,7 @@ import { SmsDeliveryError, type SmsProvider } from './provider.js';
  * modèle de message de catégorie « authentification » approuvé. Un code ne peut
  * pas être envoyé en texte libre — seul un modèle approuvé passe.
  */
-export class WhatsAppProvider implements SmsProvider {
+export class WhatsAppProvider implements MessageProvider {
   readonly name = 'whatsapp';
 
   constructor(
@@ -27,7 +27,7 @@ export class WhatsAppProvider implements SmsProvider {
     // entière : le texte autour est figé par le modèle approuvé.
     const code = message.match(/\b(\d{4,8})\b/)?.[1];
     if (!code) {
-      throw new SmsDeliveryError('Aucun code trouvé dans le message.', this.name);
+      throw new MessageDeliveryError('Aucun code trouvé dans le message.', this.name);
     }
 
     const response = await fetch(
@@ -63,7 +63,7 @@ export class WhatsAppProvider implements SmsProvider {
 
     if (!response.ok) {
       const detail = await response.text().catch(() => '');
-      throw new SmsDeliveryError(
+      throw new MessageDeliveryError(
         `WhatsApp a répondu ${response.status} : ${detail}`,
         this.name
       );

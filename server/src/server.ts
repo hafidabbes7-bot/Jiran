@@ -7,19 +7,28 @@ import { VerificationService } from './otp/service.js';
 import { InMemoryChallengeStore, type ChallengeStore } from './otp/store.js';
 import { SlidingWindowLimiter } from './rateLimit.js';
 import { issueSessionToken, readSessionToken } from './session.js';
-import { createSmsProvider, type SmsProvider } from './sms/index.js';
+import {
+  CHANNELS,
+  createChannelProviders,
+  isChannel,
+  type ChannelProviders,
+} from './messaging/index.js';
 
-const requestCodeSchema = z.object({ phone: z.string().min(6).max(20) });
+const requestCodeSchema = z.object({
+  phone: z.string().min(6).max(20),
+  /** Canal souhaité ; le SMS reste le défaut si rien n'est précisé. */
+  channel: z.enum(CHANNELS as [string, ...string[]]).optional(),
+});
 const verifyCodeSchema = z.object({
   challengeId: z.string().min(1).max(100),
   code: z.string().min(4).max(10),
 });
 
-export function createServer(options?: { store?: ChallengeStore; sms?: SmsProvider }) {
+export function createServer(options?: { store?: ChallengeStore; providers?: ChannelProviders }) {
   const store = options?.store ?? new InMemoryChallengeStore();
-  const sms = options?.sms ?? createSmsProvider();
+  const providers = options?.providers ?? createChannelProviders();
 
-  const verification = new VerificationService(store, sms, {
+  const verification = new VerificationService(store, providers, {
     length: config.otp.length,
     ttlSeconds: config.otp.ttlSeconds,
     maxAttempts: config.otp.maxAttempts,
@@ -64,7 +73,10 @@ export function createServer(options?: { store?: ChallengeStore; sms?: SmsProvid
   app.get('/health', (_request: Request, response: Response) => {
     response.json({
       status: 'ok',
-      smsProvider: sms.name,
+      channels: verification.channels.map((channel) => ({
+        channel,
+        provider: providers[channel]!.name,
+      })),
       // Rend visible une configuration de développement laissée par mégarde.
       devCodeExposed: config.exposeDevCode,
     });
@@ -75,6 +87,11 @@ export function createServer(options?: { store?: ChallengeStore; sms?: SmsProvid
     response.status(429).json({ error: 'rate_limited' });
   });
 
+  /** Canaux proposés à l'inscription — l'application n'affiche que ceux-ci. */
+  app.get('/auth/channels', (_request: Request, response: Response) => {
+    response.json({ channels: verification.channels });
+  });
+
   app.post('/auth/request-code', async (request: Request, response: Response) => {
     const parsed = requestCodeSchema.safeParse(request.body);
     if (!parsed.success) {
@@ -82,7 +99,8 @@ export function createServer(options?: { store?: ChallengeStore; sms?: SmsProvid
       return;
     }
 
-    const result = await verification.requestCode(parsed.data.phone);
+    const channel = isChannel(parsed.data.channel) ? parsed.data.channel : 'sms';
+    const result = await verification.requestCode(parsed.data.phone, channel);
 
     if (result.ok) {
       response.json(result);
@@ -91,6 +109,7 @@ export function createServer(options?: { store?: ChallengeStore; sms?: SmsProvid
 
     switch (result.reason) {
       case 'invalid_phone':
+      case 'channel_unavailable':
         response.status(400).json({ error: result.reason });
         return;
       case 'cooldown':

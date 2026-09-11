@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 
 import { isValidAlgerianMobile, maskPhone, normalizePhone, toE164 } from '../phone.js';
-import type { SmsProvider } from '../sms/provider.js';
+import type { Channel, ChannelProviders } from '../messaging/provider.js';
 import { generateCode, hashCode, safeEqual } from './codes.js';
 import type { Challenge, ChallengeStore } from './store.js';
 
@@ -28,6 +28,7 @@ export type RequestResult =
       devCode?: string;
     }
   | { ok: false; reason: 'invalid_phone' }
+  | { ok: false; reason: 'channel_unavailable' }
   | { ok: false; reason: 'cooldown' | 'rate_limited'; retryAfterSeconds: number }
   | { ok: false; reason: 'sms_failed' };
 
@@ -55,14 +56,24 @@ export function buildMessage(code: string, ttlSeconds: number): string {
 export class VerificationService {
   constructor(
     private readonly store: ChallengeStore,
-    private readonly sms: SmsProvider,
+    private readonly providers: ChannelProviders,
     private readonly options: VerificationOptions,
     private readonly now: () => number = () => Date.now()
   ) {}
 
-  async requestCode(rawPhone: string): Promise<RequestResult> {
+  /** Canaux ouverts, dans l'ordre d'affichage souhaité. */
+  get channels(): Channel[] {
+    return (['sms', 'whatsapp'] as const).filter((channel) => this.providers[channel]);
+  }
+
+  async requestCode(rawPhone: string, channel: Channel = 'sms'): Promise<RequestResult> {
     if (!isValidAlgerianMobile(rawPhone)) {
       return { ok: false, reason: 'invalid_phone' };
+    }
+
+    const provider = this.providers[channel];
+    if (!provider) {
+      return { ok: false, reason: 'channel_unavailable' };
     }
 
     const phone = normalizePhone(rawPhone);
@@ -81,6 +92,8 @@ export class VerificationService {
       }
     }
 
+    // Les quotas sont tenus par numéro, tous canaux confondus : basculer sur
+    // WhatsApp ne doit pas remettre les compteurs à zéro.
     const windowStart = now - this.options.windowSeconds * 1000;
     const sendsInWindow = timestamps.filter((timestamp) => timestamp > windowStart);
     if (sendsInWindow.length >= this.options.maxSendsPerWindow) {
@@ -96,13 +109,13 @@ export class VerificationService {
     const code = generateCode(this.options.length);
 
     try {
-      await this.sms.send({
+      await provider.send({
         to: toE164(phone),
         message: buildMessage(code, this.options.ttlSeconds),
       });
     } catch (error) {
       console.error(
-        `[otp] envoi impossible vers ${maskPhone(phone)} via ${this.sms.name}`,
+        `[otp] envoi impossible vers ${maskPhone(phone)} par ${channel} (${provider.name})`,
         error
       );
       return { ok: false, reason: 'sms_failed' };

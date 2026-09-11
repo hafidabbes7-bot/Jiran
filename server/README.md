@@ -32,15 +32,25 @@ seule. Le serveur refuse ce réglage quand `NODE_ENV=production`.
 
 ## Canaux d'envoi
 
-Le canal se choisit par la variable `SMS_PROVIDER`, sans toucher au reste du
-code : tout passe par l'interface `SmsProvider` (`src/sms/provider.ts`).
+**C'est le voisin qui choisit son canal à l'inscription — SMS ou WhatsApp.**
+L'application interroge `GET /auth/channels` et n'affiche que les canaux
+réellement ouverts : proposer WhatsApp sans compte Meta configuré reviendrait à
+promettre un message qui n'arrivera jamais.
 
-| Valeur | Usage |
-| --- | --- |
-| `console` | Développement — affiche le code, n'envoie rien |
-| `http` | Passerelle d'un agrégateur local algérien (noms des champs configurables) |
-| `twilio` | Twilio |
-| `whatsapp` | WhatsApp Cloud API (Meta) |
+Tout passe par l'interface `MessageProvider` (`src/messaging/provider.ts`) :
+ajouter un canal ou changer d'agrégateur, c'est écrire un fichier.
+
+| Canal | Ouvert quand | Fournisseur |
+| --- | --- | --- |
+| SMS | `SMS_PROVIDER` vaut `console`, `http` ou `twilio` (`none` le ferme) | agrégateur local, Twilio, ou console en développement |
+| WhatsApp | `WHATSAPP_PHONE_NUMBER_ID` et `WHATSAPP_ACCESS_TOKEN` sont renseignés | WhatsApp Cloud API (Meta) |
+
+En développement avec `SMS_PROVIDER=console`, **les deux canaux sont ouverts**
+et rien n'est envoyé : le choix à l'inscription se teste sans compte WhatsApp
+Business.
+
+Les quotas (délai de renvoi, envois par heure) sont tenus **par numéro, tous
+canaux confondus** : basculer sur WhatsApp ne remet pas les compteurs à zéro.
 
 **Pour de vrais utilisateurs en Algérie, visez un agrégateur local.** Les
 identifiants d'expéditeur doivent être approuvés au préalable chez Mobilis,
@@ -58,14 +68,16 @@ complément au SMS, pas un remplacement.
 
 | Route | Effet |
 | --- | --- |
-| `POST /auth/request-code` `{ phone }` | Envoie un code, renvoie `challengeId` |
+| `GET /auth/channels` | Canaux proposés à l'inscription (`sms`, `whatsapp`) |
+| `POST /auth/request-code` `{ phone, channel }` | Envoie un code par le canal demandé (SMS par défaut), renvoie `challengeId` |
 | `POST /auth/verify-code` `{ challengeId, code }` | Vérifie le code, renvoie `{ phone, token }` |
 | `GET /auth/me` (`Authorization: Bearer …`) | Renvoie le numéro associé au jeton |
 | `GET /health` | État du serveur et fournisseur SMS actif |
 
 Codes de retour utiles : `429` avec `Retry-After` pour une limitation de débit,
 `401` avec `attemptsLeft` pour un code refusé, `410` pour un code périmé ou déjà
-utilisé, `502` si la passerelle a échoué.
+utilisé, `400` avec `channel_unavailable` pour un canal fermé, `502` si la
+passerelle a échoué.
 
 ## Ce qui protège le système
 

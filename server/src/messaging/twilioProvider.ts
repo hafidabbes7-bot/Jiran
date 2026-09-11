@@ -1,4 +1,4 @@
-import { SmsDeliveryError, type SmsProvider } from './provider.js';
+import { MessageDeliveryError, type MessageProvider } from './provider.js';
 
 /**
  * Twilio, via son API REST directement — la dépendance officielle n'apporte
@@ -8,7 +8,7 @@ import { SmsDeliveryError, type SmsProvider } from './provider.js';
  * filtrées et l'identifiant d'expéditeur doit être approuvé au préalable. À
  * tester sur de vrais numéros Mobilis, Djezzy et Ooredoo avant de s'engager.
  */
-export class TwilioSmsProvider implements SmsProvider {
+export class TwilioSmsProvider implements MessageProvider {
   readonly name = 'twilio';
 
   constructor(
@@ -32,7 +32,7 @@ export class TwilioSmsProvider implements SmsProvider {
 
     if (!response.ok) {
       const detail = await response.text().catch(() => '');
-      throw new SmsDeliveryError(`Twilio a répondu ${response.status} : ${detail}`, this.name);
+      throw new MessageDeliveryError(`Twilio a répondu ${response.status} : ${detail}`, this.name);
     }
   }
 }

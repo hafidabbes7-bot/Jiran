@@ -29,9 +29,14 @@ export const ar: Strings = {
     phoneError: 'رقم جزائري غير صالح (05 أو 06 أو 07 متبوعاً بـ 8 أرقام).',
     createAccount: 'إنشاء حسابي',
 
+    channelLabel: 'استلام الرمز عبر',
+    channelSms: '💬 رسالة قصيرة',
+    channelWhatsapp: '🟢 واتساب',
+    channelUnavailable: 'هذه القناة غير متاحة حالياً. جرّب الأخرى.',
+
     codeTitle: 'تأكيد رقمك',
-    codeSubtitle: 'أرسلنا رمزاً من {length} أرقام إلى {phone}.',
-    codeLabel: 'الرمز المستلم عبر الرسالة',
+    codeSubtitle: 'أرسلنا رمزاً من {length} أرقام إلى {phone} عبر {channel}.',
+    codeLabel: 'الرمز المستلم عبر {channel}',
     codePlaceholder: '000000',
     verify: 'تأكيد',
     resend: 'إعادة إرسال الرمز',
@@ -47,7 +52,7 @@ export const ar: Strings = {
     rateLimited: 'طلبات كثيرة على هذا الرقم. أعد المحاولة بعد {seconds} ث.',
     networkError:
       'تعذّر الاتصال بالخادم. تحقق من اتصالك — وأثناء التطوير، من أن واجهة التحقق تعمل.',
-    devCodeNotice: 'وضع التطوير: الرمز {code} (لم تُرسل أي رسالة).',
+    devCodeNotice: 'وضع التطوير: الرمز {code} (لم يُرسل أي إشعار).',
 
     locationTitle: 'أين تسكن؟',
     locationSubtitle: 'للتواصل فقط مع جيرانك الحقيقيين',

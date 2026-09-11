@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { AuthService, Challenge, VerifiedSession } from '../../data/authService';
+import type { AuthService, Challenge, Channel, VerifiedSession } from '../../data/authService';
 import { normalizePhone } from '../../domain/phone';
 
 export type VerificationStatus =
@@ -14,6 +14,7 @@ export interface VerificationError {
   key:
     | 'invalid_phone'
     | 'sms_failed'
+    | 'channel_unavailable'
     | 'network'
     | 'rate_limited'
     | 'invalid_code'
@@ -63,11 +64,11 @@ export function usePhoneVerification(auth: AuthService) {
 
   /** Renvoie le défi créé, ou `null` si l'envoi a échoué. */
   const requestCode = useCallback(
-    async (phone: string): Promise<Challenge | null> => {
+    async (phone: string, channel: Channel): Promise<Challenge | null> => {
       setError(null);
       setStatus({ kind: 'sending' });
 
-      const result = await auth.requestCode(normalizePhone(phone));
+      const result = await auth.requestCode(normalizePhone(phone), channel);
 
       if (!result.ok) {
         setStatus({ kind: 'idle' });

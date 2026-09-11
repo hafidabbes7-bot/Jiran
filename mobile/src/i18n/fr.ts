@@ -28,9 +28,14 @@ export const fr = {
     phoneError: 'Numéro algérien invalide (05, 06 ou 07 suivi de 8 chiffres).',
     createAccount: 'Créer mon compte',
 
+    channelLabel: 'Recevoir le code par',
+    channelSms: '💬 SMS',
+    channelWhatsapp: '🟢 WhatsApp',
+    channelUnavailable: 'Ce canal n’est pas disponible pour le moment. Essaie l’autre.',
+
     codeTitle: 'Vérifie ton numéro',
-    codeSubtitle: 'Nous avons envoyé un code à {length} chiffres au {phone}.',
-    codeLabel: 'Code reçu par SMS',
+    codeSubtitle: 'Nous avons envoyé un code à {length} chiffres au {phone} par {channel}.',
+    codeLabel: 'Code reçu par {channel}',
     codePlaceholder: '000000',
     verify: 'Vérifier',
     resend: 'Renvoyer le code',
@@ -42,11 +47,11 @@ export const fr = {
     codeExpired: 'Ce code a expiré. Demande-en un nouveau.',
     codeTooManyAttempts: 'Trop d’essais. Demande un nouveau code.',
     codeConsumed: 'Ce code a déjà été utilisé. Demande-en un nouveau.',
-    sendFailed: 'L’envoi du SMS a échoué. Réessaie dans un instant.',
+    sendFailed: 'L’envoi du message a échoué. Réessaie dans un instant.',
     rateLimited: 'Trop de demandes pour ce numéro. Réessaie dans {seconds} s.',
     networkError:
       'Serveur injoignable. Vérifie ta connexion — et, en développement, que l’API de vérification tourne.',
-    devCodeNotice: 'Mode développement : code {code} (aucun SMS n’a été envoyé).',
+    devCodeNotice: 'Mode développement : code {code} (aucun message n’a été envoyé).',
 
     locationTitle: 'Où habites-tu ?',
     locationSubtitle: 'Pour te connecter uniquement avec tes vrais voisins',

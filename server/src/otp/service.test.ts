@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 
-import type { SmsProvider } from '../sms/provider.js';
+import type { MessageProvider } from '../messaging/provider.js';
 import { VerificationService, type VerificationOptions } from './service.js';
 import { InMemoryChallengeStore } from './store.js';
 
-class FakeSms implements SmsProvider {
-  readonly name = 'fake';
+class FakeProvider implements MessageProvider {
+  constructor(readonly name: string) {}
   readonly sent: { to: string; message: string }[] = [];
   shouldFail = false;
 
@@ -32,7 +32,8 @@ const OPTIONS: VerificationOptions = {
 
 describe('VerificationService', () => {
   let store: InMemoryChallengeStore;
-  let sms: FakeSms;
+  let sms: FakeProvider;
+  let whatsapp: FakeProvider;
   let clock: number;
   let service: VerificationService;
 
@@ -41,10 +42,11 @@ describe('VerificationService', () => {
   };
 
   beforeEach(() => {
-    sms = new FakeSms();
+    sms = new FakeProvider('fake-sms');
+    whatsapp = new FakeProvider('fake-whatsapp');
     clock = Date.UTC(2026, 0, 1, 12, 0, 0);
     store = new InMemoryChallengeStore(() => clock);
-    service = new VerificationService(store, sms, OPTIONS, () => clock);
+    service = new VerificationService(store, { sms, whatsapp }, OPTIONS, () => clock);
   });
 
   it('envoie un code et le vérifie', async () => {
@@ -57,6 +59,67 @@ describe('VerificationService', () => {
     const result = await service.verifyCode(request.challengeId, code);
 
     assert.deepEqual(result, { ok: true, phone: '0555123456' });
+  });
+
+  it('envoie par WhatsApp quand ce canal est demandé', async () => {
+    const request = await service.requestCode('0555123456', 'whatsapp');
+    assert.equal(request.ok, true);
+    assert.equal(sms.sent.length, 0);
+    assert.equal(whatsapp.sent.length, 1);
+
+    const code = codeFromMessage(whatsapp.sent[0]!.message);
+    assert.deepEqual(await service.verifyCode(request.challengeId, code), {
+      ok: true,
+      phone: '0555123456',
+    });
+  });
+
+  it('prend le SMS par défaut quand aucun canal n’est précisé', async () => {
+    await service.requestCode('0555123456');
+    assert.equal(sms.sent.length, 1);
+    assert.equal(whatsapp.sent.length, 0);
+  });
+
+  it('refuse un canal qui n’est pas configuré', async () => {
+    const smsOnly = new VerificationService(
+      new InMemoryChallengeStore(() => clock),
+      { sms },
+      OPTIONS,
+      () => clock
+    );
+
+    assert.deepEqual(smsOnly.channels, ['sms']);
+    assert.deepEqual(await smsOnly.requestCode('0555123456', 'whatsapp'), {
+      ok: false,
+      reason: 'channel_unavailable',
+    });
+    assert.equal(sms.sent.length, 0);
+  });
+
+  it('partage les quotas entre les canaux', async () => {
+    await service.requestCode('0555123456', 'sms');
+
+    // Basculer sur WhatsApp ne doit pas contourner le délai de renvoi.
+    const viaWhatsApp = await service.requestCode('0555123456', 'whatsapp');
+    assert.equal(viaWhatsApp.ok, false);
+    assert.equal(viaWhatsApp.ok === false && viaWhatsApp.reason, 'cooldown');
+    assert.equal(whatsapp.sent.length, 0);
+  });
+
+  it('vérifie un code quel que soit le canal qui l’a porté', async () => {
+    const first = await service.requestCode('0555123456', 'whatsapp');
+    assert.equal(first.ok, true);
+    advance(OPTIONS.resendCooldownSeconds);
+
+    // Le voisin ne reçoit rien sur WhatsApp et redemande par SMS.
+    const second = await service.requestCode('0555123456', 'sms');
+    assert.equal(second.ok, true);
+
+    const smsCode = codeFromMessage(sms.sent[0]!.message);
+    assert.deepEqual(await service.verifyCode(second.challengeId, smsCode), {
+      ok: true,
+      phone: '0555123456',
+    });
   });
 
   it('refuse un numéro qui n’est pas un mobile algérien', async () => {

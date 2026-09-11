@@ -58,20 +58,16 @@ export const config = {
   },
 
   sms: {
-    /** `console`, `twilio`, `http` (passerelle générique) ou `whatsapp`. */
+    /**
+     * Canal SMS : `console` (développement), `twilio`, `http` (passerelle d'un
+     * agrégateur) ou `none` pour fermer le canal SMS et n'offrir que WhatsApp.
+     */
     provider: process.env.SMS_PROVIDER ?? 'console',
     senderId: process.env.SMS_SENDER_ID ?? 'Jiran',
     twilio: {
       accountSid: process.env.TWILIO_ACCOUNT_SID ?? '',
       authToken: process.env.TWILIO_AUTH_TOKEN ?? '',
       from: process.env.TWILIO_FROM ?? '',
-    },
-    whatsapp: {
-      phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID ?? '',
-      accessToken: process.env.WHATSAPP_ACCESS_TOKEN ?? '',
-      /** Modèle « authentification » approuvé par Meta. */
-      templateName: process.env.WHATSAPP_TEMPLATE_NAME ?? 'jiran_verification',
-      templateLanguage: process.env.WHATSAPP_TEMPLATE_LANGUAGE ?? 'fr',
     },
     http: {
       url: process.env.SMS_HTTP_URL ?? '',
@@ -81,6 +77,18 @@ export const config = {
       messageField: process.env.SMS_HTTP_MESSAGE_FIELD ?? 'message',
       senderField: process.env.SMS_HTTP_SENDER_FIELD ?? 'sender',
     },
+  },
+
+  /**
+   * Canal WhatsApp. Il ne s'ouvre que si ces identifiants sont renseignés — un
+   * compte WhatsApp Business vérifié et un modèle « authentification »
+   * approuvé par Meta sont nécessaires.
+   */
+  whatsapp: {
+    phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID ?? '',
+    accessToken: process.env.WHATSAPP_ACCESS_TOKEN ?? '',
+    templateName: process.env.WHATSAPP_TEMPLATE_NAME ?? 'jiran_verification',
+    templateLanguage: process.env.WHATSAPP_TEMPLATE_LANGUAGE ?? 'fr',
   },
 
   /**

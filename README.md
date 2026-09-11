@@ -30,8 +30,8 @@ objets à emprunter, services recommandés, carte, mode vacances, collecte des
 déchets, messagerie privée) viendront ensuite, pour ne pas retarder le lancement
 ni diluer le positionnement sécurité / entraide.
 
-L'inscription vérifie le numéro par code reçu en SMS (ou WhatsApp), comme dans
-la plupart des applications. Le choix du canal d'envoi et ce qu'il faut obtenir
+L'inscription vérifie le numéro par un code à 6 chiffres, que le voisin choisit
+de recevoir **par SMS ou sur WhatsApp**, comme dans la plupart des applications. Le choix du canal d'envoi et ce qu'il faut obtenir
 auprès des opérateurs sont expliqués dans [`server/README.md`](server/README.md).
 
 Ce qui reste à brancher côté services externes (modération d'image,
