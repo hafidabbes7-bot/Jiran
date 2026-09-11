@@ -98,7 +98,7 @@ export function OnboardingFlow({
     [neighborhoodId]
   );
 
-  // 86 quartiers ne tiennent pas dans une liste qu'on parcourt : on filtre sur
+  // 97 quartiers ne tiennent pas dans une liste qu'on parcourt : on filtre sur
   // le nom et sur la wilaya, dans les deux langues.
   const matching = useMemo(() => {
     const query = neighborhoodQuery.trim();
@@ -303,7 +303,7 @@ export function OnboardingFlow({
 
   /**
    * Chemin le plus court : on part de la position et on en déduit le quartier,
-   * au lieu de demander au voisin de le trouver dans une liste de 86 lignes.
+   * au lieu de demander au voisin de le trouver dans une liste de 97 lignes.
    */
   const detectNeighborhood = useCallback(async () => {
     setPosition({ kind: 'checking' });

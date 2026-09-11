@@ -104,9 +104,11 @@ cd mobile && npm test        # filtre de texte, géolocalisation, téléphone
 
 ## Couverture du territoire
 
-Les 86 quartiers de `mobile/src/data/neighborhoods.ts` couvrent les 58 wilayas :
-les communes d'Alger et de Béjaïa au quartier près, le chef-lieu partout
-ailleurs. C'est volontairement grossier hors de ces deux wilayas — un chef-lieu
+Les 97 quartiers de `mobile/src/data/neighborhoods.ts` couvrent les 69 wilayas —
+les 58 d'avant, plus les 11 créées par la loi n° 26-06 du 4 avril 2026 (Aflou,
+Barika, El Kantara, Bir El Ater, El Aricha, Ksar Chellala, Aïn Oussara, Messaad,
+Ksar El Boukhari, Bou Saâda, El Abiodh Sidi Cheikh). Les communes d'Alger et de
+Béjaïa y figurent au quartier près, le chef-lieu partout ailleurs. C'est volontairement grossier hors de ces deux wilayas — un chef-lieu
 se découpera en quartiers quand il y aura assez de voisins pour que ça ait un
 sens. Personne ne doit rester sans entrée : un voisin absent de la liste ne peut
 pas s'inscrire. Quand sa commune manque quand même, l'inscription reste possible

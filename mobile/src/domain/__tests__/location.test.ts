@@ -56,9 +56,17 @@ describe('findCoverage', () => {
 });
 
 describe('couverture du territoire', () => {
-  it('propose une entrée pour chaque wilaya', () => {
-    const wilayas = new Set(NEIGHBORHOODS.map((n) => n.wilayaCode));
-    expect(wilayas.size).toBe(58);
+  it('propose une entrée pour chacune des 69 wilayas', () => {
+    const codes = new Set(NEIGHBORHOODS.map((n) => n.wilayaCode));
+    for (let i = 1; i <= 69; i += 1) {
+      expect(codes.has(String(i).padStart(2, '0'))).toBe(true);
+    }
+  });
+
+  it('connaît les wilayas créées en 2026', () => {
+    const bouSaada = NEIGHBORHOODS.find((n) => n.id === 'bou-saada');
+    expect(bouSaada?.wilayaCode).toBe('68');
+    expect(bouSaada?.wilaya).toBe('Bou Saâda');
   });
 
   it('ne place aucun quartier hors d’Algérie', () => {
