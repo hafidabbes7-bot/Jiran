@@ -13,14 +13,26 @@ espace dédié, vérifié et organisé par quartier.
 | `docs/cahier-des-charges.md` | Toutes les décisions de conception validées (concept, regroupement par quartier, modération, 24 écrans, périmètre V1) |
 | `prototype/jiran-accueil.html` | Prototype visuel HTML autonome — 24 écrans navigables, bilingue FR/AR avec bascule RTL |
 
-## L'application
+## Essayer tout de suite
 
 ```bash
-# terminal 1 — API de vérification du numéro (aucun SMS envoyé en développement)
-cd server && npm install && cp .env.example .env && EXPOSE_DEV_CODE=true npm run dev
+npm run install:all   # la première fois
+npm run essai
+```
+
+Construit l'application, crée les secrets, démarre le serveur qui sert à la
+fois l'API et l'application web : il n'y a plus qu'une adresse à ouvrir. Pour
+la partager à des voisins, ajoutez un tunnel (`npx localtunnel --port 4000`) —
+voir [`docs/lancer-sur-telephone.md`](docs/lancer-sur-telephone.md).
+
+## Développer
+
+```bash
+# terminal 1 — serveur
+cd server && npm install && cp .env.example .env && npm run dev
 
 # terminal 2 — application
-cd mobile && npm install && EXPO_PUBLIC_API_URL=http://localhost:4000 npm start
+cd mobile && npm install && npm start
 ```
 
 Le périmètre retenu pour la V1 est le **socle restreint** décrit au §5 du cahier

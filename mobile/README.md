@@ -13,12 +13,12 @@ du code. En développement, aucun SMS n'est réellement envoyé.
 ```bash
 # terminal 1 — API de vérification
 cd server && npm install && cp .env.example .env
-EXPOSE_DEV_CODE=true npm run dev
-# les canaux WhatsApp ne s'ajoutent que si vous les configurez (voir .env.example)
+npm run dev   # lit server/.env, où EXPOSE_DEV_CODE=true remplit le code tout seul
 
 # terminal 2 — application
 cd mobile && npm install
-EXPO_PUBLIC_API_URL=http://localhost:4000 npm start
+npm start   # sur le web, l'adresse du serveur est celle de la page ;
+            # sur un téléphone, renseignez EXPO_PUBLIC_API_URL dans mobile/.env
 #   puis « a » pour Android, « i » pour iOS, « w » pour le web
 npm test           # logique métier (filtre de texte, géolocalisation, téléphone)
 npm run typecheck

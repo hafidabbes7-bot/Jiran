@@ -1,4 +1,6 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import express, { type Request, type Response } from 'express';
 import { z } from 'zod';
@@ -33,6 +35,38 @@ const verifyCodeSchema = z.object({
 });
 
 const verifyLinkSchema = z.object({ challengeId: z.string().min(1).max(100) });
+
+/**
+ * Sert l'application web, si elle a été construite.
+ *
+ * Monté après les routes de l'API pour ne rien lui prendre. Le repli sur
+ * `index.html` est indispensable : l'application gère elle-même ses écrans, et
+ * une adresse comme `/quartier` n'existe pas sur le disque.
+ */
+function serveWebApp(app: express.Express, webDir: string): void {
+  if (!webDir) return;
+
+  const dossier = path.resolve(webDir);
+  const accueil = path.join(dossier, 'index.html');
+
+  if (!fs.existsSync(accueil)) {
+    console.warn(`[web] ${dossier} ne contient pas d'index.html — rien n'est servi.`);
+    return;
+  }
+
+  app.use(express.static(dossier));
+  app.get(/.*/, (request: Request, response: Response, next) => {
+    // Une requête d'API qui n'a trouvé personne doit rester une erreur d'API,
+    // pas renvoyer silencieusement la page d'accueil.
+    if (request.path.startsWith('/auth') || request.path.startsWith('/webhooks')) {
+      next();
+      return;
+    }
+    response.sendFile(accueil);
+  });
+
+  console.info(`[web] application servie depuis ${dossier}`);
+}
 
 /** Signature `sha256=…` posée par Meta sur le corps brut du webhook. */
 function verifyMetaSignature(rawBody: Buffer | undefined, header: string | undefined): boolean {
@@ -77,6 +111,8 @@ export function createServer(options?: {
   /** Base du contenu ; par défaut celle de `DATABASE_PATH`. */
   databasePath?: string;
   push?: PushSender;
+  /** Dossier de l'application web à servir en plus de l'API. */
+  webDir?: string;
 }) {
   const store = options?.store ?? new InMemoryChallengeStore();
   const providers = options?.providers ?? createChannelProviders();
@@ -295,6 +331,8 @@ export function createServer(options?: {
   });
 
   app.use(createContentRouter(content, alerts, moderation));
+
+  serveWebApp(app, options?.webDir ?? config.webDir);
 
   /** Contrôle qu'un jeton est encore valable, et à quel numéro il correspond. */
   app.get('/auth/me', (request: Request, response: Response) => {

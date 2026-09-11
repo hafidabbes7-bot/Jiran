@@ -4,25 +4,71 @@ Tout a été vérifié jusqu'ici depuis un navigateur. Cette étape-ci vérifie 
 qu'un navigateur ne peut pas montrer : la vraie demande de géolocalisation, le
 rendu arabe sur un écran de téléphone, les performances réelles.
 
-Deux chemins, selon ce que vous voulez faire.
+Trois chemins, du plus rapide au plus complet.
 
-| | **A. Recevoir un APK** | **B. Installer depuis l'ordinateur** |
-| --- | --- | --- |
-| À installer | Node.js seulement | + Android Studio (~1 Go) |
-| Câble USB | non | oui |
-| Attente | ~15 min, dans le nuage | ~20 min la 1ʳᵉ fois, puis 2 min |
-| Compte à créer | un compte Expo, gratuit | aucun |
-| Pour qui | essayer, faire essayer à d'autres | modifier le code et revoir tout de suite |
+| | **0. Un lien à partager** | **A. Un fichier APK** | **B. Depuis l'ordinateur** |
+| --- | --- | --- | --- |
+| À installer côté voisin | rien | l'APK | l'APK |
+| À installer chez vous | Node.js | Node.js | + Android Studio (~1 Go) |
+| Attente | 2 min | ~15 min, dans le nuage | ~20 min la 1ʳᵉ fois |
+| Compte à créer | aucun | un compte Expo, gratuit | aucun |
+| Ce qu'on ne peut pas essayer | les notifications | les notifications | rien |
 
-**Commencez par A** : c'est le plus simple, et l'APK s'envoie ensuite à qui vous
-voulez. Le chemin B sert quand on développe.
+**Pour faire essayer à deux ou trois voisins cette semaine, prenez le chemin
+0** : ils ouvrent un lien dans leur navigateur, rien à installer, et tout
+fonctionne — inscription, fil partagé, signalements, SOS. Seules les
+notifications manquent, et elles ne sont de toute façon pas encore branchées.
 
-Dans les deux cas, **le serveur doit tourner quelque part** et le téléphone doit
-pouvoir le joindre : l'application ne fait rien sans lui. C'est l'étape 4.
+Prenez le chemin A quand vous voudrez une vraie application installée sur les
+téléphones, et le B quand vous voudrez modifier le code.
+
+Dans les trois cas, **le serveur doit tourner quelque part** : l'application ne
+fait rien sans lui.
 
 ---
 
-## A. Recevoir un fichier APK, sans installer Android Studio
+## 0. Un lien à partager, sans rien installer
+
+Une seule commande, à la racine du projet :
+
+```bash
+npm run install:all   # la première fois seulement
+npm run essai
+```
+
+Elle construit l'application, crée les secrets du serveur, et démarre le tout.
+Le serveur sert l'application **et** l'API à la même adresse : il n'y a donc
+rien à configurer, ni chez vous ni chez vos voisins.
+
+Puis, dans un **second terminal**, ouvrez un tunnel :
+
+```bash
+npx localtunnel --port 4000
+```
+
+Il affiche une adresse en `https://…`. **C'est celle-là qu'on partage** — par
+WhatsApp, par exemple. Elle marche depuis n'importe où, même sur les données
+mobiles.
+
+> ⚠️ **Il faut du `https://`, pas du `http://`.** Les navigateurs refusent la
+> géolocalisation sur une adresse non sécurisée : vos voisins seraient bloqués
+> à l'étape « Confirmer ma position », sans comprendre pourquoi. L'adresse
+> `http://192.168.…` affichée par la commande ne sert donc qu'à regarder
+> depuis votre propre ordinateur.
+
+Ce qu'il faut savoir pour l'essai :
+
+- **Aucun SMS n'est envoyé.** Le code à 6 chiffres se remplit tout seul. Il
+  s'affiche aussi dans votre terminal.
+- **Chaque voisin doit choisir le même quartier**, sinon ils ne se verront pas.
+- **Il faut trois voisins différents** pour qu'un signalement masque une
+  publication : c'est tout l'objet de la règle.
+- Le tunnel s'arrête quand vous fermez le terminal, et l'adresse change à
+  chaque fois. C'est fait pour essayer, pas pour durer.
+
+---
+
+## A. Un fichier APK, sans installer Android Studio
 
 Expo compile dans le nuage et vous rend un lien de téléchargement. Il faut un
 compte sur expo.dev — gratuit, et le plan gratuit suffit largement.

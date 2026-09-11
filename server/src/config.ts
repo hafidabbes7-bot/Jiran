@@ -127,6 +127,15 @@ export const config = {
   },
 
   /**
+   * Dossier de l'application web à servir, s'il y en a un.
+   *
+   * Servir l'application et l'API à la même adresse permet de partager un
+   * simple lien : le navigateur trouve le serveur tout seul, il n'y a rien à
+   * configurer sur le téléphone du voisin.
+   */
+  webDir: process.env.WEB_DIR ?? '',
+
+  /**
    * Emplacement de la base du contenu. `:memory:` ne survit pas au
    * redémarrage — pratique pour les tests, à proscrire ailleurs.
    */

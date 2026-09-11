@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 /**
  * Vérification du numéro par SMS, côté application.
  *
@@ -23,8 +25,28 @@ export const CHANNELS: readonly Channel[] = ['sms', 'whatsapp', 'whatsapp_link']
 
 const isChannel = (value: unknown): value is Channel => CHANNELS.includes(value as Channel);
 
-/** Adresse de l'API, injectée à la compilation par Expo (`EXPO_PUBLIC_*`). */
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000';
+/**
+ * Adresse du serveur.
+ *
+ * Sur un téléphone, elle est figée à la compilation (`EXPO_PUBLIC_API_URL`) :
+ * l'application est un paquet installé, elle n'a aucun moyen de la deviner.
+ *
+ * Dans un navigateur, elle vaut par défaut l'adresse de la page elle-même,
+ * parce que le serveur sert aussi l'application web. C'est ce qui permet de
+ * partager un simple lien à des voisins : il n'y a rien à configurer, et
+ * l'adresse suit le lien où qu'il pointe.
+ */
+function resolveApiUrl(): string {
+  const configured = process.env.EXPO_PUBLIC_API_URL;
+  if (configured) return configured;
+
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return 'http://localhost:4000';
+}
+
+export const API_URL = resolveApiUrl();
 
 /** Défi classique : un code a été envoyé, il faut le recopier. */
 export interface CodeChallenge {
