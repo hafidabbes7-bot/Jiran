@@ -76,6 +76,12 @@ compile l'application sur ses propres machines et dépose le fichier dans les
 
 ### La marche à suivre
 
+> ⚠️ **Depuis le navigateur, pas depuis l'application GitHub.** L'application
+> mobile affiche les compilations et permet de télécharger le résultat, mais
+> elle ne sait pas en déclencher une. Ouvrez `github.com` dans Chrome ; si le
+> bouton est difficile à atteindre, activez **Version pour ordinateur** dans le
+> menu du navigateur.
+
 1. **Mettez d'abord le serveur en ligne** ([`mettre-en-ligne.md`](mettre-en-ligne.md)) :
    l'adresse du serveur est figée dans le fichier au moment de la compilation,
    il faut donc la connaître avant.
