@@ -1,0 +1,87 @@
+# Fabrique le fichier d'installation Android et le publie dans les « Releases »
+# du dépôt, d'où il se télécharge directement depuis un téléphone.
+#
+# Se lance à la main : onglet Actions → « Fabriquer l'APK » → Run workflow.
+name: Fabriquer l'APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      adresse_serveur:
+        description: "Adresse du serveur, en https:// (ex. https://jiran-essai.onrender.com)"
+        required: true
+        type: string
+      http_en_clair:
+        description: "Autoriser le http:// — uniquement pour un serveur sur le réseau local"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    name: Android
+    runs-on: ubuntu-latest
+    env:
+      # Figée dans le paquet au moment de la compilation : l'application
+      # installée n'a aucun moyen de la deviner.
+      EXPO_PUBLIC_API_URL: ${{ inputs.adresse_serveur }}
+      EXPO_ALLOW_CLEARTEXT: ${{ inputs.http_en_clair }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      # La compilation Android exige Java 17 ; le SDK Android est déjà présent
+      # sur les machines de GitHub.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Installer les dépendances
+        run: npm ci --prefix mobile
+
+      - name: Générer le projet Android
+        run: npm run prebuild:android --prefix mobile
+
+      - name: Compiler
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Renommer le fichier
+        run: |
+          mkdir -p paquet
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk \
+             "paquet/jiran-${{ github.run_number }}.apk"
+
+      # Deux façons de le récupérer : la « Release » donne un lien direct,
+      # pratique depuis un téléphone ; l'artefact est une archive zip.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jiran-apk
+          path: paquet/*.apk
+
+      - name: Publier dans les Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "apk-${{ github.run_number }}" \
+            "paquet/jiran-${{ github.run_number }}.apk" \
+            --title "Jiran — essai ${{ github.run_number }}" \
+            --notes "Application d'essai.
+
+          Serveur : ${{ inputs.adresse_serveur }}
+
+          Ouvrir ce lien depuis le téléphone et accepter l'installation depuis
+          cette source. Signée avec la clé de test d'Android : bon pour essayer,
+          pas pour publier sur le store."

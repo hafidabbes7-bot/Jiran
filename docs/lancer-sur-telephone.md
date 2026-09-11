@@ -9,9 +9,9 @@ Trois chemins, du plus rapide au plus complet.
 | | **0. Un lien à partager** | **A. Un fichier APK** | **B. Depuis l'ordinateur** |
 | --- | --- | --- | --- |
 | À installer côté voisin | rien | l'APK | l'APK |
-| À installer chez vous | Node.js | Node.js | + Android Studio (~1 Go) |
-| Attente | 2 min | ~15 min, dans le nuage | ~20 min la 1ʳᵉ fois |
-| Compte à créer | aucun | un compte Expo, gratuit | aucun |
+| À installer chez vous | Node.js | **rien du tout** | + Android Studio (~1 Go) |
+| Attente | 2 min | ~10 min, chez GitHub | ~20 min la 1ʳᵉ fois |
+| Compte à créer | aucun | aucun (celui de GitHub suffit) | aucun |
 | Ce qu'on ne peut pas essayer | les notifications | les notifications | rien |
 
 **Pour faire essayer à deux ou trois voisins cette semaine, prenez le chemin
@@ -68,10 +68,38 @@ Ce qu'il faut savoir pour l'essai :
 
 ---
 
-## A. Un fichier APK, sans installer Android Studio
+## A. Un fichier APK, fabriqué par GitHub
 
-Expo compile dans le nuage et vous rend un lien de téléchargement. Il faut un
-compte sur expo.dev — gratuit, et le plan gratuit suffit largement.
+**Rien à installer, et tout se fait depuis le navigateur du téléphone.** GitHub
+compile l'application sur ses propres machines et dépose le fichier dans les
+« Releases » du dépôt, d'où il se télécharge directement.
+
+### La marche à suivre
+
+1. **Mettez d'abord le serveur en ligne** ([`mettre-en-ligne.md`](mettre-en-ligne.md)) :
+   l'adresse du serveur est figée dans le fichier au moment de la compilation,
+   il faut donc la connaître avant.
+2. Sur github.com, ouvrez le dépôt **Jiran** → onglet **Actions**
+3. Dans la liste de gauche : **Fabriquer l'APK** → bouton **Run workflow**
+4. Collez l'adresse du serveur, du genre `https://jiran-essai.onrender.com`
+5. **Run workflow**
+
+Une dizaine de minutes plus tard, le dépôt a une nouvelle **Release**. Ouvrez-la
+depuis le téléphone, touchez le fichier `.apk`, et acceptez l'installation
+depuis cette source quand Android le demande.
+
+Ce lien de Release se partage : vos voisins l'ouvrent et installent pareil.
+
+> **À savoir.** Le fichier est signé avec la clé de test d'Android — parfait
+> pour essayer, mais il ne peut pas être publié sur le Play Store, et le jour
+> où une vraie clé sera utilisée il faudra désinstaller avant de réinstaller.
+> Android affichera aussi un avertissement à l'installation : c'est le
+> comportement normal pour une application qui ne vient pas du store.
+
+### Ou bien avec un compte Expo
+
+Autre chemin, si vous préférez Expo : il faut un compte sur expo.dev — gratuit,
+et le plan gratuit suffit largement.
 
 ```bash
 cd Jiran/mobile

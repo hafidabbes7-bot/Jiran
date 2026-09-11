@@ -39,7 +39,8 @@
     "typecheck": "tsc --noEmit",
     "build:check": "expo export --platform android --output-dir .expo/ci-export",
     "prebuild:check": "expo prebuild --platform all --no-install --clean",
-    "build:web": "expo export --platform web --output-dir dist"
+    "build:web": "expo export --platform web --output-dir dist",
+    "prebuild:android": "expo prebuild --platform android --no-install --clean"
   },
   "private": true,
   "jest": {

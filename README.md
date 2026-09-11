@@ -73,6 +73,13 @@ elle tourne alors à une adresse `https://` publique, que vos voisins ouvrent
 sans rien installer. Dix minutes, pas à pas :
 [`docs/mettre-en-ligne.md`](docs/mettre-en-ligne.md).
 
+## Obtenir le fichier d'installation
+
+Onglet **Actions** du dépôt → **Fabriquer l'APK** → *Run workflow*, en donnant
+l'adresse du serveur. GitHub compile et dépose le fichier dans les
+« Releases », d'où il s'installe directement depuis un téléphone. Rien à
+installer, aucun compte supplémentaire.
+
 ## Essayer sur un vrai téléphone
 
 Tout a été vérifié depuis un navigateur ; la géolocalisation réelle, le rendu
