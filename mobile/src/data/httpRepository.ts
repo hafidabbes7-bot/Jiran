@@ -256,6 +256,9 @@ export class HttpRepository implements JiranRepository {
 
     if (acceptedStatuses.includes(status)) return data;
 
+    if (status === 403 && data.error === 'profile_required') {
+      throw new RepositoryError('Profil à recréer', 'profile_required');
+    }
     if (status === 401 || status === 403) {
       throw new RepositoryError('Session refusée', 'unauthorized');
     }

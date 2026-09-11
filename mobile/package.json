@@ -35,7 +35,8 @@
     "web": "expo start --web",
     "test": "jest",
     "test:watch": "jest --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:check": "expo export --platform android --output-dir .expo/ci-export"
   },
   "private": true,
   "jest": {

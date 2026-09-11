@@ -1,0 +1,58 @@
+name: Tests
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  serveur:
+    name: Serveur
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      # Les tests du serveur comparent ses copies partagées à celles de
+      # l'application : les deux dépendances sont donc nécessaires.
+      - name: Installer les dépendances
+        run: |
+          npm ci --prefix server
+          npm ci --prefix mobile
+
+      - name: Vérifier les types
+        run: npm run typecheck --prefix server
+
+      - name: Tests
+        run: npm test --prefix server
+
+  application:
+    name: Application
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Installer les dépendances
+        run: npm ci --prefix mobile
+
+      - name: Vérifier les types
+        run: npm run typecheck --prefix mobile
+
+      - name: Tests
+        run: npm test --prefix mobile
+
+      # Prouve que l'application se construit réellement, pas seulement
+      # qu'elle compile : c'est ce qui attrape les erreurs de bundling.
+      - name: Construire le paquet
+        run: npm run build:check --prefix mobile

@@ -80,11 +80,23 @@ export interface SosResult {
   delivered: boolean;
 }
 
-/** Erreur remontée quand le serveur est injoignable ou refuse la requête. */
+/**
+ * Erreur remontée quand le serveur est injoignable ou refuse la requête.
+ *
+ * `unauthorized` et `profile_required` sont distingués à dessein : le premier
+ * veut dire que la session ne vaut plus rien et qu'il faut refaire
+ * l'inscription, le second qu'il manque seulement le profil — et cela,
+ * l'application sait le réparer toute seule.
+ */
 export class RepositoryError extends Error {
   constructor(
     message: string,
-    readonly kind: 'network' | 'unauthorized' | 'rejected' | 'inappropriate_text'
+    readonly kind:
+      | 'network'
+      | 'unauthorized'
+      | 'profile_required'
+      | 'rejected'
+      | 'inappropriate_text'
   ) {
     super(message);
     this.name = 'RepositoryError';

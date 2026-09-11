@@ -53,6 +53,22 @@ cahier des charges pour la liste exacte de ce qui est factice.
 Il sert de référence visuelle et fonctionnelle pour le développement réel — il
 n'est **pas destiné à être réutilisé tel quel** comme base de code.
 
+## Tests
+
+Les deux paquets se vérifient séparément, et l'intégration continue
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) les rejoue à chaque
+poussée : types, tests, et construction réelle du paquet mobile.
+
+```bash
+cd server && npm test        # vérification, fil, modération, alertes
+cd mobile && npm test        # filtre de texte, géolocalisation, téléphone
+```
+
+Trois fichiers existent en double entre les deux paquets — le découpage des
+quartiers, la liste de mots interdits et le filtre de texte. L'application en a
+besoin hors ligne, le serveur en a besoin comme autorité. Un test du serveur
+compare les deux copies et échoue à la première divergence.
+
 ## Décision encore ouverte
 
 **Nom définitif** (§1) — « Jiran » est un nom de travail, à valider avant

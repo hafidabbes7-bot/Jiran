@@ -20,8 +20,9 @@ EXPOSE_DEV_CODE=true npm run dev
 cd mobile && npm install
 EXPO_PUBLIC_API_URL=http://localhost:4000 npm start
 #   puis « a » pour Android, « i » pour iOS, « w » pour le web
-npm test           # logique métier (modération, blocage, géolocalisation)
+npm test           # logique métier (filtre de texte, géolocalisation, téléphone)
 npm run typecheck
+npm run build:check  # prouve que l'application se construit vraiment
 ```
 
 Sur un téléphone physique, `localhost` désigne le téléphone lui-même :

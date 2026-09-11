@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -78,24 +79,73 @@ export function AppProvider({
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [feed, people] = await Promise.all([
-        repository.loadFeed(),
-        repository.loadNeighbors(),
-      ]);
-      setPosts(feed);
-      setNeighbors(people);
-      setLoadFailed(false);
-    } catch {
-      // Le fil déjà affiché reste à l'écran : une coupure passagère ne doit pas
-      // vider le quartier.
-      setLoadFailed(true);
-    } finally {
-      setLoading(false);
-    }
+  /**
+   * La session courante, lisible sans faire dépendre `refresh` de l'état.
+   *
+   * Sans cette référence, `refresh` changerait d'identité à chaque session, ce
+   * qui relancerait l'effet de démarrage, qui relirait la session, qui en
+   * produirait un nouvel objet… et le fil se rechargerait sans fin.
+   */
+  const sessionRef = useRef<Session | null>(null);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  /** Vide la session : le voisin repart de l'inscription. */
+  const forgetSession = useCallback(async () => {
+    await repository.clearSession();
+    setSession(null);
+    setPosts([]);
+    setNeighbors([]);
   }, [repository]);
+
+  const refresh = useCallback(
+    async (options?: { session?: Session; allowRepair?: boolean }) => {
+      setLoading(true);
+      try {
+        const [feed, people] = await Promise.all([
+          repository.loadFeed(),
+          repository.loadNeighbors(),
+        ]);
+        setPosts(feed);
+        setNeighbors(people);
+        setLoadFailed(false);
+      } catch (error) {
+        const kind = error instanceof RepositoryError ? error.kind : 'network';
+
+        // Jeton périmé ou refusé : rester sur un fil vide en affichant
+        // « serveur injoignable » enfermerait le voisin sans issue.
+        if (kind === 'unauthorized') {
+          await forgetSession();
+          return;
+        }
+
+        // Profil absent côté serveur — base repartie de zéro, par exemple.
+        // La session reste valable : on le recrée plutôt que de tout refaire.
+        const current = options?.session ?? sessionRef.current;
+        if (kind === 'profile_required' && current && options?.allowRepair !== false) {
+          try {
+            await repository.saveProfile(current);
+            await refresh({ session: current, allowRepair: false });
+            return;
+          } catch {
+            await forgetSession();
+            return;
+          }
+        }
+
+        // Le fil déjà affiché reste à l'écran : une coupure passagère ne doit
+        // pas vider le quartier.
+        setLoadFailed(true);
+      } finally {
+        setLoading(false);
+      }
+    },
+    // `refresh` s'appelle elle-même après réparation, d'où la session passée
+    // en argument : au moment de ce rappel, l'état n'est pas encore à jour.
+    [repository, forgetSession]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -103,7 +153,7 @@ export function AppProvider({
       const stored = await repository.loadSession();
       if (cancelled) return;
       setSession(stored);
-      if (stored) await refresh();
+      if (stored) await refresh({ session: stored });
       if (!cancelled) setReady(true);
     })();
     return () => {
@@ -143,17 +193,12 @@ export function AppProvider({
       const session = { ...next, isModerator };
       await repository.saveSession(session);
       setSession(session);
-      await refresh();
+      await refresh({ session });
     },
     [repository, refresh]
   );
 
-  const signOut = useCallback(async () => {
-    await repository.clearSession();
-    setSession(null);
-    setPosts([]);
-    setNeighbors([]);
-  }, [repository]);
+  const signOut = forgetSession;
 
   const updateLanguage = useCallback(
     async (language: Session['language']) => {
