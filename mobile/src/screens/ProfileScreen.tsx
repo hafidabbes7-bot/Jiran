@@ -44,6 +44,14 @@ export function ProfileScreen({ navigation }: Props) {
   };
 
   const entrées: { emoji: string; label: string; onPress: () => void }[] = [
+    { emoji: '✉️', label: s.community.messagesTitle, onPress: () => navigation.navigate('Messages') },
+    { emoji: '🔧', label: s.community.servicesTitle, onPress: () => navigation.navigate('Services') },
+    { emoji: '🪜', label: s.community.itemsTitle, onPress: () => navigation.navigate('Items') },
+    { emoji: '👥', label: s.community.groupsTitle, onPress: () => navigation.navigate('Groups') },
+    { emoji: '🗺️', label: s.community.mapTitle, onPress: () => navigation.navigate('Map') },
+    { emoji: '🧳', label: s.community.vacationTitle, onPress: () => navigation.navigate('Vacation') },
+    { emoji: '🗑️', label: s.community.wasteTitle, onPress: () => navigation.navigate('Waste') },
+    { emoji: '🤝', label: s.community.solidarityTitle, onPress: () => navigation.navigate('Solidarity') },
     { emoji: '🎲', label: s.profile.games, onPress: () => navigation.navigate('Games') },
     { emoji: '📍', label: s.profile.neighborhood, onPress: () => navigation.navigate('Neighborhood') },
     { emoji: '🚨', label: s.profile.alerts, onPress: () => navigation.navigate('Alerts') },
@@ -151,7 +159,6 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.signOut}>{s.profile.signOut}</Text>
       </Pressable>
 
-      <Text style={[styles.comingSoon, rtl.text]}>{s.profile.comingSoon}</Text>
     </ScrollView>
   );
 }

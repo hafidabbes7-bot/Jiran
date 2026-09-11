@@ -139,3 +139,107 @@ export interface Game {
   outcome?: 'gagne' | 'perdu' | 'nul';
   updatedAt: string;
 }
+
+// --- Vie de quartier (§4.6, §4.9 à §4.15) ------------------------------
+
+export interface Conversation {
+  neighborId: string;
+  neighborName: string;
+  lastMessage: string;
+  lastAt: string;
+  unread: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  fromMe: boolean;
+  text: string;
+  createdAt: string;
+}
+
+export interface Service {
+  id: string;
+  name: string;
+  trade: string;
+  phone?: string;
+  recommendations: number;
+  /** Moyenne des notes, sur 5. */
+  rating: number;
+  recommendedByMe: boolean;
+}
+
+export interface Item {
+  id: string;
+  name: string;
+  ownerName: string;
+  ownerIsMe: boolean;
+  status: 'disponible' | 'emprunte';
+  borrowerName?: string;
+  borrowedByMe: boolean;
+  /** Date de retour promise, au format AAAA-MM-JJ. */
+  dueDate?: string;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  emoji: string;
+  members: number;
+  joined: boolean;
+}
+
+export interface GroupPost {
+  id: string;
+  authorName: string;
+  text: string;
+  createdAt: string;
+}
+
+export type PlaceKind = 'pharmacie' | 'ecole' | 'mosquee' | 'bus' | 'sante' | 'autre';
+
+export interface Place {
+  id: string;
+  name: string;
+  kind: PlaceKind;
+  latitude: number;
+  longitude: number;
+}
+
+export interface Vacation {
+  id: string;
+  startsOn: string;
+  endsOn: string;
+  note?: string;
+  watchers: { id: string; name: string }[];
+}
+
+export interface WatchedVacation {
+  id: string;
+  neighborName: string;
+  startsOn: string;
+  endsOn: string;
+  note?: string;
+}
+
+export type WasteKind = 'ordures' | 'recyclable' | 'encombrants';
+
+export interface WasteSlot {
+  id: string;
+  kind: WasteKind;
+  /** 0 = dimanche, 6 = samedi. */
+  weekday: number;
+  hour: string;
+}
+
+export type SolidarityKind = 'sang' | 'vetements' | 'ramadan' | 'autre';
+
+export interface SolidarityAction {
+  id: string;
+  title: string;
+  kind: SolidarityKind;
+  details?: string;
+  happensOn?: string;
+  participants: number;
+  joined: boolean;
+  createdByMe: boolean;
+}

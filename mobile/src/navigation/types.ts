@@ -5,6 +5,15 @@ export type RootStackParamList = {
   Sos: undefined;
   Moderation: undefined;
   Games: undefined;
+  Messages: undefined;
+  Chat: { neighborId: string; neighborName: string };
+  Services: undefined;
+  Items: undefined;
+  Groups: undefined;
+  Map: undefined;
+  Vacation: undefined;
+  Waste: undefined;
+  Solidarity: undefined;
 };
 
 export type TabParamList = {

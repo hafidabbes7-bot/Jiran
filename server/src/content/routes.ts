@@ -48,7 +48,7 @@ const sosSchema = z.object({
 });
 
 /** Requête portant le membre reconnu par son jeton de session. */
-type MemberRequest = Request & { member?: Member };
+export type MemberRequest = Request & { member?: Member };
 
 /**
  * Routes du contenu de quartier.
@@ -58,22 +58,15 @@ type MemberRequest = Request & { member?: Member };
  * membre. Un client modifié ne peut donc ni publier au nom d'un autre, ni lire
  * le fil d'un quartier où il n'habite pas.
  */
-export function createContentRouter(
-  repository: ContentRepository,
-  alerts: AlertService,
-  moderation: ModerationQueue,
-  games: GameService
-): Router {
-  const router = express.Router();
-
-  /**
-   * Reconnaît le voisin ; 401 si le jeton manque ou ne vaut rien.
-   *
-   * Posé route par route, et non sur le routeur entier : monté à la racine, il
-   * s'appliquerait aussi aux routes de vérification, qui doivent rester
-   * ouvertes à un voisin qui n'a pas encore de profil.
-   */
-  const authenticate = (request: MemberRequest, response: Response, next: () => void) => {
+/**
+ * Reconnaît le voisin ; 401 si le jeton manque ou ne vaut rien.
+ *
+ * Posé route par route, et non sur un routeur entier : monté à la racine, il
+ * s'appliquerait aussi aux routes de vérification, qui doivent rester ouvertes
+ * à un voisin qui n'a pas encore de profil.
+ */
+export function memberAuthenticator(repository: ContentRepository) {
+  return (request: MemberRequest, response: Response, next: () => void) => {
     const header = request.header('authorization') ?? '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : '';
     const phone = token ? readSessionToken(token, config.sessionSecret) : null;
@@ -94,6 +87,17 @@ export function createContentRouter(
     request.member = member;
     next();
   };
+}
+
+export function createContentRouter(
+  repository: ContentRepository,
+  alerts: AlertService,
+  moderation: ModerationQueue,
+  games: GameService
+): Router {
+  const router = express.Router();
+
+  const authenticate = memberAuthenticator(repository);
 
   /** Crée ou met à jour le profil du voisin vérifié. */
   router.post('/profile', (request: MemberRequest, response: Response) => {

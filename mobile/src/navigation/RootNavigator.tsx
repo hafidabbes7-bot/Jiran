@@ -11,6 +11,15 @@ import { ComposeScreen } from '../screens/ComposeScreen';
 import { FeedScreen } from '../screens/FeedScreen';
 import { ModerationScreen } from '../screens/ModerationScreen';
 import { GamesScreen } from '../screens/GamesScreen';
+import { ChatScreen } from '../screens/community/ChatScreen';
+import { GroupsScreen } from '../screens/community/GroupsScreen';
+import { ItemsScreen } from '../screens/community/ItemsScreen';
+import { MapScreen } from '../screens/community/MapScreen';
+import { MessagesScreen } from '../screens/community/MessagesScreen';
+import { ServicesScreen } from '../screens/community/ServicesScreen';
+import { SolidarityScreen } from '../screens/community/SolidarityScreen';
+import { VacationScreen } from '../screens/community/VacationScreen';
+import { WasteScreen } from '../screens/community/WasteScreen';
 import { NeighborhoodScreen } from '../screens/NeighborhoodScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { PostDetailScreen } from '../screens/PostDetailScreen';
@@ -124,6 +133,51 @@ export function RootNavigator() {
             options={{ title: s.moderation.title }}
           />
           <Stack.Screen name="Games" component={GamesScreen} options={{ title: s.games.title }} />
+          <Stack.Screen
+            name="Messages"
+            component={MessagesScreen}
+            options={{ title: s.community.messagesTitle }}
+          />
+          <Stack.Screen
+            name="Chat"
+            component={ChatScreen}
+            options={({ route }) => ({ title: route.params.neighborName })}
+          />
+          <Stack.Screen
+            name="Services"
+            component={ServicesScreen}
+            options={{ title: s.community.servicesTitle }}
+          />
+          <Stack.Screen
+            name="Items"
+            component={ItemsScreen}
+            options={{ title: s.community.itemsTitle }}
+          />
+          <Stack.Screen
+            name="Groups"
+            component={GroupsScreen}
+            options={{ title: s.community.groupsTitle }}
+          />
+          <Stack.Screen
+            name="Map"
+            component={MapScreen}
+            options={{ title: s.community.mapTitle }}
+          />
+          <Stack.Screen
+            name="Vacation"
+            component={VacationScreen}
+            options={{ title: s.community.vacationTitle }}
+          />
+          <Stack.Screen
+            name="Waste"
+            component={WasteScreen}
+            options={{ title: s.community.wasteTitle }}
+          />
+          <Stack.Screen
+            name="Solidarity"
+            component={SolidarityScreen}
+            options={{ title: s.community.solidarityTitle }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
 

@@ -66,6 +66,148 @@ export function openDatabase(location: string): DatabaseSync {
     );
     CREATE INDEX IF NOT EXISTS reports_by_post ON reports (post_id, created_at);
 
+    -- Messages privés entre deux voisins (§4.6). La conversation n'est pas une
+    -- ligne : elle se déduit de la paire, ce qui évite de créer un objet vide
+    -- avant le premier message.
+    CREATE TABLE IF NOT EXISTS messages (
+      id           TEXT PRIMARY KEY,
+      sender_id    TEXT NOT NULL REFERENCES members(id),
+      recipient_id TEXT NOT NULL REFERENCES members(id),
+      body         TEXT NOT NULL,
+      created_at   TEXT NOT NULL,
+      read_at      TEXT
+    );
+    CREATE INDEX IF NOT EXISTS messages_by_pair
+      ON messages (sender_id, recipient_id, created_at);
+    CREATE INDEX IF NOT EXISTS messages_to
+      ON messages (recipient_id, created_at DESC);
+
+    -- Annuaire des artisans recommandés par de vrais voisins (§4.9).
+    CREATE TABLE IF NOT EXISTS services (
+      id              TEXT PRIMARY KEY,
+      neighborhood_id TEXT NOT NULL,
+      name            TEXT NOT NULL,
+      trade           TEXT NOT NULL,
+      phone           TEXT,
+      added_by        TEXT NOT NULL REFERENCES members(id),
+      created_at      TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS services_by_neighborhood ON services (neighborhood_id);
+
+    -- Une recommandation par voisin et par artisan : la clé primaire l'impose.
+    CREATE TABLE IF NOT EXISTS service_recommendations (
+      service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+      member_id  TEXT NOT NULL REFERENCES members(id),
+      rating     INTEGER NOT NULL,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (service_id, member_id)
+    );
+
+    -- Objets prêtés entre voisins (§4.10).
+    CREATE TABLE IF NOT EXISTS items (
+      id              TEXT PRIMARY KEY,
+      neighborhood_id TEXT NOT NULL,
+      owner_id        TEXT NOT NULL REFERENCES members(id),
+      name            TEXT NOT NULL,
+      status          TEXT NOT NULL,
+      borrower_id     TEXT REFERENCES members(id),
+      due_date        TEXT,
+      created_at      TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS items_by_neighborhood ON items (neighborhood_id, created_at DESC);
+
+    -- Groupes d'intérêt et leurs fils (§4.11).
+    CREATE TABLE IF NOT EXISTS groups (
+      id              TEXT PRIMARY KEY,
+      neighborhood_id TEXT NOT NULL,
+      name            TEXT NOT NULL,
+      emoji           TEXT NOT NULL,
+      created_by      TEXT NOT NULL REFERENCES members(id),
+      created_at      TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS groups_by_neighborhood ON groups (neighborhood_id);
+
+    CREATE TABLE IF NOT EXISTS group_members (
+      group_id  TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+      member_id TEXT NOT NULL REFERENCES members(id),
+      joined_at TEXT NOT NULL,
+      PRIMARY KEY (group_id, member_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS group_posts (
+      id         TEXT PRIMARY KEY,
+      group_id   TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+      author_id  TEXT NOT NULL REFERENCES members(id),
+      body       TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS group_posts_by_group ON group_posts (group_id, created_at DESC);
+
+    -- Points utiles du quartier (§4.12) : la distance se calcule à l'affichage.
+    CREATE TABLE IF NOT EXISTS places (
+      id              TEXT PRIMARY KEY,
+      neighborhood_id TEXT NOT NULL,
+      name            TEXT NOT NULL,
+      kind            TEXT NOT NULL,
+      latitude        REAL NOT NULL,
+      longitude       REAL NOT NULL,
+      added_by        TEXT NOT NULL REFERENCES members(id),
+      created_at      TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS places_by_neighborhood ON places (neighborhood_id);
+
+    -- Mode vacances (§4.13) : une absence déclarée, et les voisins nommément
+    -- désignés pour veiller. Personne d'autre ne la voit — une absence connue
+    -- de tout le quartier serait une invitation au cambriolage.
+    CREATE TABLE IF NOT EXISTS vacations (
+      id         TEXT PRIMARY KEY,
+      member_id  TEXT NOT NULL REFERENCES members(id),
+      starts_on  TEXT NOT NULL,
+      ends_on    TEXT NOT NULL,
+      note       TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS vacations_by_member ON vacations (member_id, ends_on DESC);
+
+    CREATE TABLE IF NOT EXISTS vacation_watchers (
+      vacation_id TEXT NOT NULL REFERENCES vacations(id) ON DELETE CASCADE,
+      member_id   TEXT NOT NULL REFERENCES members(id),
+      PRIMARY KEY (vacation_id, member_id)
+    );
+
+    -- Calendrier de collecte des déchets (§4.14), renseigné par les voisins.
+    CREATE TABLE IF NOT EXISTS waste_slots (
+      id              TEXT PRIMARY KEY,
+      neighborhood_id TEXT NOT NULL,
+      kind            TEXT NOT NULL,
+      weekday         INTEGER NOT NULL,
+      hour            TEXT NOT NULL,
+      updated_by      TEXT NOT NULL REFERENCES members(id),
+      updated_at      TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS waste_by_neighborhood ON waste_slots (neighborhood_id, weekday);
+
+    -- Actions solidaires (§4.15) et leurs participants.
+    CREATE TABLE IF NOT EXISTS solidarity_actions (
+      id              TEXT PRIMARY KEY,
+      neighborhood_id TEXT NOT NULL,
+      title           TEXT NOT NULL,
+      kind            TEXT NOT NULL,
+      details         TEXT,
+      happens_on      TEXT,
+      created_by      TEXT NOT NULL REFERENCES members(id),
+      created_at      TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS solidarity_by_neighborhood
+      ON solidarity_actions (neighborhood_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS solidarity_participants (
+      action_id TEXT NOT NULL REFERENCES solidarity_actions(id) ON DELETE CASCADE,
+      member_id TEXT NOT NULL REFERENCES members(id),
+      joined_at TEXT NOT NULL,
+      PRIMARY KEY (action_id, member_id)
+    );
+
     -- Parties entre voisins. Le plateau et le tour vivent ici : c'est le
     -- serveur qui arbitre, pas le téléphone (§7.6).
     CREATE TABLE IF NOT EXISTS games (

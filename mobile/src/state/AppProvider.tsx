@@ -28,6 +28,14 @@ export interface PublishInput {
 }
 
 interface AppValue {
+  /**
+   * Accès direct au serveur pour les écrans de la vie de quartier (§4.6, §4.9
+   * à §4.15). Ces données ne sont pas de l'état partagé — chaque écran charge
+   * les siennes en s'ouvrant — et les recopier ici n'apporterait qu'un cache à
+   * maintenir. Le fil, la session et les voisins, eux, restent gérés ici.
+   */
+  repository: JiranRepository;
+
   ready: boolean;
   session: Session | null;
   posts: Post[];
@@ -339,6 +347,7 @@ export function AppProvider({
 
   const value = useMemo<AppValue>(
     () => ({
+      repository,
       ready,
       session,
       posts,
@@ -365,6 +374,7 @@ export function AppProvider({
       decideModeration,
     }),
     [
+      repository,
       ready,
       session,
       posts,

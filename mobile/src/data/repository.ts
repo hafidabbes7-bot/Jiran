@@ -1,7 +1,21 @@
 import type {
   Category,
+  ChatMessage,
   Comment,
+  Conversation,
   Game,
+  Group,
+  GroupPost,
+  Item,
+  Place,
+  PlaceKind,
+  Service,
+  SolidarityAction,
+  SolidarityKind,
+  Vacation,
+  WasteKind,
+  WasteSlot,
+  WatchedVacation,
   ModerationState,
   Neighbor,
   Post,
@@ -67,6 +81,57 @@ export interface JiranRepository {
   createGame(): Promise<Game>;
   joinGame(gameId: string): Promise<Game>;
   playMove(gameId: string, cell: number): Promise<Game>;
+
+  // --- Vie de quartier (§4.6, §4.9 à §4.15) ----------------------------
+
+  loadConversations(): Promise<Conversation[]>;
+  loadMessages(neighborId: string): Promise<ChatMessage[]>;
+  sendMessage(neighborId: string, text: string): Promise<ChatMessage>;
+
+  loadServices(): Promise<Service[]>;
+  addService(input: { name: string; trade: string; phone?: string }): Promise<Service>;
+  recommendService(serviceId: string, rating: number): Promise<Service>;
+
+  loadItems(): Promise<Item[]>;
+  addItem(name: string): Promise<Item>;
+  borrowItem(itemId: string, dueDate?: string): Promise<Item>;
+  returnItem(itemId: string): Promise<Item>;
+
+  loadGroups(): Promise<Group[]>;
+  createGroup(name: string, emoji: string): Promise<Group>;
+  setGroupMembership(groupId: string, joined: boolean): Promise<Group>;
+  loadGroupPosts(groupId: string): Promise<GroupPost[]>;
+  addGroupPost(groupId: string, text: string): Promise<GroupPost>;
+
+  loadPlaces(): Promise<Place[]>;
+  addPlace(input: {
+    name: string;
+    kind: PlaceKind;
+    latitude: number;
+    longitude: number;
+  }): Promise<Place>;
+
+  loadVacation(): Promise<{ vacation: Vacation | null; watched: WatchedVacation[] }>;
+  declareVacation(input: {
+    startsOn: string;
+    endsOn: string;
+    note?: string;
+    watcherIds: string[];
+  }): Promise<Vacation>;
+  cancelVacation(): Promise<void>;
+
+  loadWasteSlots(): Promise<WasteSlot[]>;
+  addWasteSlot(input: { kind: WasteKind; weekday: number; hour: string }): Promise<WasteSlot>;
+  removeWasteSlot(slotId: string): Promise<void>;
+
+  loadSolidarityActions(): Promise<SolidarityAction[]>;
+  createSolidarityAction(input: {
+    title: string;
+    kind: SolidarityKind;
+    details?: string;
+    happensOn?: string;
+  }): Promise<SolidarityAction>;
+  setParticipation(actionId: string, joined: boolean): Promise<SolidarityAction>;
 
   /** File des contenus signalés — réservée aux modérateurs par le serveur. */
   loadModerationQueue(): Promise<QueuedPost[]>;

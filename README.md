@@ -109,10 +109,23 @@ Au-delà du socle V1 (fil, alertes, entraide, SOS, modération) : l'onglet
 réellement jouable à deux — le plateau, le tour et le verdict vivent sur le
 serveur, pas sur le téléphone (§7.6).
 
-Toujours à faire : messagerie privée (§4.6), services recommandés (§4.9), objets
-à emprunter (§4.10), groupes d'intérêt (§4.11), carte du quartier (§4.12), mode
-vacances (§4.13), collecte des déchets (§4.14), actions solidaires (§4.15), et
-les autres jeux (échecs, dames, belote, dominos).
+Puis toute la vie de quartier, accessible depuis le profil : messagerie privée
+(§4.6), services recommandés (§4.9), objets à emprunter (§4.10), groupes
+d'intérêt (§4.11), carte du quartier (§4.12), mode vacances (§4.13), collecte
+des déchets (§4.14) et actions solidaires (§4.15).
+
+Trois choix assumés dans ce lot :
+ — la carte est une liste triée par distance qui ouvre l'itinéraire dans
+   l'application de cartes du téléphone, plutôt qu'une carte dessinée qui
+   imposerait une clé d'API et une dépendance native ;
+ — le calendrier des déchets est rempli par les voisins, faute de source
+   publique exploitable, et le rappel de la veille reste sur le téléphone ;
+ — une absence n'est visible que des voisins nommément désignés : l'annoncer au
+   quartier reviendrait à donner l'adresse d'un logement vide.
+
+Toujours à faire : les autres jeux (échecs, dames, belote, dominos), le
+classement mensuel du quartier, et les réglages de notifications par catégorie
+(§4.17).
 
 ## Couverture du territoire
 

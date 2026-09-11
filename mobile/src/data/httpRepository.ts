@@ -2,8 +2,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type {
   Category,
+  ChatMessage,
   Comment,
+  Conversation,
   Game,
+  Group,
+  GroupPost,
+  Item,
+  Place,
+  PlaceKind,
+  Service,
+  SolidarityAction,
+  SolidarityKind,
+  Vacation,
+  WasteKind,
+  WasteSlot,
+  WatchedVacation,
   ModerationState,
   Neighbor,
   Post,
@@ -209,6 +223,184 @@ export class HttpRepository implements JiranRepository {
     return toGame(data.game);
   }
 
+  // --- Vie de quartier -------------------------------------------------
+
+  async loadConversations(): Promise<Conversation[]> {
+    const data = await this.request('GET', '/messages');
+    return (Array.isArray(data.conversations) ? data.conversations : []).map(
+      (raw: JsonObject): Conversation => ({
+        neighborId: String(raw.neighborId),
+        neighborName: String(raw.neighborName),
+        lastMessage: String(raw.lastMessage ?? ''),
+        lastAt: String(raw.lastAt ?? ''),
+        unread: Number(raw.unread ?? 0),
+      })
+    );
+  }
+
+  async loadMessages(neighborId: string): Promise<ChatMessage[]> {
+    const data = await this.request('GET', `/messages/${encodeURIComponent(neighborId)}`);
+    return (Array.isArray(data.messages) ? data.messages : []).map(toChatMessage);
+  }
+
+  async sendMessage(neighborId: string, text: string): Promise<ChatMessage> {
+    const data = await this.request('POST', `/messages/${encodeURIComponent(neighborId)}`, { text });
+    return toChatMessage(data.message);
+  }
+
+  async loadServices(): Promise<Service[]> {
+    const data = await this.request('GET', '/services');
+    return (Array.isArray(data.services) ? data.services : []).map(toService);
+  }
+
+  async addService(input: { name: string; trade: string; phone?: string }): Promise<Service> {
+    const data = await this.request('POST', '/services', input);
+    return toService(data.service);
+  }
+
+  async recommendService(serviceId: string, rating: number): Promise<Service> {
+    const data = await this.request(
+      'POST',
+      `/services/${encodeURIComponent(serviceId)}/recommend`,
+      { rating }
+    );
+    return toService(data.service);
+  }
+
+  async loadItems(): Promise<Item[]> {
+    const data = await this.request('GET', '/items');
+    return (Array.isArray(data.items) ? data.items : []).map(toItem);
+  }
+
+  async addItem(name: string): Promise<Item> {
+    const data = await this.request('POST', '/items', { name });
+    return toItem(data.item);
+  }
+
+  async borrowItem(itemId: string, dueDate?: string): Promise<Item> {
+    const data = await this.request('POST', `/items/${encodeURIComponent(itemId)}/borrow`, {
+      ...(dueDate ? { dueDate } : {}),
+    });
+    return toItem(data.item);
+  }
+
+  async returnItem(itemId: string): Promise<Item> {
+    const data = await this.request('POST', `/items/${encodeURIComponent(itemId)}/return`);
+    return toItem(data.item);
+  }
+
+  async loadGroups(): Promise<Group[]> {
+    const data = await this.request('GET', '/groups');
+    return (Array.isArray(data.groups) ? data.groups : []).map(toGroup);
+  }
+
+  async createGroup(name: string, emoji: string): Promise<Group> {
+    const data = await this.request('POST', '/groups', { name, emoji });
+    return toGroup(data.group);
+  }
+
+  async setGroupMembership(groupId: string, joined: boolean): Promise<Group> {
+    const data = await this.request(
+      'POST',
+      `/groups/${encodeURIComponent(groupId)}/membership`,
+      { joined }
+    );
+    return toGroup(data.group);
+  }
+
+  async loadGroupPosts(groupId: string): Promise<GroupPost[]> {
+    const data = await this.request('GET', `/groups/${encodeURIComponent(groupId)}/posts`);
+    return (Array.isArray(data.posts) ? data.posts : []).map(toGroupPost);
+  }
+
+  async addGroupPost(groupId: string, text: string): Promise<GroupPost> {
+    const data = await this.request('POST', `/groups/${encodeURIComponent(groupId)}/posts`, { text });
+    return toGroupPost(data.post);
+  }
+
+  async loadPlaces(): Promise<Place[]> {
+    const data = await this.request('GET', '/places');
+    return (Array.isArray(data.places) ? data.places : []).map(toPlace);
+  }
+
+  async addPlace(input: {
+    name: string;
+    kind: PlaceKind;
+    latitude: number;
+    longitude: number;
+  }): Promise<Place> {
+    const data = await this.request('POST', '/places', input);
+    return toPlace(data.place);
+  }
+
+  async loadVacation(): Promise<{ vacation: Vacation | null; watched: WatchedVacation[] }> {
+    const data = await this.request('GET', '/vacation');
+    return {
+      vacation: data.vacation ? toVacation(data.vacation) : null,
+      watched: (Array.isArray(data.watched) ? data.watched : []).map(
+        (raw: JsonObject): WatchedVacation => ({
+          id: String(raw.id),
+          neighborName: String(raw.neighborName),
+          startsOn: String(raw.startsOn),
+          endsOn: String(raw.endsOn),
+          note: raw.note ? String(raw.note) : undefined,
+        })
+      ),
+    };
+  }
+
+  async declareVacation(input: {
+    startsOn: string;
+    endsOn: string;
+    note?: string;
+    watcherIds: string[];
+  }): Promise<Vacation> {
+    const data = await this.request('POST', '/vacation', input);
+    return toVacation(data.vacation);
+  }
+
+  async cancelVacation(): Promise<void> {
+    await this.request('DELETE', '/vacation');
+  }
+
+  async loadWasteSlots(): Promise<WasteSlot[]> {
+    const data = await this.request('GET', '/waste');
+    return (Array.isArray(data.slots) ? data.slots : []).map(toWasteSlot);
+  }
+
+  async addWasteSlot(input: { kind: WasteKind; weekday: number; hour: string }): Promise<WasteSlot> {
+    const data = await this.request('POST', '/waste', input);
+    return toWasteSlot(data.slot);
+  }
+
+  async removeWasteSlot(slotId: string): Promise<void> {
+    await this.request('DELETE', `/waste/${encodeURIComponent(slotId)}`);
+  }
+
+  async loadSolidarityActions(): Promise<SolidarityAction[]> {
+    const data = await this.request('GET', '/solidarity');
+    return (Array.isArray(data.actions) ? data.actions : []).map(toAction);
+  }
+
+  async createSolidarityAction(input: {
+    title: string;
+    kind: SolidarityKind;
+    details?: string;
+    happensOn?: string;
+  }): Promise<SolidarityAction> {
+    const data = await this.request('POST', '/solidarity', input);
+    return toAction(data.action);
+  }
+
+  async setParticipation(actionId: string, joined: boolean): Promise<SolidarityAction> {
+    const data = await this.request(
+      'POST',
+      `/solidarity/${encodeURIComponent(actionId)}/participation`,
+      { joined }
+    );
+    return toAction(data.action);
+  }
+
   // --- Alertes ---------------------------------------------------------
 
   async registerDevice(token: string, platform: 'ios' | 'android' | 'web'): Promise<void> {
@@ -291,6 +483,104 @@ export class HttpRepository implements JiranRepository {
     }
     throw new RepositoryError(`Requête refusée (${status})`, 'rejected');
   }
+}
+
+function toChatMessage(raw: JsonObject): ChatMessage {
+  return {
+    id: String(raw.id),
+    fromMe: Boolean(raw.fromMe),
+    text: String(raw.text ?? ''),
+    createdAt: String(raw.createdAt ?? ''),
+  };
+}
+
+function toService(raw: JsonObject): Service {
+  return {
+    id: String(raw.id),
+    name: String(raw.name),
+    trade: String(raw.trade),
+    phone: raw.phone ? String(raw.phone) : undefined,
+    recommendations: Number(raw.recommendations ?? 0),
+    rating: Number(raw.rating ?? 0),
+    recommendedByMe: Boolean(raw.recommendedByMe),
+  };
+}
+
+function toItem(raw: JsonObject): Item {
+  return {
+    id: String(raw.id),
+    name: String(raw.name),
+    ownerName: String(raw.ownerName),
+    ownerIsMe: Boolean(raw.ownerIsMe),
+    status: raw.status === 'emprunte' ? 'emprunte' : 'disponible',
+    borrowerName: raw.borrowerName ? String(raw.borrowerName) : undefined,
+    borrowedByMe: Boolean(raw.borrowedByMe),
+    dueDate: raw.dueDate ? String(raw.dueDate) : undefined,
+  };
+}
+
+function toGroup(raw: JsonObject): Group {
+  return {
+    id: String(raw.id),
+    name: String(raw.name),
+    emoji: String(raw.emoji ?? '👥'),
+    members: Number(raw.members ?? 0),
+    joined: Boolean(raw.joined),
+  };
+}
+
+function toGroupPost(raw: JsonObject): GroupPost {
+  return {
+    id: String(raw.id),
+    authorName: String(raw.authorName),
+    text: String(raw.text ?? ''),
+    createdAt: String(raw.createdAt ?? ''),
+  };
+}
+
+function toPlace(raw: JsonObject): Place {
+  return {
+    id: String(raw.id),
+    name: String(raw.name),
+    kind: String(raw.kind) as PlaceKind,
+    latitude: Number(raw.latitude),
+    longitude: Number(raw.longitude),
+  };
+}
+
+function toVacation(raw: JsonObject): Vacation {
+  return {
+    id: String(raw.id),
+    startsOn: String(raw.startsOn),
+    endsOn: String(raw.endsOn),
+    note: raw.note ? String(raw.note) : undefined,
+    watchers: (Array.isArray(raw.watchers) ? raw.watchers : []).map((watcher: JsonObject) => ({
+      id: String(watcher.id),
+      name: String(watcher.name),
+    })),
+  };
+}
+
+function toWasteSlot(raw: JsonObject): WasteSlot {
+  return {
+    id: String(raw.id),
+    kind: String(raw.kind) as WasteKind,
+    weekday: Number(raw.weekday ?? 0),
+    hour: String(raw.hour ?? '00:00'),
+  };
+}
+
+function toAction(raw: JsonObject): SolidarityAction {
+  return {
+    id: String(raw.id),
+    title: String(raw.title),
+    kind: String(raw.kind) as SolidarityKind,
+    details: raw.details ? String(raw.details) : undefined,
+    happensOn: raw.happensOn ? String(raw.happensOn) : undefined,
+    participants: Number(raw.participants ?? 0),
+    joined: Boolean(raw.joined),
+    createdByMe: Boolean(raw.createdByMe),
+  };
 }
 
 /** Une partie telle qu'elle arrive du serveur, ramenée au type de l'application. */
