@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { config } from './config.js';
 import { AlertService } from './content/alerts.js';
 import { openDatabase } from './content/db.js';
+import { GameService } from './content/games.js';
 import { ContentRepository } from './content/repository.js';
 import { ModerationQueue } from './content/moderationQueue.js';
 import { createContentRouter } from './content/routes.js';
@@ -121,6 +122,7 @@ export function createServer(options?: {
   const push = options?.push ?? createPushSender();
   const alerts = new AlertService(database, push);
   const moderation = new ModerationQueue(database, config.moderatorPhones);
+  const games = new GameService(database);
 
   const verification = new VerificationService(store, providers, {
     length: config.otp.length,
@@ -331,7 +333,7 @@ export function createServer(options?: {
     }
   });
 
-  app.use(createContentRouter(content, alerts, moderation));
+  app.use(createContentRouter(content, alerts, moderation, games));
 
   serveWebApp(app, options?.webDir ?? config.webDir);
 

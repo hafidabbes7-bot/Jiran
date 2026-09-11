@@ -102,6 +102,18 @@ cd server && npm test        # vérification, fil, modération, alertes
 cd mobile && npm test        # filtre de texte, géolocalisation, téléphone
 ```
 
+## Ce qui est construit, et ce qui ne l'est pas
+
+Au-delà du socle V1 (fil, alertes, entraide, SOS, modération) : l'onglet
+**Profil** (§4.7) et les **jeux entre voisins** (§4.8), avec un morpion
+réellement jouable à deux — le plateau, le tour et le verdict vivent sur le
+serveur, pas sur le téléphone (§7.6).
+
+Toujours à faire : messagerie privée (§4.6), services recommandés (§4.9), objets
+à emprunter (§4.10), groupes d'intérêt (§4.11), carte du quartier (§4.12), mode
+vacances (§4.13), collecte des déchets (§4.14), actions solidaires (§4.15), et
+les autres jeux (échecs, dames, belote, dominos).
+
 ## Couverture du territoire
 
 Les 97 quartiers de `mobile/src/data/neighborhoods.ts` couvrent les 69 wilayas —

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { readSessionToken } from '../session.js';
 import type { AlertService } from './alerts.js';
+import { GAME_KINDS, type GameError, type GameService } from './games.js';
 import type { ModerationQueue } from './moderationQueue.js';
 import { findNeighborhood } from './neighborhoods.js';
 import { CATEGORIES, type ContentRepository, type Member } from './repository.js';
@@ -36,6 +37,9 @@ const decisionSchema = z.object({
   note: z.string().trim().max(500).optional(),
 });
 
+const gameSchema = z.object({ kind: z.enum(GAME_KINDS as unknown as [string, ...string[]]) });
+const moveSchema = z.object({ cell: z.number().int().min(0).max(8) });
+
 const sosSchema = z.object({
   neighborIds: z.array(z.string().min(1).max(60)).min(1).max(50),
   position: z
@@ -57,7 +61,8 @@ type MemberRequest = Request & { member?: Member };
 export function createContentRouter(
   repository: ContentRepository,
   alerts: AlertService,
-  moderation: ModerationQueue
+  moderation: ModerationQueue,
+  games: GameService
 ): Router {
   const router = express.Router();
 
@@ -346,6 +351,55 @@ export function createContentRouter(
       response.status(cancelled ? 200 : 404).json({ cancelled });
     }
   );
+
+  // --- Jeux entre voisins (§4.8) ---------------------------------------
+
+  /** Traduit un refus du service en code HTTP : le client n'invente rien. */
+  const gameStatus = (error: GameError): number => {
+    if (error === 'partie_inconnue') return 404;
+    if (error === 'pas_ta_partie') return 403;
+    return 409;
+  };
+
+  router.get('/games', authenticate, (request: MemberRequest, response: Response) => {
+    response.json({ games: games.list(request.member!) });
+  });
+
+  router.post('/games', authenticate, (request: MemberRequest, response: Response) => {
+    const parsed = gameSchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    response.status(201).json({ game: games.create(request.member!, parsed.data.kind as 'morpion') });
+  });
+
+  router.post('/games/:id/join', authenticate, (request: MemberRequest, response: Response) => {
+    const result = games.join(request.member!, String(request.params.id));
+    if (typeof result === 'string') {
+      response.status(gameStatus(result)).json({ error: result });
+      return;
+    }
+
+    response.json({ game: result });
+  });
+
+  router.post('/games/:id/move', authenticate, (request: MemberRequest, response: Response) => {
+    const parsed = moveSchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    const result = games.play(request.member!, String(request.params.id), parsed.data.cell);
+    if (typeof result === 'string') {
+      response.status(gameStatus(result)).json({ error: result });
+      return;
+    }
+
+    response.json({ game: result });
+  });
 
   return router;
 }

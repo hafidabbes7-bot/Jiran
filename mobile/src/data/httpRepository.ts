@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {
   Category,
   Comment,
+  Game,
   ModerationState,
   Neighbor,
   Post,
@@ -186,6 +187,28 @@ export class HttpRepository implements JiranRepository {
     return toModeration(data.moderation);
   }
 
+  // --- Jeux ------------------------------------------------------------
+
+  async loadGames(): Promise<Game[]> {
+    const data = await this.request('GET', '/games');
+    return (Array.isArray(data.games) ? data.games : []).map(toGame);
+  }
+
+  async createGame(): Promise<Game> {
+    const data = await this.request('POST', '/games', { kind: 'morpion' });
+    return toGame(data.game);
+  }
+
+  async joinGame(gameId: string): Promise<Game> {
+    const data = await this.request('POST', `/games/${encodeURIComponent(gameId)}/join`);
+    return toGame(data.game);
+  }
+
+  async playMove(gameId: string, cell: number): Promise<Game> {
+    const data = await this.request('POST', `/games/${encodeURIComponent(gameId)}/move`, { cell });
+    return toGame(data.game);
+  }
+
   // --- Alertes ---------------------------------------------------------
 
   async registerDevice(token: string, platform: 'ios' | 'android' | 'web'): Promise<void> {
@@ -268,6 +291,22 @@ export class HttpRepository implements JiranRepository {
     }
     throw new RepositoryError(`Requête refusée (${status})`, 'rejected');
   }
+}
+
+/** Une partie telle qu'elle arrive du serveur, ramenée au type de l'application. */
+function toGame(raw: JsonObject): Game {
+  return {
+    id: String(raw.id),
+    kind: 'morpion',
+    status: String(raw.status) as Game['status'],
+    board: String(raw.board ?? '.........'),
+    hostName: String(raw.hostName ?? ''),
+    opponentName: raw.opponentName ? String(raw.opponentName) : undefined,
+    yourMark: raw.yourMark === 'X' || raw.yourMark === 'O' ? raw.yourMark : undefined,
+    yourTurn: Boolean(raw.yourTurn),
+    outcome: raw.outcome ? (String(raw.outcome) as Game['outcome']) : undefined,
+    updatedAt: String(raw.updatedAt ?? ''),
+  };
 }
 
 function toModeration(value: unknown): ModerationState {

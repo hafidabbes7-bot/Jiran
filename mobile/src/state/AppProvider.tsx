@@ -11,6 +11,7 @@ import React, {
 import type {
   Category,
   Comment,
+  Game,
   ModerationState,
   Neighbor,
   Post,
@@ -54,6 +55,11 @@ interface AppValue {
     position?: { latitude: number; longitude: number }
   ) => Promise<SosResult>;
   cancelSos: (alertId: string) => Promise<void>;
+
+  loadGames: () => Promise<Game[]>;
+  createGame: () => Promise<Game>;
+  joinGame: (gameId: string) => Promise<Game>;
+  playMove: (gameId: string, cell: number) => Promise<Game>;
 
   loadModerationQueue: () => Promise<QueuedPost[]>;
   decideModeration: (
@@ -294,6 +300,14 @@ export function AppProvider({
     [repository]
   );
 
+  const loadGames = useCallback(() => repository.loadGames(), [repository]);
+  const createGame = useCallback(() => repository.createGame(), [repository]);
+  const joinGame = useCallback((gameId: string) => repository.joinGame(gameId), [repository]);
+  const playMove = useCallback(
+    (gameId: string, cell: number) => repository.playMove(gameId, cell),
+    [repository]
+  );
+
   const loadModerationQueue = useCallback(
     () => repository.loadModerationQueue(),
     [repository]
@@ -343,6 +357,10 @@ export function AppProvider({
       setTrusted,
       triggerSos,
       cancelSos,
+      loadGames,
+      createGame,
+      joinGame,
+      playMove,
       loadModerationQueue,
       decideModeration,
     }),
@@ -365,6 +383,10 @@ export function AppProvider({
       setTrusted,
       triggerSos,
       cancelSos,
+      loadGames,
+      createGame,
+      joinGame,
+      playMove,
       loadModerationQueue,
       decideModeration,
     ]

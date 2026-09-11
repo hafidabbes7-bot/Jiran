@@ -66,6 +66,24 @@ export function openDatabase(location: string): DatabaseSync {
     );
     CREATE INDEX IF NOT EXISTS reports_by_post ON reports (post_id, created_at);
 
+    -- Parties entre voisins. Le plateau et le tour vivent ici : c'est le
+    -- serveur qui arbitre, pas le téléphone (§7.6).
+    CREATE TABLE IF NOT EXISTS games (
+      id              TEXT PRIMARY KEY,
+      kind            TEXT NOT NULL,
+      neighborhood_id TEXT NOT NULL,
+      player_x        TEXT NOT NULL REFERENCES members(id),
+      player_o        TEXT REFERENCES members(id),
+      board           TEXT NOT NULL,
+      turn            TEXT NOT NULL,
+      status          TEXT NOT NULL,
+      winner          TEXT,
+      created_at      TEXT NOT NULL,
+      updated_at      TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS games_by_neighborhood
+      ON games (neighborhood_id, updated_at DESC);
+
     -- Un voisin peut avoir plusieurs appareils ; un jeton n'appartient qu'à un
     -- seul voisin, d'où la clé primaire sur le jeton.
     CREATE TABLE IF NOT EXISTS devices (

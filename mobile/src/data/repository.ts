@@ -1,6 +1,7 @@
 import type {
   Category,
   Comment,
+  Game,
   ModerationState,
   Neighbor,
   Post,
@@ -60,6 +61,12 @@ export interface JiranRepository {
 
   /** Annule un SOS : les mêmes voisins sont prévenus que c'est une fausse alerte. */
   cancelSos(alertId: string): Promise<void>;
+
+  /** Parties du quartier : les siennes, et celles qui cherchent un adversaire. */
+  loadGames(): Promise<Game[]>;
+  createGame(): Promise<Game>;
+  joinGame(gameId: string): Promise<Game>;
+  playMove(gameId: string, cell: number): Promise<Game>;
 
   /** File des contenus signalés — réservée aux modérateurs par le serveur. */
   loadModerationQueue(): Promise<QueuedPost[]>;

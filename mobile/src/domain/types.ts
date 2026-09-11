@@ -123,3 +123,19 @@ export interface Neighbor {
   /** Date d'arrivée dans le quartier, pour repérer les nouveaux venus. */
   joinedAt: string;
 }
+
+/** Une partie de morpion telle que le serveur la montre au voisin (§4.8). */
+export interface Game {
+  id: string;
+  kind: 'morpion';
+  status: 'waiting' | 'playing' | 'won' | 'draw';
+  /** Neuf caractères : `.` pour une case libre, sinon `X` ou `O`. */
+  board: string;
+  hostName: string;
+  opponentName?: string;
+  /** Absente si le voisin ne joue pas cette partie — il ne fait que la voir. */
+  yourMark?: 'X' | 'O';
+  yourTurn: boolean;
+  outcome?: 'gagne' | 'perdu' | 'nul';
+  updatedAt: string;
+}

@@ -10,7 +10,9 @@ import { AlertsScreen } from '../screens/AlertsScreen';
 import { ComposeScreen } from '../screens/ComposeScreen';
 import { FeedScreen } from '../screens/FeedScreen';
 import { ModerationScreen } from '../screens/ModerationScreen';
+import { GamesScreen } from '../screens/GamesScreen';
 import { NeighborhoodScreen } from '../screens/NeighborhoodScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 import { PostDetailScreen } from '../screens/PostDetailScreen';
 import { SosScreen } from '../screens/SosScreen';
 import { colors, fontSizes } from '../theme/theme';
@@ -78,6 +80,14 @@ function TabsNavigator() {
           tabBarIcon: ({ focused }) => <TabIcon emoji="📍" focused={focused} />,
         }}
       />
+      <Tabs.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: s.nav.profile,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
+        }}
+      />
     </Tabs.Navigator>
   );
 }
@@ -113,6 +123,7 @@ export function RootNavigator() {
             component={ModerationScreen}
             options={{ title: s.moderation.title }}
           />
+          <Stack.Screen name="Games" component={GamesScreen} options={{ title: s.games.title }} />
         </Stack.Navigator>
       </NavigationContainer>
 
