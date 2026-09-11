@@ -42,3 +42,14 @@ services:
       # tableau de bord de l'hébergeur avec votre propre numéro.
       - key: MODERATOR_PHONES
         value: ''
+
+      # Vérification gratuite par WhatsApp — rien à payer par message, et le
+      # numéro reste prouvé. À renseigner dans le tableau de bord une fois le
+      # compte Meta créé : voir docs/verification-whatsapp.md.
+      # Tant qu'ils sont vides, ce canal n'est pas proposé à l'inscription.
+      - key: WHATSAPP_BUSINESS_NUMBER
+        value: ''
+      - key: WHATSAPP_APP_SECRET
+        value: ''
+      - key: WHATSAPP_VERIFY_TOKEN
+        generateValue: true

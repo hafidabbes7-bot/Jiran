@@ -44,9 +44,14 @@ déchets, messagerie privée) viendront ensuite, pour ne pas retarder le lanceme
 ni diluer le positionnement sécurité / entraide.
 
 L'inscription suit le parcours habituel : le voisin tape son numéro, reçoit un
-code à 6 chiffres par SMS, le saisit, et l'application s'ouvre. Deux options
-WhatsApp — dont une sans aucun frais d'envoi — peuvent s'ajouter si vous les
-configurez ; voir [`server/README.md`](server/README.md). Le choix du canal d'envoi et ce qu'il faut obtenir
+code à 6 chiffres, le saisit, et l'application s'ouvre.
+
+Le canal retenu pour le lancement est **WhatsApp gratuit** : au lieu de lui
+envoyer un code, c'est le voisin qui nous envoie un message, et WhatsApp
+confirme son numéro. Rien n'est facturé, et le numéro reste prouvé. Activation
+pas à pas : [`docs/verification-whatsapp.md`](docs/verification-whatsapp.md).
+Le SMS reste disponible pour qui n'a pas WhatsApp, le jour où un contrat
+d'agrégateur sera signé. Le choix du canal d'envoi et ce qu'il faut obtenir
 auprès des opérateurs sont expliqués dans [`server/README.md`](server/README.md).
 
 Ce qui reste à brancher côté services externes (modération d'image,
