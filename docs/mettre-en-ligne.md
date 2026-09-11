@@ -41,9 +41,8 @@ d'agrégateur — ce n'est pas une configuration à laisser en place pour de vra
 
 1. Dans le tableau de bord : **New +** → **Blueprint**
 2. Choisissez le dépôt **Jiran**
-3. **Choisissez la bonne branche** : `claude/new-session-q7ijf3` (ou `main` si
-   le travail y a été fusionné). Render lit `render.yaml` et prépare tout seul
-   le service, les secrets et la configuration.
+3. **Choisissez la branche `main`.** Render lit `render.yaml` et prépare tout
+   seul le service, les secrets et la configuration.
 4. **Apply** / **Create**
 
 La première construction prend 3 à 5 minutes : elle installe les dépendances et
@@ -106,7 +105,7 @@ plus besoin d'un ordinateur allumé chez vous pour fonctionner.
 
 | Ce que vous voyez | Ce que c'est |
 | --- | --- |
-| La construction échoue | Regardez l'onglet **Logs**. Le plus souvent : la mauvaise branche a été choisie |
+| La construction échoue | Regardez l'onglet **Logs**. Le plus souvent : la mauvaise branche a été choisie — ce doit être `main` |
 | La page met une minute à s'ouvrir | Le service dormait. C'est normal sur la formule gratuite |
 | Le quartier est vide alors qu'on y avait publié | Le service a redémarré. Les données ne survivent pas sans disque |
 | « Serveur injoignable » dans l'application | Le service est en train de redémarrer ou la construction a échoué |

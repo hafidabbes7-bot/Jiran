@@ -168,7 +168,6 @@ voir « Si ça coince » plus bas.
 ```bash
 git clone https://github.com/hafidabbes7-bot/Jiran.git
 cd Jiran
-git checkout claude/new-session-q7ijf3
 ```
 
 ---
