@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { fournisseurMuetAutorise } from '../modeEssai.js';
 import { ConsolePushSender } from './consolePushSender.js';
 import { ExpoPushSender } from './expoPushSender.js';
 import type { PushSender } from './sender.js';
@@ -10,9 +11,10 @@ export function createPushSender(): PushSender {
       return new ExpoPushSender(config.push.expoAccessToken || undefined);
 
     case 'console':
-      if (config.isProduction) {
+      if (!fournisseurMuetAutorise(config.isProduction, config.trialMode)) {
         throw new Error(
-          "PUSH_PROVIDER=console ne remet aucune notification : interdit en production, où le SOS doit joindre les voisins."
+          'PUSH_PROVIDER=console ne remet aucune notification : interdit en production, ' +
+            'où le SOS doit joindre les voisins. Posez TRIAL_MODE=true pour un essai assumé.'
         );
       }
       return new ConsolePushSender();

@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
 
+import { modeEssaiDemande } from './modeEssai.js';
+
 /**
  * Configuration lue dans l'environnement. Les valeurs sensibles n'ont pas de
  * défaut en production : un secret de repli silencieux est pire que le
@@ -7,6 +9,9 @@ import crypto from 'node:crypto';
  */
 
 const isProduction = process.env.NODE_ENV === 'production';
+
+/** Voir `modeEssai.ts` : porte explicite, annoncée bruyamment au démarrage. */
+const trialMode = modeEssaiDemande(process.env.TRIAL_MODE);
 
 function requiredSecret(name: string): string {
   const value = process.env[name];
@@ -31,6 +36,7 @@ function intFromEnv(name: string, fallback: number): number {
 
 export const config = {
   isProduction,
+  trialMode,
   port: intFromEnv('PORT', 4000),
 
   /** Clé de hachage des codes à usage unique. */
@@ -152,8 +158,9 @@ export const config = {
     .filter(Boolean),
 
   /**
-   * Renvoie le code dans la réponse HTTP. Réservé au développement et refusé
-   * en production : ce serait offrir la vérification à n'importe qui.
+   * Renvoie le code dans la réponse HTTP, ce qui revient à offrir la
+   * vérification à quiconque a le lien. Réservé au développement, ou à un
+   * essai explicitement assumé.
    */
-  exposeDevCode: !isProduction && process.env.EXPOSE_DEV_CODE === 'true',
+  exposeDevCode: (!isProduction && process.env.EXPOSE_DEV_CODE === 'true') || trialMode,
 } as const;

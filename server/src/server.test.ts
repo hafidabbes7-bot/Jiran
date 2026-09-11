@@ -58,6 +58,7 @@ describe('API de vérification', () => {
         { channel: 'whatsapp', provider: 'recording-whatsapp' },
       ],
       devCodeExposed: false,
+      trialMode: false,
       push: { provider: 'test', delivers: false },
     });
   });

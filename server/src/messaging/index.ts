@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { fournisseurMuetAutorise } from '../modeEssai.js';
 import { ConsoleProvider } from './consoleProvider.js';
 import { HttpGatewaySmsProvider } from './httpGatewayProvider.js';
 import type { Channel, ChannelProviders, MessageProvider } from './provider.js';
@@ -30,9 +31,10 @@ function createSmsProvider(): MessageProvider | undefined {
     }
 
     case 'console': {
-      if (config.isProduction) {
+      if (!fournisseurMuetAutorise(config.isProduction, config.trialMode)) {
         throw new Error(
-          "SMS_PROVIDER=console n'envoie aucun message : interdit en production, choisissez « twilio » ou « http »."
+          "SMS_PROVIDER=console n'envoie aucun message : interdit en production. " +
+            'Choisissez « twilio » ou « http », ou posez TRIAL_MODE=true pour un essai assumé.'
         );
       }
       return new ConsoleProvider('sms');

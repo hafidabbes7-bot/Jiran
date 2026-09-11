@@ -226,6 +226,19 @@ projet, et un code à 6 chiffres se devine en quelques milliers d'essais.
   un message imitable et n'est pas protégé par un compteur d'essais, il doit
   donc être hors de portée d'une recherche exhaustive.
 
+## Le mode essai
+
+Les hébergeurs déclarent tous `NODE_ENV=production`, ce qui fait refuser au
+serveur les fournisseurs qui n'envoient rien — un garde-fou voulu. Pour un
+essai en ligne sans contrat d'agrégateur, `TRIAL_MODE=true` ouvre
+explicitement cette porte : les fournisseurs `console` sont acceptés et le code
+de vérification est rendu à l'application.
+
+Elle ne s'ouvre que sur la valeur exacte `true`, le serveur l'annonce dans un
+encadré à chaque démarrage, et `/health` la signale. **À retirer avant
+d'ouvrir à de vrais voisins** : tant qu'elle est là, n'importe qui peut
+s'inscrire sous n'importe quel numéro.
+
 ## À reprendre avant la mise en production
 
 - **Stockage en mémoire** : les défis et les compteurs vivent dans le processus.

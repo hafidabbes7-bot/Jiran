@@ -24,8 +24,13 @@ L'hébergement gratuit convient à un essai et pas à un lancement. Deux limites
 
 Et, comme c'est une configuration d'essai : **aucun SMS n'est envoyé**, le code
 de vérification se remplit tout seul. N'importe qui ayant le lien peut donc
-s'inscrire sous n'importe quel prénom. C'est voulu pour essayer sans contrat
+s'inscrire sous n'importe quel numéro. C'est voulu pour essayer sans contrat
 d'agrégateur — ce n'est pas une configuration à laisser en place pour de vrai.
+
+Le serveur refuse normalement de démarrer ainsi : c'est la variable
+`TRIAL_MODE=true` du fichier de déploiement qui l'autorise, et il l'annonce
+dans ses journaux à chaque démarrage. **Retirez-la** le jour où vous ouvrirez à
+de vrais voisins.
 
 ---
 
@@ -113,5 +118,6 @@ plus besoin d'un ordinateur allumé chez vous pour fonctionner.
 | La construction échoue | Regardez l'onglet **Logs**. Le plus souvent : la mauvaise branche a été choisie — ce doit être `main` |
 | La page met une minute à s'ouvrir | Le service dormait. C'est normal sur la formule gratuite |
 | Le quartier est vide alors qu'on y avait publié | Le service a redémarré. Les données ne survivent pas sans disque |
+| `Exited with status 1` et un message sur `SMS_PROVIDER=console` | `TRIAL_MODE` manque dans les variables du service |
 | « Serveur injoignable » dans l'application | Le service est en train de redémarrer ou la construction a échoué |
 | Pas d'entrée « Signalements en attente » | `MODERATOR_PHONES` ne contient pas le numéro avec lequel vous vous êtes inscrit |

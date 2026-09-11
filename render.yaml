@@ -29,11 +29,15 @@ services:
       - key: SESSION_SECRET
         generateValue: true
 
+      # Porte explicite : sans elle, le serveur refuse de démarrer avec des
+      # fournisseurs qui n'envoient rien, puisque l'hébergeur le déclare en
+      # production. À retirer avant d'ouvrir à de vrais voisins.
+      - key: TRIAL_MODE
+        value: 'true'
+
       # Le code s'affiche dans l'application au lieu d'être envoyé par SMS.
       - key: SMS_PROVIDER
         value: console
-      - key: EXPOSE_DEV_CODE
-        value: 'true'
       - key: PUSH_PROVIDER
         value: console
 
