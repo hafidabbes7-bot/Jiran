@@ -23,3 +23,21 @@ export function modeEssaiDemande(brut: string | undefined): boolean {
 export function fournisseurMuetAutorise(enProduction: boolean, modeEssai: boolean): boolean {
   return !enProduction || modeEssai;
 }
+
+/**
+ * Vrai tant qu'aucun canal n'envoie réellement de message.
+ *
+ * Sert à refermer le mode d'essai tout seul : le jour où des identifiants
+ * Twilio ou Meta sont posés, le code cesse d'être renvoyé dans la réponse HTTP,
+ * sans qu'il faille penser à retirer TRIAL_MODE. C'est l'oubli le plus
+ * probable, et le plus coûteux — il rend la vérification décorative.
+ */
+export function aucunEnvoiReel(env: {
+  smsProvider?: string;
+  whatsappPhoneNumberId?: string;
+  whatsappAccessToken?: string;
+}): boolean {
+  const sms = env.smsProvider ?? 'console';
+  const whatsapp = Boolean(env.whatsappPhoneNumberId && env.whatsappAccessToken);
+  return (sms === 'console' || sms === 'none') && !whatsapp;
+}

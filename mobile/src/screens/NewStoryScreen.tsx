@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -55,7 +55,7 @@ export function NewStoryScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.screen}>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={[styles.intro, rtl.text]}>{s.stories.intro}</Text>
 
       {photo ? (
@@ -90,16 +90,19 @@ export function NewStoryScreen({ navigation }: Props) {
         loading={sending}
         onPress={publier}
       />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.paper, padding: spacing.lg, gap: spacing.md },
+  screen: { flex: 1, backgroundColor: colors.paper },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
   intro: { fontSize: fontSizes.small, color: colors.muted, lineHeight: 18 },
   preview: {
     width: '100%',
-    aspectRatio: 3 / 4,
+    // Hauteur fixe : un aperçu plein format repoussait le bouton « Partager »
+    // hors de l'écran.
+    height: 220,
     borderRadius: radii.md,
     backgroundColor: colors.sand,
   },

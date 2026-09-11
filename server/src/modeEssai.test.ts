@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { fournisseurMuetAutorise, modeEssaiDemande } from './modeEssai.js';
+import { aucunEnvoiReel, fournisseurMuetAutorise, modeEssaiDemande } from './modeEssai.js';
 
 describe('mode essai', () => {
   it('ne s’ouvre que sur la valeur exacte « true »', () => {
@@ -26,5 +26,27 @@ describe('mode essai', () => {
 
   it('les autorise en production quand l’essai est demandé', () => {
     assert.equal(fournisseurMuetAutorise(true, true), true);
+  });
+});
+
+describe('fermeture automatique du mode d’essai', () => {
+  it('reste muet tant qu’aucun canal n’envoie vraiment', () => {
+    assert.equal(aucunEnvoiReel({}), true);
+    assert.equal(aucunEnvoiReel({ smsProvider: 'console' }), true);
+    assert.equal(aucunEnvoiReel({ smsProvider: 'none' }), true);
+  });
+
+  it('se referme dès qu’un fournisseur réel est configuré', () => {
+    assert.equal(aucunEnvoiReel({ smsProvider: 'twilio' }), false);
+    assert.equal(aucunEnvoiReel({ smsProvider: 'http' }), false);
+    assert.equal(
+      aucunEnvoiReel({ whatsappPhoneNumberId: '1234', whatsappAccessToken: 'jeton' }),
+      false
+    );
+  });
+
+  it('ne se referme pas sur des identifiants WhatsApp à moitié posés', () => {
+    assert.equal(aucunEnvoiReel({ whatsappPhoneNumberId: '1234' }), true);
+    assert.equal(aucunEnvoiReel({ whatsappAccessToken: 'jeton' }), true);
   });
 });

@@ -36,6 +36,23 @@ export async function localNotify(title: string, body: string): Promise<void> {
   }
 }
 
+/** État de l'autorisation, sans jamais la demander : pour l'afficher. */
+export async function notificationPermission(): Promise<boolean | null> {
+  try {
+    if (Platform.OS === 'web') {
+      const api = typeof window !== 'undefined' ? window.Notification : undefined;
+      if (!api) return false;
+      if (api.permission === 'granted') return true;
+      return api.permission === 'denied' ? false : null;
+    }
+
+    const { status } = await Notifications.getPermissionsAsync();
+    return status === 'granted' ? true : status === 'denied' ? false : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Demande l'autorisation une fois, sur un geste du voisin. */
 export async function askNotificationPermission(): Promise<boolean> {
   try {

@@ -120,10 +120,16 @@ export const fr = {
     searchPlaceholder: 'Chercher une publication ou un voisin',
     empty: 'Rien de neuf dans le quartier pour le moment.',
     offline: 'Serveur injoignable — tire vers le bas pour réessayer.',
+    serverReset:
+      '⚠️ Le serveur a redémarré et a perdu les publications : l’hébergement gratuit efface tout à chaque mise en veille. Ton compte, lui, a été retrouvé grâce à ton numéro.',
     alertBannerMeta: '{time} · signalé par {author}',
     welcomeTitle: 'Souhaite la bienvenue à {name} !',
     welcomeSubtitle: 'Nouveau voisin · arrivé cette semaine',
     welcomeSubtitleBuilding: 'Nouveau voisin · {building} · arrivé cette semaine',
+    welcomeAction: '👋 Souhaiter la bienvenue à {name}',
+    welcomeSent: '✓ Bienvenue envoyée',
+    welcomeFailed: 'Le message n’est pas parti. Réessaie dans un instant.',
+    welcomeMessage: 'Bienvenue dans le quartier, {name} ! 👋',
     firstPostHint:
       'Ton quartier démarre. Publie le premier message : une demande de coup de main, une annonce, ou une information utile.',
     emptyFiltered: 'Aucune publication dans cette catégorie.',
@@ -442,6 +448,12 @@ export const fr = {
     title: 'Notifications',
     recent: 'CE QUI S’EST PASSÉ',
     empty: 'Rien de nouveau pour l’instant.',
+    ask: '🔔 Autoriser les notifications',
+    askHint:
+      'Ton téléphone n’autorise pas encore Jiran à te notifier : sans ça, rien ne s’affiche, même quand un voisin t’écrit.',
+    allowed: '✅ Ce téléphone autorise les notifications de Jiran.',
+    openAppHint:
+      'Jiran doit rester ouvert (même en arrière-plan) pour te prévenir : les notifications qui réveillent un téléphone éteint demandent un compte Firebase et un compte Apple, pas encore branchés.',
     markAll: 'Tout marquer comme lu',
     settings: 'ME PRÉVENIR POUR',
     settingsHint:

@@ -196,6 +196,7 @@ export function createServer(options?: {
       // Rend visible une configuration de développement laissée par mégarde.
       devCodeExposed: config.exposeDevCode,
       trialMode: config.trialMode,
+      verificationDecorative: config.verificationDecorative,
       push: { provider: push.name, delivers: push.delivers },
     });
   });

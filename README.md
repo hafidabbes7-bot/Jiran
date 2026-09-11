@@ -139,6 +139,23 @@ Trois choix assumés dans ce lot :
  — une absence n'est visible que des voisins nommément désignés : l'annoncer au
    quartier reviendrait à donner l'adresse d'un logement vide.
 
+## Deux limites de l'hébergement gratuit, dites en face
+
+**Les données disparaissent.** Une instance gratuite Render n'a pas de disque
+qui survit : elle s'endort après quinze minutes sans visite, et repart vide.
+Publications, messages, stories et parties sont perdus ; le compte, lui, est
+retrouvé grâce au numéro de téléphone, et l'application dit ce qui s'est passé
+au lieu d'afficher un fil vide. Pour que ça cesse, il faut un disque persistant
+(offre payante Render) ou une base PostgreSQL hébergée ailleurs.
+
+**La vérification du numéro est décorative.** `TRIAL_MODE=true` affiche le code
+à l'écran : n'importe qui peut s'inscrire avec n'importe quel numéro. Tout le
+reste du mécanisme existe et fonctionne — il ne manque qu'un compte chez un
+expéditeur. Voir [docs/verification-reelle.md](docs/verification-reelle.md) : le
+serveur referme cette porte tout seul dès que des identifiants réels sont posés,
+même si `TRIAL_MODE` reste à `true`, et `/health` dit lequel des deux états est
+en cours (`verificationDecorative`).
+
 ## Idées gardées de côté
 
 Rien de ce qui suit n'est oublié : c'est mis de côté, volontairement, pour ne

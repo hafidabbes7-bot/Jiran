@@ -39,13 +39,27 @@ type Props = CompositeScreenProps<
 export function FeedScreen({ navigation }: Props) {
   const { s, format, language, setLanguage, rtl } = useI18n();
   const localizedName = useLocalizedName();
-  const { session, posts, neighbors, toggleLike, report, updateLanguage, refresh, loading, loadFailed } =
-    useApp();
+  const {
+    session,
+    posts,
+    neighbors,
+    toggleLike,
+    report,
+    updateLanguage,
+    refresh,
+    loading,
+    loadFailed,
+    repository,
+    serverReset,
+    dismissServerReset,
+  } = useApp();
   const toast = useToast();
 
   const [filter, setFilter] = useState<CategoryFilter>('tout');
   const [query, setQuery] = useState('');
   const [reportTarget, setReportTarget] = useState<string | null>(null);
+  /** Voisin à qui la bienvenue vient d'être envoyée, pour ne pas la renvoyer. */
+  const [bienvenue, setBienvenue] = useState<string | null>(null);
 
   const neighborhood = session ? findNeighborhood(session.neighborhoodId) : undefined;
 
@@ -71,6 +85,23 @@ export function FeedScreen({ navigation }: Props) {
     });
   }, [posts, filter, query]);
 
+  /**
+   * Envoie un vrai message de bienvenue au nouveau voisin.
+   *
+   * C'est un message privé, pas une publication : souhaiter la bienvenue
+   * s'adresse à quelqu'un, et le nouveau venu reçoit la notification qui va
+   * avec.
+   */
+  const souhaiterBienvenue = async (voisin: { id: string; name: string }) => {
+    try {
+      await repository.sendMessage(voisin.id, format(s.feed.welcomeMessage, { name: voisin.name }));
+      setBienvenue(voisin.id);
+      toast(s.feed.welcomeSent);
+    } catch {
+      toast(s.feed.welcomeFailed);
+    }
+  };
+
   const submitReport = async (reason: ReportReason) => {
     const postId = reportTarget;
     setReportTarget(null);
@@ -81,6 +112,54 @@ export function FeedScreen({ navigation }: Props) {
 
   return (
     <View style={styles.screen}>
+      {/* En-tête épinglé : le quartier, la recherche et les catégories
+          restent atteignables quand le fil défile. */}
+      <View style={styles.sticky}>
+          <View style={[styles.topbar, rtl.row]}>
+            <View style={styles.flex}>
+              <Text style={[styles.title, rtl.text]}>Jiran</Text>
+              <Text style={[styles.location, rtl.text]}>
+                📍 {neighborhood ? localizedName(neighborhood) : ''}
+                {neighborhood ? ` · ${language === 'ar' ? neighborhood.regionAr : neighborhood.region}` : ''}
+              </Text>
+            </View>
+
+            <View style={[styles.langToggle, rtl.row]}>
+              {(['fr', 'ar'] as const).map((code) => (
+                <Pressable
+                  key={code}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: language === code }}
+                  onPress={() => {
+                    setLanguage(code);
+                    updateLanguage(code);
+                  }}
+                  style={[styles.langButton, language === code && styles.langButtonActive]}
+                >
+                  <Text
+                    style={[styles.langText, language === code && styles.langTextActive]}
+                  >
+                    {code === 'fr' ? 'FR' : 'ع'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <TextInput
+            placeholder={s.feed.searchPlaceholder}
+            placeholderTextColor={colors.muted}
+            value={query}
+            onChangeText={setQuery}
+            style={[styles.search, rtl.text]}
+          />
+
+          <View style={styles.chips}>
+            <CategoryChips options={FILTERS} selected={filter} onSelect={setFilter} />
+          </View>
+
+      </View>
+
       <FlatList
         data={visiblePosts}
         keyExtractor={(post) => post.id}
@@ -91,48 +170,20 @@ export function FeedScreen({ navigation }: Props) {
         ListHeaderComponent={
           <View>
             <SosBanner />
-            <View style={[styles.topbar, rtl.row]}>
-              <View style={styles.flex}>
-                <Text style={[styles.title, rtl.text]}>Jiran</Text>
-                <Text style={[styles.location, rtl.text]}>
-                  📍 {neighborhood ? localizedName(neighborhood) : ''}
-                  {neighborhood ? ` · ${language === 'ar' ? neighborhood.regionAr : neighborhood.region}` : ''}
-                </Text>
-              </View>
 
-              <View style={[styles.langToggle, rtl.row]}>
-                {(['fr', 'ar'] as const).map((code) => (
-                  <Pressable
-                    key={code}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: language === code }}
-                    onPress={() => {
-                      setLanguage(code);
-                      updateLanguage(code);
-                    }}
-                    style={[styles.langButton, language === code && styles.langButtonActive]}
-                  >
-                    <Text
-                      style={[styles.langText, language === code && styles.langTextActive]}
-                    >
-                      {code === 'fr' ? 'FR' : 'ع'}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
+            {/* Le fil vide après un redémarrage du serveur n'est pas une
+                panne du téléphone : le dire vaut mieux que le laisser croire. */}
+            {serverReset ? (
+              <Pressable accessibilityRole="button" onPress={dismissServerReset}>
+                <View style={styles.reset}>
+                  <Text style={[styles.resetText, rtl.text]}>{s.feed.serverReset}</Text>
+                  <Text style={[styles.resetDismiss, rtl.text]}>{s.common.close}</Text>
+                </View>
+              </Pressable>
+            ) : null}
             {loadFailed ? (
               <Text style={[styles.offline, rtl.text]}>{s.feed.offline}</Text>
             ) : null}
-
-            <TextInput
-              placeholder={s.feed.searchPlaceholder}
-              placeholderTextColor={colors.muted}
-              value={query}
-              onChangeText={setQuery}
-              style={[styles.search, rtl.text]}
-            />
 
             {twin && neighborhood ? (
               <Text style={[styles.twinned, rtl.text]}>
@@ -143,10 +194,6 @@ export function FeedScreen({ navigation }: Props) {
                 })}
               </Text>
             ) : null}
-
-            <View style={styles.chips}>
-              <CategoryChips options={FILTERS} selected={filter} onSelect={setFilter} />
-            </View>
 
             <StoriesRow
               onOpen={(index) => navigation.navigate('Story', { index })}
@@ -162,7 +209,13 @@ export function FeedScreen({ navigation }: Props) {
               />
             ) : null}
 
-            {nouveau ? <WelcomeCard neighbor={nouveau} /> : null}
+            {nouveau ? (
+              <WelcomeCard
+                neighbor={nouveau}
+                sent={bienvenue === nouveau.id}
+                onWelcome={() => souhaiterBienvenue(nouveau)}
+              />
+            ) : null}
           </View>
         }
         ListEmptyComponent={
@@ -207,6 +260,29 @@ export function FeedScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   flex: { flex: 1 },
+  reset: {
+    backgroundColor: colors.sand,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  resetText: { fontSize: fontSizes.small, color: colors.ink, lineHeight: 18 },
+  resetDismiss: {
+    marginTop: spacing.xs,
+    fontSize: fontSizes.small,
+    color: colors.brand,
+    fontWeight: '700',
+  },
+  sticky: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
+    backgroundColor: colors.paper,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.line,
+  },
   list: { paddingHorizontal: spacing.lg, paddingBottom: 120 },
   topbar: { alignItems: 'flex-start', paddingTop: spacing.md, marginBottom: spacing.md },
   title: { fontSize: fontSizes.heading, fontWeight: '700', color: colors.ink },

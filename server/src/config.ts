@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 
-import { modeEssaiDemande } from './modeEssai.js';
+import { aucunEnvoiReel, modeEssaiDemande } from './modeEssai.js';
 
 /**
  * Configuration lue dans l'environnement. Les valeurs sensibles n'ont pas de
@@ -12,6 +12,20 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 /** Voir `modeEssai.ts` : porte explicite, annoncée bruyamment au démarrage. */
 const trialMode = modeEssaiDemande(process.env.TRIAL_MODE);
+
+/**
+ * Vrai tant qu'aucun canal n'envoie réellement de message.
+ *
+ * Sert à fermer la porte du mode d'essai toute seule : le jour où des
+ * identifiants Twilio ou Meta sont posés, le code cesse d'être renvoyé dans la
+ * réponse, sans qu'il faille penser à retirer TRIAL_MODE — l'oubli le plus
+ * probable, et le plus coûteux, puisqu'il rend la vérification décorative.
+ */
+const envoiMuet = aucunEnvoiReel({
+  smsProvider: process.env.SMS_PROVIDER,
+  whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+  whatsappAccessToken: process.env.WHATSAPP_ACCESS_TOKEN,
+});
 
 function requiredSecret(name: string): string {
   const value = process.env[name];
@@ -162,5 +176,9 @@ export const config = {
    * vérification à quiconque a le lien. Réservé au développement, ou à un
    * essai explicitement assumé.
    */
-  exposeDevCode: (!isProduction && process.env.EXPOSE_DEV_CODE === 'true') || trialMode,
+  exposeDevCode:
+    (!isProduction && process.env.EXPOSE_DEV_CODE === 'true') || (trialMode && envoiMuet),
+
+  /** Vrai si le numéro n'est vérifié par aucun envoi réel — affiché dans /health. */
+  verificationDecorative: trialMode && envoiMuet,
 } as const;

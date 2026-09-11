@@ -122,16 +122,21 @@ export function ComposeScreen({ navigation }: Props) {
 
         <Text style={[styles.photoNote, rtl.text]}>{s.compose.photoNotice}</Text>
 
+        {tooShort && moderation.clean ? (
+          <Text style={[styles.hint, rtl.text]}>{s.compose.tooShort}</Text>
+        ) : null}
+      </ScrollView>
+
+      {/* Le bouton reste en bas de l'écran : avec une photo en aperçu, il
+          descendait hors de vue et la publication semblait bloquée. */}
+      <View style={styles.footer}>
         <PrimaryButton
           label={s.compose.publish}
           disabled={blocked}
           loading={submitting}
           onPress={submit}
         />
-        {tooShort && moderation.clean ? (
-          <Text style={[styles.hint, rtl.text]}>{s.compose.tooShort}</Text>
-        ) : null}
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -166,9 +171,16 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.small,
     lineHeight: 18,
   },
+  footer: {
+    padding: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.line,
+    backgroundColor: colors.paper,
+  },
   preview: {
     width: '100%',
-    aspectRatio: 4 / 3,
+    height: 180,
     borderRadius: radii.sm,
     backgroundColor: colors.sand,
   },

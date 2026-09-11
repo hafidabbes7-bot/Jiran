@@ -13,6 +13,7 @@ import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Field } from '../../components/Field';
+import { askNotificationPermission } from '../../data/localNotify';
 import { NeighborhoodPicker } from '../../components/NeighborhoodPicker';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import type { AuthService, Channel, VerifiedSession } from '../../data/authService';
@@ -319,6 +320,11 @@ export function OnboardingFlow({
         rulesAcceptedAt: new Date().toISOString(),
         joinedAt: new Date().toISOString(),
       });
+
+      // Le bon moment pour demander : le voisin vient d'accepter les règles et
+      // sait ce qu'est l'application. Un refus ne bloque rien — la liste des
+      // notifications reste consultable dans le profil.
+      askNotificationPermission();
     } finally {
       setSubmitting(false);
     }

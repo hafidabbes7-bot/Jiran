@@ -72,6 +72,14 @@ interface AppValue {
   loading: boolean;
   /** Dernière erreur de chargement, à montrer sans vider le fil affiché. */
   loadFailed: boolean;
+  /**
+   * Vrai quand le serveur ne connaissait plus ce voisin : sur l'hébergement
+   * gratuit, un redémarrage efface la base. Le compte est recréé tout seul,
+   * mais les publications, elles, sont perdues — et il vaut mieux le dire que
+   * laisser croire à un fil vide.
+   */
+  serverReset: boolean;
+  dismissServerReset: () => void;
 
   register: (session: Session) => Promise<void>;
   signOut: () => Promise<void>;
@@ -134,6 +142,7 @@ export function AppProvider({
   const signalées = useRef(new Set<string>());
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [serverReset, setServerReset] = useState(false);
 
   /**
    * La session courante, lisible sans faire dépendre `refresh` de l'état.
@@ -215,6 +224,7 @@ export function AppProvider({
         if (kind === 'profile_required' && current && options?.allowRepair !== false) {
           try {
             await repository.saveProfile(current);
+            setServerReset(true);
             await refresh({ session: current, allowRepair: false });
             return;
           } catch {
@@ -364,6 +374,8 @@ export function AppProvider({
     [repository]
   );
 
+  const dismissServerReset = useCallback(() => setServerReset(false), []);
+
   const publishStory = useCallback(
     async (input: { photoId?: string; text?: string }) => {
       await repository.addStory(input);
@@ -509,6 +521,8 @@ export function AppProvider({
       removeStory,
       loading,
       loadFailed,
+      serverReset,
+      dismissServerReset,
       register,
       signOut,
       updateLanguage,
@@ -544,6 +558,8 @@ export function AppProvider({
       removeStory,
       loading,
       loadFailed,
+      serverReset,
+      dismissServerReset,
       register,
       signOut,
       updateLanguage,

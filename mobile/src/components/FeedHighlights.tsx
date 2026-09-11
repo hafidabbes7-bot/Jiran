@@ -70,24 +70,49 @@ export function AlertBanner({ post, onPress }: { post: Post; onPress: () => void
  * Un fil de quartier ne démarre pas tout seul : nommer celui qui vient
  * d'arriver donne une raison d'écrire à ceux qui hésitent.
  */
-export function WelcomeCard({ neighbor }: { neighbor: Neighbor }) {
+export function WelcomeCard({
+  neighbor,
+  onWelcome,
+  sent,
+}: {
+  neighbor: Neighbor;
+  /** Envoie vraiment un mot de bienvenue au nouveau voisin. */
+  onWelcome: () => void;
+  sent: boolean;
+}) {
   const { s, format, rtl } = useI18n();
 
   return (
-    <View style={[styles.welcome, rtl.row]}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>👋</Text>
+    <View style={styles.welcome}>
+      <View style={[styles.welcomeHead, rtl.row]}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>👋</Text>
+        </View>
+        <View style={styles.flex}>
+          <Text style={[styles.welcomeTitle, rtl.text]}>
+            {format(s.feed.welcomeTitle, { name: neighbor.name })}
+          </Text>
+          <Text style={[styles.welcomeSub, rtl.text]}>
+            {neighbor.building
+              ? format(s.feed.welcomeSubtitleBuilding, { building: neighbor.building })
+              : s.feed.welcomeSubtitle}
+          </Text>
+        </View>
       </View>
-      <View style={styles.flex}>
-        <Text style={[styles.welcomeTitle, rtl.text]}>
-          {format(s.feed.welcomeTitle, { name: neighbor.name })}
+
+      {/* La carte ne faisait rien : le geste qu'elle propose doit partir
+          quelque part — ici, un vrai message privé au nouveau voisin. */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={format(s.feed.welcomeAction, { name: neighbor.name })}
+        disabled={sent}
+        onPress={onWelcome}
+        style={[styles.welcomeButton, sent && styles.welcomeButtonDone]}
+      >
+        <Text style={[styles.welcomeButtonText, sent && styles.welcomeButtonTextDone]}>
+          {sent ? s.feed.welcomeSent : s.feed.welcomeAction.replace('{name}', neighbor.name)}
         </Text>
-        <Text style={[styles.welcomeSub, rtl.text]}>
-          {neighbor.building
-            ? format(s.feed.welcomeSubtitleBuilding, { building: neighbor.building })
-            : s.feed.welcomeSubtitle}
-        </Text>
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -107,7 +132,6 @@ const styles = StyleSheet.create({
   alertTitle: { color: '#fff', fontSize: fontSizes.small, fontWeight: '700', lineHeight: 17 },
   alertMeta: { color: colors.alertSoft, fontSize: fontSizes.caption, marginTop: 2 },
   welcome: {
-    alignItems: 'center',
     gap: spacing.md,
     backgroundColor: colors.aidSoft,
     borderRadius: radii.lg,
@@ -123,6 +147,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: { fontSize: fontSizes.body },
+  welcomeHead: { alignItems: 'center', gap: spacing.md },
+  welcomeButton: {
+    borderWidth: 1,
+    borderColor: colors.aid,
+    borderRadius: radii.sm,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  welcomeButtonDone: { borderColor: colors.line },
+  welcomeButtonText: { color: colors.aid, fontWeight: '700', fontSize: fontSizes.small },
+  welcomeButtonTextDone: { color: colors.muted },
   welcomeTitle: { fontSize: fontSizes.body, fontWeight: '700', color: colors.aid },
   welcomeSub: { fontSize: fontSizes.caption, color: colors.aid, marginTop: 2, opacity: 0.85 },
 });

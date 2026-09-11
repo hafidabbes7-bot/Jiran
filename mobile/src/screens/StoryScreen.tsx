@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { groupStories } from '../domain/stories';
 import { formatRelative } from '../domain/time';
 import { useI18n } from '../i18n/I18nProvider';
 import { useApp } from '../state/AppProvider';
@@ -22,12 +23,15 @@ export function StoryScreen({ route, navigation }: Props) {
   const { stories, removeStory, repository } = useApp();
   const [index, setIndex] = useState(route.params.index);
 
-  const story = stories[index];
+  // Même ordre que le bandeau : les stories d'un voisin se suivent, donc une
+  // touche à droite passe à la suivante du même voisin avant de changer.
+  const { ordered } = groupStories(stories);
+  const story = ordered[index];
   if (!story) return null;
 
   const aller = (pas: number) => {
     const suivant = index + pas;
-    if (suivant < 0 || suivant >= stories.length) navigation.goBack();
+    if (suivant < 0 || suivant >= ordered.length) navigation.goBack();
     else setIndex(suivant);
   };
 
@@ -66,7 +70,7 @@ export function StoryScreen({ route, navigation }: Props) {
 
       <View style={styles.footer}>
         <Text style={styles.counter}>
-          {index + 1} / {stories.length}
+          {index + 1} / {ordered.length}
         </Text>
         {story.authorIsMe ? (
           <Pressable

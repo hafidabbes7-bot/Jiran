@@ -59,6 +59,7 @@ describe('API de vérification', () => {
       ],
       devCodeExposed: false,
       trialMode: false,
+      verificationDecorative: false,
       push: { provider: 'test', delivers: false },
     });
   });

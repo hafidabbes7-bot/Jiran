@@ -4,7 +4,8 @@ import type { CompositeScreenProps } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
-import { askNotificationPermission } from '../data/localNotify';
+import { PrimaryButton } from '../components/PrimaryButton';
+import { askNotificationPermission, notificationPermission } from '../data/localNotify';
 import {
   DEFAULT_SETTINGS,
   SETTABLE_KINDS,
@@ -49,6 +50,8 @@ export function NotificationsScreen({ navigation }: Props) {
 
   useEffect(() => {
     loadSettings().then(setSettings);
+    // On regarde l'état sans rien demander : la demande, elle, part d'un geste.
+    notificationPermission().then(setAllowed);
   }, []);
 
   const basculer = async (kind: NotificationKind, value: boolean) => {
@@ -73,6 +76,25 @@ export function NotificationsScreen({ navigation }: Props) {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      {/* Sans l'autorisation du téléphone, aucune notification n'apparaît —
+          et rien ne le disait. C'est la première chose de l'écran. */}
+      {allowed === true ? (
+        <Text style={[styles.allowed, rtl.text]}>{s.notifications.allowed}</Text>
+      ) : (
+        <View>
+          <Text style={[styles.hint, rtl.text]}>{s.notifications.askHint}</Text>
+          <PrimaryButton
+            label={s.notifications.ask}
+            onPress={async () => setAllowed(await askNotificationPermission())}
+          />
+          {allowed === false ? (
+            <Text style={[styles.hint, styles.refused, rtl.text]}>
+              {s.notifications.refused}
+            </Text>
+          ) : null}
+        </View>
+      )}
+
       <View style={[styles.headerRow, rtl.row]}>
         <Text style={[styles.section, rtl.text]}>{s.notifications.recent}</Text>
         {notifications.some((item) => !item.read) ? (
@@ -127,9 +149,7 @@ export function NotificationsScreen({ navigation }: Props) {
       ))}
 
       <Text style={[styles.hint, rtl.text]}>{s.notifications.sosAlways}</Text>
-      {allowed === false ? (
-        <Text style={[styles.hint, styles.refused, rtl.text]}>{s.notifications.refused}</Text>
-      ) : null}
+      <Text style={[styles.hint, rtl.text]}>{s.notifications.openAppHint}</Text>
     </ScrollView>
   );
 }
@@ -162,4 +182,5 @@ const styles = StyleSheet.create({
   time: { marginTop: 2, fontSize: fontSizes.caption, color: colors.muted },
   hint: { fontSize: fontSizes.small, color: colors.muted, lineHeight: 18, marginBottom: spacing.sm },
   refused: { color: colors.alert },
+  allowed: { color: colors.aid, fontSize: fontSizes.small, fontWeight: '600' },
 });

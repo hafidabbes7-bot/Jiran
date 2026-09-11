@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { groupStories } from '../domain/stories';
 import { useI18n } from '../i18n/I18nProvider';
 import { useApp } from '../state/AppProvider';
 import { colors, fontSizes, radii, spacing } from '../theme/theme';
@@ -15,6 +16,7 @@ import { colors, fontSizes, radii, spacing } from '../theme/theme';
 export function StoriesRow({ onOpen, onAdd }: { onOpen: (index: number) => void; onAdd: () => void }) {
   const { s, rtl } = useI18n();
   const { stories, repository } = useApp();
+  const { groups } = groupStories(stories);
 
   return (
     <View style={styles.wrapper}>
@@ -37,30 +39,41 @@ export function StoriesRow({ onOpen, onAdd }: { onOpen: (index: number) => void;
           </Text>
         </Pressable>
 
-        {stories.map((story, index) => (
-          <Pressable
-            key={story.id}
-            accessibilityRole="button"
-            accessibilityLabel={`${s.stories.of} ${story.authorName}`}
-            onPress={() => onOpen(index)}
-            style={styles.item}
-          >
-            <View style={styles.bubble}>
-              {story.photoId ? (
-                <Image
-                  source={{ uri: repository.photoUri(story.photoId) }}
-                  style={styles.thumb}
-                  resizeMode="cover"
-                />
-              ) : (
-                <Text style={styles.initial}>{story.authorName.slice(0, 1).toUpperCase()}</Text>
-              )}
-            </View>
-            <Text style={styles.name} numberOfLines={1}>
-              {story.authorIsMe ? s.stories.mine : story.authorName}
-            </Text>
-          </Pressable>
-        ))}
+        {groups.map((group) => {
+          const première = group.items[0]!;
+          return (
+            <Pressable
+              key={group.authorName + group.firstIndex}
+              accessibilityRole="button"
+              accessibilityLabel={`${s.stories.of} ${group.authorName}`}
+              onPress={() => onOpen(group.firstIndex)}
+              style={styles.item}
+            >
+              <View style={styles.bubble}>
+                {première.photoId ? (
+                  <Image
+                    source={{ uri: repository.photoUri(première.photoId) }}
+                    style={styles.thumb}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Text style={styles.initial}>{group.authorName.slice(0, 1).toUpperCase()}</Text>
+                )}
+
+                {/* Plusieurs stories du même voisin : une seule bulle, avec
+                    leur nombre. */}
+                {group.items.length > 1 ? (
+                  <View style={styles.count}>
+                    <Text style={styles.countText}>{group.items.length}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={styles.name} numberOfLines={1}>
+                {group.authorIsMe ? s.stories.mine : group.authorName}
+              </Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -85,5 +98,16 @@ const styles = StyleSheet.create({
   addSign: { fontSize: 24, color: colors.muted },
   thumb: { width: '100%', height: '100%', borderRadius: radii.lg },
   initial: { fontSize: 22, fontWeight: '700', color: colors.brand },
+  count: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    minWidth: 20,
+    paddingHorizontal: 4,
+    borderRadius: 10,
+    backgroundColor: colors.brand,
+    alignItems: 'center',
+  },
+  countText: { color: colors.paper, fontSize: fontSizes.caption, fontWeight: '700' },
   name: { marginTop: 4, fontSize: fontSizes.caption, color: colors.muted, maxWidth: 64 },
 });
