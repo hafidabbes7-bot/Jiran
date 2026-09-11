@@ -49,11 +49,25 @@ remplacez-le par l'adresse de votre machine sur le réseau local
 | §7.7 Notifications d'alerte | ✅ appareil enregistré au serveur ; SOS et alertes sécurité poussés en priorité haute — reste à brancher un service d'envoi |
 | Bilingue FR / AR avec RTL | ✅ bascule immédiate, sans redémarrage |
 
+## Fabriquer un APK
+
+```bash
+npx eas-cli@latest build --platform android --profile apk-local
+```
+
+Compile dans le nuage (compte expo.dev gratuit) et rend un lien de
+téléchargement à ouvrir depuis le téléphone — aucun Android Studio, aucun
+câble. Les profils sont dans `eas.json` : `apk-local` vise un serveur de
+développement sur le réseau local, `apk` un serveur en HTTPS, `production`
+fabrique le paquet pour le store. Détails dans
+[`docs/lancer-sur-telephone.md`](../docs/lancer-sur-telephone.md).
+
 ## Projets natifs
 
-`npm run prebuild:check` régénère `android/` et `ios/` à partir de `app.json`.
+`npm run prebuild:check` régénère `android/` et `ios/` à partir de
+`app.config.js`.
 Ces dossiers ne sont pas versionnés : ils se reconstruisent, et les modifier à
-la main serait perdu au prebuild suivant. Tout passe par `app.json`.
+la main serait perdu au prebuild suivant. Tout passe par `app.config.js`.
 
 Ce qui y est réglé, et vérifié dans les fichiers produits :
 
@@ -71,6 +85,8 @@ Ce qui y est réglé, et vérifié dans les fichiers produits :
   appareil.
 - **Canal de notification `alertes`**, celui que le serveur vise pour les SOS
   et les alertes de sécurité.
+- **HTTP en clair refusé**, sauf si `EXPO_ALLOW_CLEARTEXT=true` — réservé aux
+  APK d'essai qui doivent joindre un serveur de développement sans HTTPS.
 
 ## Ce qui n'est pas encore branché
 

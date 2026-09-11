@@ -4,12 +4,80 @@ Tout a été vérifié jusqu'ici depuis un navigateur. Cette étape-ci vérifie 
 qu'un navigateur ne peut pas montrer : la vraie demande de géolocalisation, le
 rendu arabe sur un écran de téléphone, les performances réelles.
 
+Deux chemins, selon ce que vous voulez faire.
+
+| | **A. Recevoir un APK** | **B. Installer depuis l'ordinateur** |
+| --- | --- | --- |
+| À installer | Node.js seulement | + Android Studio (~1 Go) |
+| Câble USB | non | oui |
+| Attente | ~15 min, dans le nuage | ~20 min la 1ʳᵉ fois, puis 2 min |
+| Compte à créer | un compte Expo, gratuit | aucun |
+| Pour qui | essayer, faire essayer à d'autres | modifier le code et revoir tout de suite |
+
+**Commencez par A** : c'est le plus simple, et l'APK s'envoie ensuite à qui vous
+voulez. Le chemin B sert quand on développe.
+
+Dans les deux cas, **le serveur doit tourner quelque part** et le téléphone doit
+pouvoir le joindre : l'application ne fait rien sans lui. C'est l'étape 4.
+
+---
+
+## A. Recevoir un fichier APK, sans installer Android Studio
+
+Expo compile dans le nuage et vous rend un lien de téléchargement. Il faut un
+compte sur expo.dev — gratuit, et le plan gratuit suffit largement.
+
+```bash
+cd Jiran/mobile
+npm install
+npx eas-cli@latest login      # crée le compte si besoin
+npx eas-cli@latest init       # affiche un identifiant de projet
+```
+
+`eas init` affiche un identifiant du genre `1a2b3c4d-…`. Ouvrez
+`mobile/app.config.js`, trouvez la ligne commentée `extra: { eas: …` vers le
+milieu du fichier, décommentez-la et collez l'identifiant à la place des zéros.
+
+Ensuite, **indiquez où joindre le serveur**. Ouvrez `mobile/eas.json` : le
+profil `apk-local` contient une adresse d'exemple, remplacez-la par l'adresse
+de votre ordinateur sur le Wi-Fi (voir « Trouver l'adresse de votre
+ordinateur », étape 4) :
+
+```json
+"EXPO_PUBLIC_API_URL": "http://192.168.1.10:4000"
+```
+
+Puis lancez la compilation :
+
+```bash
+npx eas-cli@latest build --platform android --profile apk-local
+```
+
+Une quinzaine de minutes plus tard, la commande affiche un lien — et un
+QR code. **Ouvrez ce lien depuis le téléphone** : il télécharge l'APK. Android
+demandera d'autoriser l'installation depuis cette source, acceptez.
+
+Ce même lien s'envoie par WhatsApp à qui vous voulez faire essayer.
+
+> **Pourquoi un profil séparé `apk-local` ?** Un APK est une version
+> « release », et Android y refuse le HTTP non chiffré depuis Android 9 — à
+> juste titre. Ce profil lève l'interdiction pour pouvoir joindre un serveur de
+> développement sur le réseau local. Le jour où le serveur sera en ligne
+> derrière du HTTPS, utilisez le profil `apk`, qui ne la lève pas.
+
+Une fois l'APK installé, passez directement à l'étape 4 (démarrer le serveur),
+puis à l'étape 6 (ce qu'il faut regarder).
+
+---
+
+## B. Installer depuis l'ordinateur, câble branché
+
 Comptez **une heure la première fois**, dont une bonne partie à télécharger
 Android Studio. Les fois suivantes, deux commandes suffisent.
 
 ---
 
-## 1. À installer une seule fois
+### 1. À installer une seule fois
 
 | Outil | Où | Remarque |
 | --- | --- | --- |
@@ -27,7 +95,7 @@ terminal, pour qu'il voie les nouveaux outils.
 
 ---
 
-## 2. Préparer le téléphone
+### 2. Préparer le téléphone
 
 1. **Réglages → À propos du téléphone**
 2. Appuyez **7 fois de suite** sur « Numéro de build » (ou « Numéro de
@@ -49,7 +117,7 @@ voir « Si ça coince » plus bas.
 
 ---
 
-## 3. Récupérer le projet
+### 3. Récupérer le projet
 
 ```bash
 git clone https://github.com/hafidabbes7-bot/Jiran.git
@@ -59,7 +127,7 @@ git checkout claude/new-session-q7ijf3
 
 ---
 
-## 4. Démarrer le serveur
+## 4. Démarrer le serveur (les deux chemins)
 
 Le téléphone ne peut pas faire grand-chose sans lui : c'est lui qui envoie les
 codes de vérification et qui porte le fil du quartier.
@@ -115,7 +183,7 @@ Notez cette adresse. Elle commence presque toujours par `192.168.` ou `10.`.
 
 ---
 
-## 5. Installer l'application sur le téléphone
+## 5. Installer l'application depuis l'ordinateur (chemin B seulement)
 
 Dans un **second terminal** :
 
@@ -147,6 +215,13 @@ l'application s'installe et s'ouvre toute seule sur le téléphone.
 Vous pouvez ensuite débrancher le téléphone : l'application reste installée.
 Mais elle aura besoin du serveur (donc du Wi-Fi et de l'ordinateur allumé)
 pour fonctionner.
+
+> **Pour l'essayer ailleurs que chez vous** — sur les données mobiles, ou pour
+> faire essayer à quelqu'un d'autre — il faut que le serveur soit joignable
+> depuis Internet, en HTTPS. Le plus rapide est un tunnel temporaire :
+> `npx localtunnel --port 4000` affiche une adresse `https://…` à mettre dans
+> `EXPO_PUBLIC_API_URL`. Avec du HTTPS, le profil `apk` suffit et l'exception
+> pour le HTTP en clair devient inutile.
 
 ---
 
