@@ -1,10 +1,11 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { findNeighborhood } from '../data/neighborhoods';
 import { formatRelative } from '../domain/time';
 import type { Post } from '../domain/types';
 import { useI18n, useLocalizedName } from '../i18n/I18nProvider';
+import { useApp } from '../state/AppProvider';
 import { colors, fontSizes, radii, spacing } from '../theme/theme';
 import { CATEGORY_COLORS } from './CategoryChips';
 
@@ -23,6 +24,7 @@ export function PostCard({
   onReport?: () => void;
 }) {
   const { s, format, language, rtl } = useI18n();
+  const { repository } = useApp();
   const localizedName = useLocalizedName();
 
   // Le verdict est calculé par le serveur : l'application l'affiche, elle ne
@@ -93,6 +95,15 @@ export function PostCard({
 
       <Text style={[styles.text, rtl.text]}>{post.text}</Text>
 
+      {post.photoId ? (
+        <Image
+          source={{ uri: repository.photoUri(post.photoId) }}
+          style={styles.photo}
+          resizeMode="cover"
+          accessibilityLabel={format(s.feed.photoOf, { name: post.authorName })}
+        />
+      ) : null}
+
       <View style={[styles.actions, rtl.row]}>
         <Pressable
           accessibilityRole="button"
@@ -154,6 +165,13 @@ const styles = StyleSheet.create({
   menu: { paddingHorizontal: spacing.xs },
   menuText: { fontSize: fontSizes.title, color: colors.muted },
   text: { fontSize: fontSizes.body, lineHeight: 20, color: colors.ink },
+  photo: {
+    marginTop: spacing.sm,
+    width: '100%',
+    aspectRatio: 4 / 3,
+    borderRadius: radii.sm,
+    backgroundColor: colors.sand,
+  },
   actions: { gap: spacing.lg, marginTop: spacing.md, alignItems: 'center' },
   action: { fontSize: fontSizes.small, color: colors.muted },
   actionActive: { color: colors.brand, fontWeight: '700' },

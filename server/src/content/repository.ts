@@ -24,6 +24,8 @@ export interface Member {
 
 export interface FeedPost {
   id: string;
+  /** Photo jointe, à charger sur `/photos/:id`. */
+  photoId?: string;
   authorName: string;
   authorIsMe: boolean;
   category: Category;
@@ -154,7 +156,7 @@ export class ContentRepository {
 
     const rows = this.db
       .prepare(
-        `SELECT p.id, p.category, p.body, p.neighborhood_id, p.building, p.created_at,
+        `SELECT p.id, p.category, p.body, p.neighborhood_id, p.building, p.photo_id, p.created_at,
                 m.first_name AS author_name,
                 p.author_id = ?1 AS author_is_me,
                 (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
@@ -179,6 +181,7 @@ export class ContentRepository {
         text: String(row.body),
         neighborhoodId: String(row.neighborhood_id),
         building: (row.building as string | null) ?? undefined,
+        photoId: (row.photo_id as string | null) ?? undefined,
         createdAt: String(row.created_at),
         likes: Number(row.likes),
         likedByMe: Number(row.liked_by_me) === 1,
@@ -195,14 +198,14 @@ export class ContentRepository {
 
   createPost(
     member: Member,
-    input: { category: Category; text: string },
+    input: { category: Category; text: string; photoId?: string },
     now: Date = new Date()
   ): string {
     const id = newId();
     this.db
       .prepare(
-        `INSERT INTO posts (id, author_id, category, body, neighborhood_id, building, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO posts (id, author_id, category, body, neighborhood_id, building, photo_id, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         id,
@@ -211,6 +214,7 @@ export class ContentRepository {
         input.text,
         member.neighborhoodId,
         member.building ?? null,
+        input.photoId ?? null,
         now.toISOString()
       );
     return id;

@@ -5,6 +5,12 @@ import { config } from '../config.js';
 import { readSessionToken } from '../session.js';
 import type { AlertService } from './alerts.js';
 import { GAME_KINDS, type GameError, type GameService } from './games.js';
+import {
+  MAX_PHOTO_BYTES,
+  PHOTO_TYPES,
+  type MediaError,
+  type MediaService,
+} from './media.js';
 import type { ModerationQueue } from './moderationQueue.js';
 import { findNeighborhood } from './neighborhoods.js';
 import { CATEGORIES, type ContentRepository, type Member } from './repository.js';
@@ -19,12 +25,23 @@ const profileSchema = z.object({
 const postSchema = z.object({
   category: z.enum(CATEGORIES as [string, ...string[]]),
   text: z.string().trim().min(3).max(2000),
+  photoId: z.string().min(10).max(60).optional(),
 });
 
 const commentSchema = z.object({ text: z.string().trim().min(2).max(1000) });
 const likeSchema = z.object({ liked: z.boolean() });
 const reportSchema = z.object({
   reason: z.enum(['spam', 'inapproprie', 'fausse_alerte', 'autre']),
+});
+
+const photoSchema = z.object({
+  mime: z.enum(PHOTO_TYPES as unknown as [string, ...string[]]),
+  data: z.string().min(10),
+});
+
+const storySchema = z.object({
+  photoId: z.string().min(10).max(60).optional(),
+  text: z.string().trim().min(1).max(300).optional(),
 });
 
 const deviceSchema = z.object({
@@ -68,7 +85,10 @@ export type MemberRequest = Request & { member?: Member };
 export function memberAuthenticator(repository: ContentRepository) {
   return (request: MemberRequest, response: Response, next: () => void) => {
     const header = request.header('authorization') ?? '';
-    const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+    // Le jeton passe aussi en paramètre d'adresse : une balise <img> ne sait
+    // pas poser d'en-tête, et c'est comme ça que les photos s'affichent.
+    const requête = typeof request.query.t === 'string' ? request.query.t : '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : requête;
     const phone = token ? readSessionToken(token, config.sessionSecret) : null;
 
     if (!phone) {
@@ -93,7 +113,8 @@ export function createContentRouter(
   repository: ContentRepository,
   alerts: AlertService,
   moderation: ModerationQueue,
-  games: GameService
+  games: GameService,
+  media: MediaService
 ): Router {
   const router = express.Router();
 
@@ -158,9 +179,17 @@ export function createContentRouter(
     }
 
     const member = request.member!;
+    // Une photo jointe doit être celle de l'auteur : sans ce contrôle, un
+    // client modifié pourrait accrocher la photo d'un voisin à sa publication.
+    if (parsed.data.photoId && !media.ownsPhoto(member, parsed.data.photoId)) {
+      response.status(404).json({ error: 'photo_introuvable' });
+      return;
+    }
+
     const id = repository.createPost(member, {
       category: parsed.data.category as never,
       text: parsed.data.text,
+      photoId: parsed.data.photoId,
     });
     response.status(201).json({ id });
 
@@ -407,6 +436,77 @@ export function createContentRouter(
     }
 
     response.json({ game: result });
+  });
+
+  // --- Photos et stories -----------------------------------------------
+
+  const mediaStatus = (error: MediaError): number => {
+    if (error === 'introuvable') return 404;
+    if (error === 'trop_lourde') return 413;
+    if (error === 'format_refuse') return 415;
+    return 422;
+  };
+
+  router.post('/photos', authenticate, (request: MemberRequest, response: Response) => {
+    const parsed = photoSchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    // Le base64 pèse un tiers de plus que les octets : on refuse avant de
+    // décoder, pour ne pas se faire remplir la mémoire par une seule requête.
+    if (parsed.data.data.length > MAX_PHOTO_BYTES * 1.4) {
+      response.status(413).json({ error: 'trop_lourde' });
+      return;
+    }
+
+    const bytes = Buffer.from(parsed.data.data, 'base64');
+    const result = media.savePhoto(request.member!, parsed.data.mime, bytes);
+    if (typeof result === 'string') {
+      response.status(mediaStatus(result)).json({ error: result });
+      return;
+    }
+
+    response.status(201).json({ id: result.id });
+  });
+
+  router.get('/photos/:id', authenticate, (request: MemberRequest, response: Response) => {
+    const result = media.photo(request.member!, String(request.params.id));
+    if (typeof result === 'string') {
+      response.status(mediaStatus(result)).json({ error: result });
+      return;
+    }
+
+    // Une photo ne change jamais : le navigateur peut la garder longtemps.
+    response.setHeader('Content-Type', result.mime);
+    response.setHeader('Cache-Control', 'private, max-age=604800, immutable');
+    response.end(Buffer.from(result.bytes));
+  });
+
+  router.get('/stories', authenticate, (request: MemberRequest, response: Response) => {
+    response.json({ stories: media.stories(request.member!) });
+  });
+
+  router.post('/stories', authenticate, (request: MemberRequest, response: Response) => {
+    const parsed = storySchema.safeParse(request.body);
+    if (!parsed.success || (!parsed.data.photoId && !parsed.data.text)) {
+      response.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    const result = media.addStory(request.member!, parsed.data);
+    if (typeof result === 'string') {
+      response.status(mediaStatus(result)).json({ error: result });
+      return;
+    }
+
+    response.status(201).json({ story: result });
+  });
+
+  router.delete('/stories/:id', authenticate, (request: MemberRequest, response: Response) => {
+    const removed = media.removeStory(request.member!, String(request.params.id));
+    response.status(removed ? 200 : 404).json({ removed });
   });
 
   return router;

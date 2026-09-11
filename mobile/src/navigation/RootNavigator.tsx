@@ -11,6 +11,8 @@ import { ComposeScreen } from '../screens/ComposeScreen';
 import { FeedScreen } from '../screens/FeedScreen';
 import { ModerationScreen } from '../screens/ModerationScreen';
 import { GamesScreen } from '../screens/GamesScreen';
+import { NewStoryScreen } from '../screens/NewStoryScreen';
+import { StoryScreen } from '../screens/StoryScreen';
 import { ChatScreen } from '../screens/community/ChatScreen';
 import { GroupsScreen } from '../screens/community/GroupsScreen';
 import { ItemsScreen } from '../screens/community/ItemsScreen';
@@ -183,6 +185,16 @@ export function RootNavigator() {
             name="Move"
             component={MoveScreen}
             options={{ title: s.community.moveTitle }}
+          />
+          <Stack.Screen
+            name="Story"
+            component={StoryScreen}
+            options={{ title: s.stories.title }}
+          />
+          <Stack.Screen
+            name="NewStory"
+            component={NewStoryScreen}
+            options={{ title: s.stories.newTitle }}
           />
         </Stack.Navigator>
       </NavigationContainer>

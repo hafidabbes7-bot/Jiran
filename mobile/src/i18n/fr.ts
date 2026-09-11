@@ -137,6 +137,7 @@ export const fr = {
     newPost: 'Publier',
     blockedTemporary:
       '🚫 Contenu masqué — signalé par 3 voisins différents. Bloqué pendant 3 jours.',
+    photoOf: 'Photo partagée par {name}',
     blockedPermanent: '🚫 Contenu bloqué définitivement après plusieurs signalements.',
   },
   compose: {
@@ -147,8 +148,12 @@ export const fr = {
       '⚠️ Ce message contient des termes potentiellement inappropriés. Merci de reformuler.',
     tooShort: 'Écris au moins quelques mots.',
     publish: 'Publier',
-    photoUnavailable:
-      '📷 Les photos arriveront quand la modération d’image sera branchée (§7.3 du cahier des charges).',
+    photoAdd: '📷 Ajouter une photo',
+    photoRemove: 'Retirer la photo',
+    photoDenied: 'Jiran n’a pas accès à tes photos. Autorise-le dans les réglages du téléphone.',
+    photoFailed: 'Cette photo n’a pas pu être préparée. Essaies-en une autre.',
+    photoNotice:
+      'Les photos ne sont pas encore relues automatiquement (§7.3) : elles ne sortent pas du quartier, et se signalent comme le reste.',
     published: '✓ Publication envoyée à ton quartier',
     publishFailed: 'Publication impossible pour l’instant. Réessaie dans un instant.',
   },
@@ -416,6 +421,21 @@ export const fr = {
     participants: '{count} participants',
     participate: 'Je participe',
     leaveAction: 'Je me retire',
+  },
+
+  stories: {
+    title: 'Story',
+    add: 'Ajouter une story',
+    mine: 'Ma story',
+    of: 'Story de',
+    intro: 'Une story dure 24 heures, puis disparaît. Elle n’encombre pas le fil du quartier.',
+    textPlaceholder: 'Un mot avec la photo (optionnel)…',
+    changePhoto: '📷 Changer la photo',
+    publish: 'Partager ma story',
+    remove: 'Supprimer ma story',
+    previous: 'Story précédente',
+    next: 'Story suivante',
+    newTitle: 'Nouvelle story',
   },
 
   places: {

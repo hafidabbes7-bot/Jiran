@@ -66,6 +66,31 @@ export function openDatabase(location: string): DatabaseSync {
     );
     CREATE INDEX IF NOT EXISTS reports_by_post ON reports (post_id, created_at);
 
+    -- Photos partagées dans le quartier (§4.3 et §4.8 du prototype).
+    -- Les octets vivent dans la base, comme le reste : un disque local ne
+    -- survivrait pas au redémarrage de l'hébergement, et un stockage externe
+    -- demanderait un compte et une facture avant le premier essai.
+    CREATE TABLE IF NOT EXISTS photos (
+      id              TEXT PRIMARY KEY,
+      owner_id        TEXT NOT NULL REFERENCES members(id),
+      neighborhood_id TEXT NOT NULL,
+      mime            TEXT NOT NULL,
+      bytes           BLOB NOT NULL,
+      created_at      TEXT NOT NULL
+    );
+
+    -- Stories : une photo et un mot, visibles 24 heures par le quartier.
+    CREATE TABLE IF NOT EXISTS stories (
+      id              TEXT PRIMARY KEY,
+      author_id       TEXT NOT NULL REFERENCES members(id),
+      neighborhood_id TEXT NOT NULL,
+      photo_id        TEXT REFERENCES photos(id),
+      body            TEXT,
+      created_at      TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS stories_by_neighborhood
+      ON stories (neighborhood_id, created_at DESC);
+
     -- Messages privés entre deux voisins (§4.6). La conversation n'est pas une
     -- ligne : elle se déduit de la paire, ce qui évite de créer un objet vide
     -- avant le premier message.
@@ -264,5 +289,20 @@ export function openDatabase(location: string): DatabaseSync {
     );
   `);
 
+  ajouterColonne(db, 'posts', 'photo_id', 'TEXT');
+
   return db;
+}
+
+/**
+ * Ajoute une colonne à une table existante, si elle n'y est pas déjà.
+ *
+ * `CREATE TABLE IF NOT EXISTS` ne touche pas une table déjà créée : sans ça,
+ * une base née avant cette colonne resterait sans photo pour toujours.
+ */
+function ajouterColonne(db: DatabaseSync, table: string, colonne: string, type: string): void {
+  const colonnes = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  if (colonnes.some((c) => c.name === colonne)) return;
+
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${colonne} ${type}`);
 }

@@ -15,6 +15,8 @@ export type RootStackParamList = {
   Waste: undefined;
   Solidarity: undefined;
   Move: undefined;
+  Story: { index: number };
+  NewStory: undefined;
 };
 
 export type TabParamList = {

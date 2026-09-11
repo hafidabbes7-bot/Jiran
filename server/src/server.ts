@@ -11,6 +11,7 @@ import { openDatabase } from './content/db.js';
 import { CommunityService } from './content/community.js';
 import { createCommunityRouter } from './content/communityRoutes.js';
 import { GameService } from './content/games.js';
+import { MediaService } from './content/media.js';
 import { ContentRepository } from './content/repository.js';
 import { ModerationQueue } from './content/moderationQueue.js';
 import { createContentRouter } from './content/routes.js';
@@ -126,6 +127,7 @@ export function createServer(options?: {
   const moderation = new ModerationQueue(database, config.moderatorPhones);
   const games = new GameService(database);
   const community = new CommunityService(database);
+  const media = new MediaService(database);
 
   const verification = new VerificationService(store, providers, {
     length: config.otp.length,
@@ -149,7 +151,9 @@ export function createServer(options?: {
   // octets reçus, pas sur le JSON reconstruit.
   app.use(
     express.json({
-      limit: '64kb',
+      // Une photo réduite arrive en base64 : 400 Ko d'octets en pèsent ~550.
+      // Le reste des requêtes tient largement dans ce qui précédait.
+      limit: '800kb',
       verify: (request, _response, buffer) => {
         (request as Request & { rawBody?: Buffer }).rawBody = Buffer.from(buffer);
       },
@@ -336,7 +340,7 @@ export function createServer(options?: {
     }
   });
 
-  app.use(createContentRouter(content, alerts, moderation, games));
+  app.use(createContentRouter(content, alerts, moderation, games, media));
   app.use(createCommunityRouter(community, content));
 
   serveWebApp(app, options?.webDir ?? config.webDir);

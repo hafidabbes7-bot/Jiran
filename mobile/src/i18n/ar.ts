@@ -136,6 +136,7 @@ export const ar: Strings = {
     noReply: 'ردّ',
     newPost: 'نشر',
     blockedTemporary: '🚫 محتوى مخفي — تم الإبلاغ عنه من طرف 3 جيران. محظور لمدة 3 أيام.',
+    photoOf: 'صورة شاركها {name}',
     blockedPermanent: '🚫 محتوى محظور نهائياً بعد عدة بلاغات.',
   },
   compose: {
@@ -145,7 +146,12 @@ export const ar: Strings = {
     moderationWarning: '⚠️ هذه الرسالة تحتوي على ألفاظ غير لائقة. أعد صياغتها من فضلك.',
     tooShort: 'اكتب بضع كلمات على الأقل.',
     publish: 'نشر',
-    photoUnavailable: '📷 ستُتاح الصور عند تفعيل نظام مراقبة الصور (البند 7.3 من دفتر الشروط).',
+    photoAdd: '📷 أضف صورة',
+    photoRemove: 'إزالة الصورة',
+    photoDenied: 'جيران لا يملك إذن الوصول إلى صورك. اسمح له من إعدادات الهاتف.',
+    photoFailed: 'تعذّر تحضير هذه الصورة. جرّب صورة أخرى.',
+    photoNotice:
+      'الصور لا تُراجَع آلياً بعد (§7.3) : لا تخرج من الحي، ويمكن الإبلاغ عنها كغيرها.',
     published: '✓ تم إرسال المنشور إلى حيّك',
     publishFailed: 'تعذّر النشر حالياً. أعد المحاولة بعد لحظات.',
   },
@@ -408,6 +414,21 @@ export const ar: Strings = {
     participants: '{count} مشاركون',
     participate: 'أشارك',
     leaveAction: 'أنسحب',
+  },
+
+  stories: {
+    title: 'ستوري',
+    add: 'أضف ستوري',
+    mine: 'ستوري خاصتي',
+    of: 'ستوري',
+    intro: 'الستوري تدوم 24 ساعة ثم تختفي. لا تزحم خيط الحي.',
+    textPlaceholder: 'كلمة مع الصورة (اختياري)…',
+    changePhoto: '📷 غيّر الصورة',
+    publish: 'انشر الستوري',
+    remove: 'احذف الستوري',
+    previous: 'الستوري السابقة',
+    next: 'الستوري التالية',
+    newTitle: 'ستوري جديدة',
   },
 
   places: {

@@ -84,6 +84,8 @@ export interface Comment {
 
 export interface Post {
   id: string;
+  /** Photo jointe, à charger avec `photoUri()`. */
+  photoId?: string;
   authorName: string;
   /** `true` si c'est une publication du voisin connecté. */
   authorIsMe: boolean;
@@ -260,5 +262,15 @@ export interface ActiveSos {
   mine: boolean;
   latitude?: number;
   longitude?: number;
+  createdAt: string;
+}
+
+/** Une story : une photo et un mot, visibles 24 heures par le quartier. */
+export interface Story {
+  id: string;
+  authorName: string;
+  authorIsMe: boolean;
+  photoId?: string;
+  text?: string;
   createdAt: string;
 }

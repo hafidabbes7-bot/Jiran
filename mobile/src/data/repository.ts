@@ -23,6 +23,7 @@ import type {
   QueuedPost,
   ReportReason,
   Session,
+  Story,
 } from '../domain/types';
 
 /**
@@ -49,7 +50,17 @@ export interface JiranRepository {
 
   /** Fil du quartier, jumelage compris — le plus récent d'abord. */
   loadFeed(): Promise<Post[]>;
-  createPost(input: { category: Category; text: string }): Promise<void>;
+  createPost(input: { category: Category; text: string; photoId?: string }): Promise<void>;
+
+  /** Envoie une photo réduite et renvoie son identifiant. */
+  uploadPhoto(base64: string, mime: string): Promise<string>;
+  /** Adresse d'affichage d'une photo, jeton de session compris. */
+  photoUri(photoId: string): string;
+
+  /** Stories du quartier, les plus récentes d'abord. */
+  loadStories(): Promise<Story[]>;
+  addStory(input: { photoId?: string; text?: string }): Promise<Story>;
+  removeStory(storyId: string): Promise<void>;
   setLiked(postId: string, liked: boolean): Promise<void>;
 
   loadComments(postId: string): Promise<Comment[]>;

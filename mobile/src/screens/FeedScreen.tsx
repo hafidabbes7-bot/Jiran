@@ -26,6 +26,7 @@ import { TWINNING_THRESHOLD, findNeighborhood } from '../data/neighborhoods';
 import type { CategoryFilter, ReportReason } from '../domain/types';
 import { useI18n, useLocalizedName } from '../i18n/I18nProvider';
 import { SosBanner } from '../components/SosBanner';
+import { StoriesRow } from '../components/StoriesRow';
 import { useApp } from '../state/AppProvider';
 import { colors, fontSizes, radii, spacing } from '../theme/theme';
 import type { RootStackParamList, TabParamList } from '../navigation/types';
@@ -146,6 +147,11 @@ export function FeedScreen({ navigation }: Props) {
             <View style={styles.chips}>
               <CategoryChips options={FILTERS} selected={filter} onSelect={setFilter} />
             </View>
+
+            <StoriesRow
+              onOpen={(index) => navigation.navigate('Story', { index })}
+              onAdd={() => navigation.navigate('NewStory')}
+            />
 
             {/* L'alerte passe avant tout, y compris avant la carte de
                 bienvenue : c'est ce pour quoi l'application existe. */}

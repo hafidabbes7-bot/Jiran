@@ -25,6 +25,7 @@ import type {
   QueuedPost,
   ReportReason,
   Session,
+  Story,
 } from '../domain/types';
 import { API_URL } from './authService';
 import { RepositoryError, type JiranRepository, type SosResult } from './repository';
@@ -97,7 +98,33 @@ export class HttpRepository implements JiranRepository {
     return posts.map(toPost);
   }
 
-  async createPost(input: { category: Category; text: string }): Promise<void> {
+  async uploadPhoto(base64: string, mime: string): Promise<string> {
+    const data = await this.request('POST', '/photos', { data: base64, mime });
+    return String(data.id);
+  }
+
+  photoUri(photoId: string): string {
+    // Le jeton voyage dans l'adresse : une balise <img> ne sait pas poser
+    // d'en-tête. Il ne sort pas du serveur de Jiran, qui est aussi celui qui
+    // sert l'application.
+    return `${API_URL}/photos/${encodeURIComponent(photoId)}?t=${encodeURIComponent(this.token ?? '')}`;
+  }
+
+  async loadStories(): Promise<Story[]> {
+    const data = await this.request('GET', '/stories');
+    return (Array.isArray(data.stories) ? data.stories : []).map(toStory);
+  }
+
+  async addStory(input: { photoId?: string; text?: string }): Promise<Story> {
+    const data = await this.request('POST', '/stories', input);
+    return toStory(data.story);
+  }
+
+  async removeStory(storyId: string): Promise<void> {
+    await this.request('DELETE', `/stories/${encodeURIComponent(storyId)}`);
+  }
+
+  async createPost(input: { category: Category; text: string; photoId?: string }): Promise<void> {
     await this.request('POST', '/posts', input);
   }
 
@@ -501,6 +528,17 @@ export class HttpRepository implements JiranRepository {
   }
 }
 
+function toStory(raw: JsonObject): Story {
+  return {
+    id: String(raw.id),
+    authorName: String(raw.authorName),
+    authorIsMe: Boolean(raw.authorIsMe),
+    photoId: raw.photoId ? String(raw.photoId) : undefined,
+    text: raw.text ? String(raw.text) : undefined,
+    createdAt: String(raw.createdAt ?? ''),
+  };
+}
+
 function toChatMessage(raw: JsonObject): ChatMessage {
   return {
     id: String(raw.id),
@@ -633,6 +671,7 @@ function toPost(raw: JsonObject): Post {
     id: String(raw.id),
     authorName: String(raw.authorName),
     authorIsMe: Boolean(raw.authorIsMe),
+    photoId: raw.photoId ? String(raw.photoId) : undefined,
     category: String(raw.category) as Category,
     text: String(raw.text),
     neighborhoodId: String(raw.neighborhoodId),

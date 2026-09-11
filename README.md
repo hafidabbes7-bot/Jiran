@@ -143,6 +143,21 @@ Toujours à faire : les autres jeux (échecs, dames, belote, dominos), le
 classement mensuel du quartier, et les réglages de notifications par catégorie
 (§4.17).
 
+## Photos et stories
+
+Une publication peut porter une photo, et une story — une photo, un mot, ou les
+deux — vit 24 heures avant de disparaître. Trois choix à connaître :
+
+ — la photo est réduite à 1280 px et ré-encodée **sur le téléphone** avant
+   l'envoi : faire monter plusieurs méga-octets sur un réseau algérien pour les
+   jeter ensuite, ce serait payer deux fois ;
+ — les octets sont stockés dans la base, comme le reste. Un disque local ne
+   survivrait pas au redémarrage de l'hébergement, et un stockage externe
+   demanderait un compte et une facture avant le premier essai ;
+ — les images ne sont pas relues automatiquement (§7.3). Elles ne sortent pas du
+   quartier, se signalent comme une publication, et la règle des trois
+   signalements les masque de la même façon. L'écran le dit.
+
 ## Ce qui arrive sans qu'on touche à l'écran
 
 Le fil, les alertes et les SOS se rafraîchissent toutes les 12 secondes tant que

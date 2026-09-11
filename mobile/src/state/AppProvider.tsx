@@ -19,6 +19,7 @@ import type {
   QueuedPost,
   ReportReason,
   Session,
+  Story,
 } from '../domain/types';
 import { AppState } from 'react-native';
 
@@ -37,6 +38,8 @@ const REFRESH_MS = 12_000;
 export interface PublishInput {
   category: Category;
   text: string;
+  /** Photo déjà envoyée au serveur, s'il y en a une. */
+  photoId?: string;
 }
 
 interface AppValue {
@@ -54,6 +57,10 @@ interface AppValue {
   neighbors: Neighbor[];
   /** Alertes SOS en cours qui concernent ce voisin (§4.16). */
   activeSos: ActiveSos[];
+  /** Stories du quartier, moins de 24 heures. */
+  stories: Story[];
+  publishStory: (input: { photoId?: string; text?: string }) => Promise<void>;
+  removeStory: (storyId: string) => Promise<void>;
   /** Chargement du fil en cours (premier affichage ou rafraîchissement). */
   loading: boolean;
   /** Dernière erreur de chargement, à montrer sans vider le fil affiché. */
@@ -107,6 +114,7 @@ export function AppProvider({
   const [posts, setPosts] = useState<Post[]>([]);
   const [neighbors, setNeighbors] = useState<Neighbor[]>([]);
   const [activeSos, setActiveSos] = useState<ActiveSos[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
 
@@ -135,14 +143,16 @@ export function AppProvider({
     async (options?: { session?: Session; allowRepair?: boolean }) => {
       setLoading(true);
       try {
-        const [feed, people, sos] = await Promise.all([
+        const [feed, people, sos, récits] = await Promise.all([
           repository.loadFeed(),
           repository.loadNeighbors(),
           repository.loadActiveSos(),
+          repository.loadStories(),
         ]);
         setPosts(feed);
         setNeighbors(people);
         setActiveSos(sos);
+        setStories(récits);
         setLoadFailed(false);
       } catch (error) {
         const kind = error instanceof RepositoryError ? error.kind : 'network';
@@ -298,6 +308,22 @@ export function AppProvider({
     [repository, refresh]
   );
 
+  const publishStory = useCallback(
+    async (input: { photoId?: string; text?: string }) => {
+      await repository.addStory(input);
+      await refresh();
+    },
+    [repository, refresh]
+  );
+
+  const removeStory = useCallback(
+    async (storyId: string) => {
+      await repository.removeStory(storyId);
+      await refresh();
+    },
+    [repository, refresh]
+  );
+
   const toggleLike = useCallback(
     async (postId: string) => {
       const post = posts.find((item) => item.id === postId);
@@ -419,6 +445,9 @@ export function AppProvider({
       posts,
       neighbors,
       activeSos,
+      stories,
+      publishStory,
+      removeStory,
       loading,
       loadFailed,
       register,
@@ -448,6 +477,9 @@ export function AppProvider({
       posts,
       neighbors,
       activeSos,
+      stories,
+      publishStory,
+      removeStory,
       loading,
       loadFailed,
       register,
