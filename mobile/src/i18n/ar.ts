@@ -80,6 +80,15 @@ export const ar: Strings = {
       'بدون إذن تحديد الموقع لا يمكن التحقق من حيّك. يمكنك السماح بذلك من إعدادات الهاتف.',
     positionUnavailable: 'تعذّر تحديد موقعك الآن. أعد المحاولة في الخارج أو قرب نافذة.',
     mustVerify: 'أكّد موقعك للمتابعة.',
+    neighborhoodSearchPlaceholder: 'ابحث عن بلديتك أو ولايتك',
+    neighborhoodNoMatch: 'لا توجد بلدية تطابق « {query} ».',
+    neighborhoodMore: '+{count} بلديات أخرى — دقّق بحثك.',
+    detectNeighborhood: '📍 ابحث عن حيّي تلقائياً',
+    positionUncovered:
+      '❌ جيران لا يغطي حيّك بعد. أقرب حي، {neighborhood}، يبعد {distance}.',
+    continueUnverified: 'المتابعة دون تأكيد الموقع',
+    unverifiedNotice:
+      '⚠️ سيبقى حسابك « غير مؤكد » ما دام حيّك غير مفتوح. راسلنا لإضافته.',
     continue: 'متابعة',
 
     introTitle: 'ثلاثة أشياء يجب معرفتها',

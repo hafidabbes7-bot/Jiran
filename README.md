@@ -102,6 +102,20 @@ cd server && npm test        # vérification, fil, modération, alertes
 cd mobile && npm test        # filtre de texte, géolocalisation, téléphone
 ```
 
+## Couverture du territoire
+
+Les 86 quartiers de `mobile/src/data/neighborhoods.ts` couvrent les 58 wilayas :
+les communes d'Alger et de Béjaïa au quartier près, le chef-lieu partout
+ailleurs. C'est volontairement grossier hors de ces deux wilayas — un chef-lieu
+se découpera en quartiers quand il y aura assez de voisins pour que ça ait un
+sens. Personne ne doit rester sans entrée : un voisin absent de la liste ne peut
+pas s'inscrire. Quand sa commune manque quand même, l'inscription reste possible
+sans vérification de position, et le compte est alors marqué « non vérifié ».
+
+Ajouter une commune, c'est ajouter la même entrée dans les deux copies —
+`mobile/src/data/neighborhoods.ts` et `server/src/content/neighborhoods.ts` — et
+dans la page d'essai `essai/jiran-essai.html`.
+
 Trois fichiers existent en double entre les deux paquets — le découpage des
 quartiers, la liste de mots interdits et le filtre de texte. L'application en a
 besoin hors ligne, le serveur en a besoin comme autorité. Un test du serveur

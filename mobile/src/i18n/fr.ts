@@ -79,6 +79,15 @@ export const fr = {
       "Sans autorisation de localisation, ton quartier ne peut pas être vérifié. Tu peux l'autoriser dans les réglages du téléphone.",
     positionUnavailable: 'Position introuvable pour le moment. Réessaie dehors ou près d’une fenêtre.',
     mustVerify: 'Confirme ta position pour continuer.',
+    neighborhoodSearchPlaceholder: 'Chercher ta commune ou ta wilaya',
+    neighborhoodNoMatch: 'Aucune commune ne correspond à « {query} ».',
+    neighborhoodMore: '+{count} autres communes — précise ta recherche.',
+    detectNeighborhood: '📍 Trouver mon quartier automatiquement',
+    positionUncovered:
+      '❌ Jiran ne couvre pas encore ton quartier. Le plus proche, {neighborhood}, est à {distance}.',
+    continueUnverified: 'Continuer sans vérifier ma position',
+    unverifiedNotice:
+      '⚠️ Ton compte restera « non vérifié » tant que ton quartier n’est pas ouvert. Écris-nous pour l’ajouter.',
     continue: 'Continuer',
 
     introTitle: 'Trois choses à savoir',

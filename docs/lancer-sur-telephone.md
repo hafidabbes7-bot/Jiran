@@ -310,10 +310,11 @@ C'est le but de l'exercice — voici ce qu'un navigateur ne pouvait pas montrer 
 
 - [ ] **L'inscription** : le code à 6 chiffres se remplit tout seul (grâce à
       `EXPOSE_DEV_CODE`). Il apparaît aussi dans le terminal du serveur.
-- [ ] **« Confirmer ma position »** : Android doit afficher sa vraie demande
-      d'autorisation, **en français**, avec le texte de Jiran. Vérifiez que la
-      position est acceptée si vous êtes dans un des quartiers de la liste — et
-      qu'elle propose le bon quartier si vous en choisissez un autre.
+- [ ] **« Trouver mon quartier automatiquement »** : Android doit afficher sa
+      vraie demande d'autorisation, **en français**, avec le texte de Jiran. Le
+      quartier doit ensuite se sélectionner tout seul. Vérifiez aussi
+      « Confirmer ma position » sur un quartier choisi à la main : elle doit
+      proposer le bon quartier si vous vous êtes trompé de ligne.
 - [ ] **Les règles du quartier** : le bouton reste bien verrouillé 3 secondes.
 - [ ] **La bascule en arabe** (bouton ع en haut) : toute l'interface doit
       passer de droite à gauche, y compris les puces de catégories et la barre
@@ -363,7 +364,8 @@ sans lui, aucune notification n'est possible sur iPhone.
 | L'application s'ouvre mais affiche « Serveur injoignable » | L'adresse dans `mobile/.env` est fausse, le téléphone n'est pas sur le même Wi-Fi, ou le pare-feu de Windows bloque le port 4000 — autorisez Node.js quand Windows le demande |
 | Le code de vérification n'arrive pas | Normal : aucun SMS n'est envoyé en développement. Le code est dans le terminal du serveur, et rempli automatiquement si `EXPOSE_DEV_CODE=true` |
 | « Numéro algérien invalide » | Le numéro doit commencer par 05, 06 ou 07 et faire 10 chiffres |
-| La position est refusée | Vous n'êtes pas dans un des quartiers de la liste. L'application propose alors le plus proche : acceptez sa proposition |
+| La position est refusée | Vous n'êtes pas dans le quartier choisi. L'application propose alors le bon : acceptez sa proposition |
+| « Jiran ne couvre pas encore ton quartier » | Votre commune n'est pas dans la liste. Vous pouvez entrer sans vérification — le compte reste « non vérifié » — puis ajoutez la commune dans `mobile/src/data/neighborhoods.ts` et `server/src/content/neighborhoods.ts` |
 | Gradle échoue sur un manque de mémoire | Fermez Android Studio pendant la compilation ; il n'a pas besoin d'être ouvert |
 
 ---

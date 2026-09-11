@@ -16,7 +16,7 @@ import { Field } from '../../components/Field';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import type { AuthService, Channel, VerifiedSession } from '../../data/authService';
 import { NEIGHBORHOODS, findNeighborhood } from '../../data/neighborhoods';
-import { checkPosition } from '../../domain/location';
+import { checkPosition, findCoverage } from '../../domain/location';
 import { isValidAlgerianMobile } from '../../domain/phone';
 import { formatDistance } from '../../domain/time';
 import type { Language, Neighborhood, Session } from '../../domain/types';
@@ -42,8 +42,22 @@ type PositionStatus =
   | { kind: 'checking' }
   | { kind: 'verified' }
   | { kind: 'too-far'; distance: number; suggestion?: Neighborhood }
+  /** Aucun quartier connu ne couvre la position : la liste est encore partielle. */
+  | { kind: 'uncovered'; distance: number; nearest?: Neighborhood }
+  /** Le voisin a choisi d'entrer sans vérification, son quartier n'étant pas couvert. */
+  | { kind: 'accepted' }
   | { kind: 'denied' }
   | { kind: 'unavailable' };
+
+/** Lignes de quartier affichées d'un coup — au-delà, la recherche prend le relais. */
+const VISIBLE_NEIGHBORHOODS = 12;
+
+/** Compare sans se soucier des accents ni de la casse : « bejaia » trouve Béjaïa. */
+const fold = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 
 /**
  * Parcours d'inscription en 5 étapes (§4.1). La dernière — les règles du
@@ -75,6 +89,7 @@ export function OnboardingFlow({
   const [errors, setErrors] = useState<{ firstName?: string; phone?: string }>({});
   const [neighborhoodId, setNeighborhoodId] = useState(NEIGHBORHOODS[0].id);
   const [building, setBuilding] = useState('');
+  const [neighborhoodQuery, setNeighborhoodQuery] = useState('');
   const [position, setPosition] = useState<PositionStatus>({ kind: 'idle' });
   const [submitting, setSubmitting] = useState(false);
 
@@ -82,6 +97,31 @@ export function OnboardingFlow({
     () => findNeighborhood(neighborhoodId) ?? NEIGHBORHOODS[0],
     [neighborhoodId]
   );
+
+  // 86 quartiers ne tiennent pas dans une liste qu'on parcourt : on filtre sur
+  // le nom et sur la wilaya, dans les deux langues.
+  const matching = useMemo(() => {
+    const query = neighborhoodQuery.trim();
+    if (!query) return NEIGHBORHOODS;
+    const needle = fold(query);
+    return NEIGHBORHOODS.filter((item) =>
+      [item.name, item.nameAr, item.wilaya, item.wilayaAr].some((field) =>
+        fold(field).includes(needle)
+      )
+    );
+  }, [neighborhoodQuery]);
+
+  // Le quartier choisi reste visible même s'il sort du filtre : sans ça, on ne
+  // voit plus ce qu'on a sélectionné.
+  const visible = useMemo(() => {
+    const head = matching.slice(0, VISIBLE_NEIGHBORHOODS);
+    return head.some((item) => item.id === neighborhoodId) ? head : [neighborhood, ...head];
+  }, [matching, neighborhood, neighborhoodId]);
+
+  const selectNeighborhood = useCallback((id: string) => {
+    setNeighborhoodId(id);
+    setPosition({ kind: 'idle' });
+  }, []);
 
   const chooseLanguage = (next: Language) => {
     setLanguage(next);
@@ -234,16 +274,62 @@ export function OnboardingFlow({
         accuracy: Location.Accuracy.Balanced,
       });
       const result = checkPosition(reading.coords, neighborhood, NEIGHBORHOODS);
+      if (result.verified) {
+        setPosition({ kind: 'verified' });
+        return;
+      }
 
+      // Hors du quartier déclaré : soit le voisin s'est trompé de ligne et un
+      // autre quartier le couvre, soit sa commune n'est pas encore dans la
+      // liste — deux situations très différentes à l'écran.
+      const coverage = findCoverage(reading.coords, NEIGHBORHOODS);
       setPosition(
-        result.verified
-          ? { kind: 'verified' }
-          : { kind: 'too-far', distance: result.distanceMeters, suggestion: result.suggestion }
+        coverage.neighborhood
+          ? {
+              kind: 'too-far',
+              distance: result.distanceMeters,
+              suggestion: coverage.neighborhood,
+            }
+          : {
+              kind: 'uncovered',
+              distance: coverage.distanceMeters,
+              nearest: coverage.nearest,
+            }
       );
     } catch {
       setPosition({ kind: 'unavailable' });
     }
   }, [neighborhood]);
+
+  /**
+   * Chemin le plus court : on part de la position et on en déduit le quartier,
+   * au lieu de demander au voisin de le trouver dans une liste de 86 lignes.
+   */
+  const detectNeighborhood = useCallback(async () => {
+    setPosition({ kind: 'checking' });
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (permission.status !== Location.PermissionStatus.GRANTED) {
+        setPosition({ kind: 'denied' });
+        return;
+      }
+
+      const reading = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const coverage = findCoverage(reading.coords, NEIGHBORHOODS);
+      if (!coverage.neighborhood) {
+        setPosition({ kind: 'uncovered', distance: coverage.distanceMeters, nearest: coverage.nearest });
+        return;
+      }
+
+      setNeighborhoodId(coverage.neighborhood.id);
+      setNeighborhoodQuery('');
+      setPosition({ kind: 'verified' });
+    } catch {
+      setPosition({ kind: 'unavailable' });
+    }
+  }, []);
 
   const rules = useRulesCountdown(step === 5);
 
@@ -477,31 +563,62 @@ export function OnboardingFlow({
               <Text style={[styles.heading, rtl.text]}>{s.onboarding.locationTitle}</Text>
               <Text style={[styles.sub, rtl.text]}>{s.onboarding.locationSubtitle}</Text>
 
-              <Text style={[styles.label, rtl.text]}>{s.onboarding.neighborhoodLabel}</Text>
-              <View style={styles.neighborhoodList}>
-                {NEIGHBORHOODS.map((item) => {
-                  const active = item.id === neighborhoodId;
-                  return (
-                    <Pressable
-                      key={item.id}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: active }}
-                      onPress={() => {
-                        setNeighborhoodId(item.id);
-                        setPosition({ kind: 'idle' });
-                      }}
-                      style={[styles.neighborhoodRow, active && styles.neighborhoodRowActive]}
-                    >
-                      <Text style={[styles.neighborhoodName, rtl.text]}>
-                        {localizedName(item)}
-                      </Text>
-                      <Text style={[styles.neighborhoodWilaya, rtl.text]}>
-                        {language === 'ar' ? item.wilayaAr : item.wilaya}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
+              <PrimaryButton
+                label={
+                  position.kind === 'checking'
+                    ? s.onboarding.positionChecking
+                    : s.onboarding.detectNeighborhood
+                }
+                loading={position.kind === 'checking'}
+                onPress={detectNeighborhood}
+              />
+
+              <View style={styles.spaced}>
+                <Field
+                  label={s.onboarding.neighborhoodLabel}
+                  placeholder={s.onboarding.neighborhoodSearchPlaceholder}
+                  value={neighborhoodQuery}
+                  onChangeText={setNeighborhoodQuery}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
               </View>
+
+              {matching.length === 0 ? (
+                <Text style={[styles.listHint, rtl.text]}>
+                  {format(s.onboarding.neighborhoodNoMatch, { query: neighborhoodQuery.trim() })}
+                </Text>
+              ) : (
+                <View style={styles.neighborhoodList}>
+                  {visible.map((item) => {
+                    const active = item.id === neighborhoodId;
+                    return (
+                      <Pressable
+                        key={item.id}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        onPress={() => selectNeighborhood(item.id)}
+                        style={[styles.neighborhoodRow, active && styles.neighborhoodRowActive]}
+                      >
+                        <Text style={[styles.neighborhoodName, rtl.text]}>
+                          {localizedName(item)}
+                        </Text>
+                        <Text style={[styles.neighborhoodWilaya, rtl.text]}>
+                          {language === 'ar' ? item.wilayaAr : item.wilaya}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+
+              {matching.length > VISIBLE_NEIGHBORHOODS ? (
+                <Text style={[styles.listHint, rtl.text]}>
+                  {format(s.onboarding.neighborhoodMore, {
+                    count: matching.length - VISIBLE_NEIGHBORHOODS,
+                  })}
+                </Text>
+              ) : null}
 
               <Field
                 label={s.onboarding.buildingLabel}
@@ -554,6 +671,29 @@ export function OnboardingFlow({
                 </View>
               ) : null}
 
+              {position.kind === 'uncovered' ? (
+                <View>
+                  <Text style={[styles.positionError, rtl.text]}>
+                    {format(s.onboarding.positionUncovered, {
+                      neighborhood: position.nearest ? localizedName(position.nearest) : '—',
+                      distance: formatDistance(position.distance, language),
+                    })}
+                  </Text>
+                  <PrimaryButton
+                    label={s.onboarding.continueUnverified}
+                    tone="ghost"
+                    onPress={() => setPosition({ kind: 'accepted' })}
+                    style={styles.spaced}
+                  />
+                </View>
+              ) : null}
+
+              {position.kind === 'accepted' ? (
+                <Text style={[styles.positionError, rtl.text]}>
+                  {s.onboarding.unverifiedNotice}
+                </Text>
+              ) : null}
+
               {position.kind === 'denied' ? (
                 <Text style={[styles.positionError, rtl.text]}>
                   {s.onboarding.positionDenied}
@@ -568,11 +708,11 @@ export function OnboardingFlow({
 
               <PrimaryButton
                 label={s.onboarding.continue}
-                disabled={position.kind !== 'verified'}
+                disabled={position.kind !== 'verified' && position.kind !== 'accepted'}
                 onPress={() => setStep(4)}
                 style={styles.spaced}
               />
-              {position.kind !== 'verified' ? (
+              {position.kind !== 'verified' && position.kind !== 'accepted' ? (
                 <Text style={[styles.hint, rtl.text]}>{s.onboarding.mustVerify}</Text>
               ) : null}
             </View>
@@ -695,6 +835,11 @@ const styles = StyleSheet.create({
   neighborhoodName: { fontSize: fontSizes.body, color: colors.ink, fontWeight: '600' },
   neighborhoodWilaya: { fontSize: fontSizes.caption, color: colors.muted, marginTop: 2 },
   spaced: { marginTop: spacing.md },
+  listHint: {
+    marginBottom: spacing.md,
+    fontSize: fontSizes.small,
+    color: colors.muted,
+  },
   channelBlock: { marginBottom: spacing.md },
   channelRow: { gap: spacing.sm },
   channelButton: {

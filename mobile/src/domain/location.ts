@@ -56,3 +56,48 @@ export function checkPosition(
     suggestion: nearest.id === declared.id ? undefined : nearest,
   };
 }
+
+export interface Coverage {
+  /** Quartier couvrant réellement la position, s'il y en a un. */
+  neighborhood?: Neighborhood;
+  /** Quartier le plus proche, couvrant ou non — jamais indéfini si la liste ne l'est pas. */
+  nearest?: Neighborhood;
+  /** Distance jusqu'au plus proche, en mètres. */
+  distanceMeters: number;
+}
+
+/**
+ * Cherche le quartier où se trouve vraiment une position, sans rien déclarer
+ * au préalable : c'est ce qui permet de proposer son quartier à un voisin au
+ * lieu de lui faire parcourir la liste.
+ *
+ * Un quartier « couvre » la position si elle tombe dans son rayon. Aucune
+ * couverture ne veut pas dire fraude : la liste des quartiers est encore
+ * partielle (§7.2), et un voisin d'une commune absente doit pouvoir le
+ * comprendre plutôt que rester bloqué sans explication.
+ */
+export function findCoverage(
+  position: { latitude: number; longitude: number },
+  all: Neighborhood[]
+): Coverage {
+  let nearest: Neighborhood | undefined;
+  let nearestDistance = Infinity;
+  let covering: Neighborhood | undefined;
+  let coveringDistance = Infinity;
+
+  for (const candidate of all) {
+    const distance = distanceMeters(position, candidate);
+    if (distance < nearestDistance) {
+      nearest = candidate;
+      nearestDistance = distance;
+    }
+    // Les rayons se chevauchent par endroits : on retient le quartier dont on
+    // est le plus proche parmi ceux qui couvrent, pas le premier de la liste.
+    if (distance <= candidate.radiusMeters && distance < coveringDistance) {
+      covering = candidate;
+      coveringDistance = distance;
+    }
+  }
+
+  return { neighborhood: covering, nearest, distanceMeters: nearestDistance };
+}
