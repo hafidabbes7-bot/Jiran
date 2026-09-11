@@ -13,6 +13,12 @@ import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
 import { CategoryChips, FILTERS } from '../components/CategoryChips';
+import {
+  AlertBanner,
+  WelcomeCard,
+  latestAlert,
+  newcomer,
+} from '../components/FeedHighlights';
 import { PostCard } from '../components/PostCard';
 import { ReportSheet } from '../components/ReportSheet';
 import { useToast } from '../components/Toast';
@@ -31,7 +37,7 @@ type Props = CompositeScreenProps<
 export function FeedScreen({ navigation }: Props) {
   const { s, format, language, setLanguage, rtl } = useI18n();
   const localizedName = useLocalizedName();
-  const { session, posts, toggleLike, report, updateLanguage, refresh, loading, loadFailed } =
+  const { session, posts, neighbors, toggleLike, report, updateLanguage, refresh, loading, loadFailed } =
     useApp();
   const toast = useToast();
 
@@ -46,6 +52,10 @@ export function FeedScreen({ navigation }: Props) {
     if (!neighborhood?.twinnedWith) return undefined;
     return findNeighborhood(neighborhood.twinnedWith);
   }, [neighborhood]);
+
+  // Mises en avant du haut de fil : l'alerte du moment, et le dernier arrivé.
+  const alerte = useMemo(() => latestAlert(posts), [posts]);
+  const nouveau = useMemo(() => newcomer(neighbors), [neighbors]);
 
   const visiblePosts = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -134,12 +144,29 @@ export function FeedScreen({ navigation }: Props) {
             <View style={styles.chips}>
               <CategoryChips options={FILTERS} selected={filter} onSelect={setFilter} />
             </View>
+
+            {/* L'alerte passe avant tout, y compris avant la carte de
+                bienvenue : c'est ce pour quoi l'application existe. */}
+            {alerte ? (
+              <AlertBanner
+                post={alerte}
+                onPress={() => navigation.navigate('PostDetail', { postId: alerte.id })}
+              />
+            ) : null}
+
+            {nouveau ? <WelcomeCard neighbor={nouveau} /> : null}
           </View>
         }
         ListEmptyComponent={
-          <Text style={styles.empty}>
-            {filter === 'tout' && !query ? s.feed.empty : s.feed.emptyFiltered}
-          </Text>
+          <View>
+            <Text style={styles.empty}>
+              {filter === 'tout' && !query ? s.feed.empty : s.feed.emptyFiltered}
+            </Text>
+            {/* Un fil vide sans mode d'emploi ne donne pas envie d'écrire. */}
+            {filter === 'tout' && !query ? (
+              <Text style={styles.emptyHint}>{s.feed.firstPostHint}</Text>
+            ) : null}
+          </View>
         }
         renderItem={({ item }) => (
           <PostCard
@@ -214,6 +241,14 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: fontSizes.small,
     marginTop: spacing.xxl,
+  },
+  emptyHint: {
+    textAlign: 'center',
+    color: colors.muted,
+    fontSize: fontSizes.small,
+    lineHeight: 19,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
   fab: {
     position: 'absolute',

@@ -241,6 +241,10 @@ describe('fil de quartier partagé', () => {
     assert.ok(noms.includes('Autre'));
     assert.equal(noms.includes('Moi'), false);
     assert.ok(autre);
+
+    // La date d'arrivée sert à souhaiter la bienvenue aux nouveaux (§4.2).
+    const voisin = data.neighbors.find((n: any) => n.name === 'Autre');
+    assert.ok(!Number.isNaN(Date.parse(voisin.joinedAt)));
   });
 
   it('enchaîne une réponse et son décompte', async () => {

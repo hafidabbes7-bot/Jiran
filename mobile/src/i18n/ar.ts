@@ -112,6 +112,12 @@ export const ar: Strings = {
     searchPlaceholder: 'ابحث عن منشور أو جار',
     empty: 'لا جديد في الحي حالياً.',
     offline: 'تعذّر الاتصال بالخادم — اسحب للأسفل لإعادة المحاولة.',
+    alertBannerMeta: '{time} · أبلغ عنه {author}',
+    welcomeTitle: 'رحّب بـ {name} !',
+    welcomeSubtitle: 'جار جديد · وصل هذا الأسبوع',
+    welcomeSubtitleBuilding: 'جار جديد · {building} · وصل هذا الأسبوع',
+    firstPostHint:
+      'حيّك ينطلق. انشر أول رسالة: طلب مساعدة، إعلان، أو معلومة مفيدة.',
     emptyFiltered: 'لا يوجد منشور في هذه الفئة.',
     twinnedNotice: '{neighborhood} يتشارك خيطه مع {twin} إلى حين بلوغ {threshold} جار موثّق.',
     origin: '{neighborhood}',

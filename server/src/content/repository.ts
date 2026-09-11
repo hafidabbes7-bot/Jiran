@@ -112,14 +112,22 @@ export class ContentRepository {
     return member;
   }
 
-  /** Voisins du même fil, pour la liste des personnes de confiance du SOS. */
-  neighbors(member: Member): { id: string; name: string; building?: string }[] {
+  /**
+   * Voisins du même fil : liste de confiance du SOS, et repérage des nouveaux
+   * arrivants à qui souhaiter la bienvenue.
+   */
+  neighbors(member: Member): {
+    id: string;
+    name: string;
+    building?: string;
+    joinedAt: string;
+  }[] {
     const ids = sharedFeedNeighborhoodIds(member.neighborhoodId);
     const placeholders = ids.map(() => '?').join(', ');
 
     const rows = this.db
       .prepare(
-        `SELECT id, first_name, building FROM members
+        `SELECT id, first_name, building, joined_at FROM members
          WHERE neighborhood_id IN (${placeholders}) AND id != ?
          ORDER BY first_name`
       )
@@ -129,6 +137,7 @@ export class ContentRepository {
       id: String(row.id),
       name: String(row.first_name),
       building: row.building ?? undefined,
+      joinedAt: String(row.joined_at),
     }));
   }
 

@@ -136,6 +136,7 @@ export class HttpRepository implements JiranRepository {
         name: String(neighbor.name),
         building: neighbor.building ? String(neighbor.building) : undefined,
         trusted: trusted.includes(String(neighbor.id)),
+        joinedAt: String(neighbor.joinedAt),
       })
     );
   }

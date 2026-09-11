@@ -39,7 +39,7 @@ remplacez-le par l'adresse de votre machine sur le réseau local
 | §3 Règles obligatoires, bouton verrouillé 3 s | ✅ `useRulesCountdown` |
 | §2 Vérification par géolocalisation | ✅ position réelle comparée au quartier déclaré, correction proposée si erreur |
 | §2 Quartiers nommés + jumelage | ✅ fil partagé entre cités jumelées, origine affichée sur chaque publication |
-| §4.2 Fil de quartier | ✅ recherche, filtres par catégorie, likes, réponses |
+| §4.2 Fil de quartier | ✅ recherche, filtres par catégorie, likes, réponses, bannière d'alerte prioritaire, carte de bienvenue au dernier arrivé |
 | §4.5 Alertes | ✅ fil dédié aux publications « Sécurité » |
 | §3 Filtre de texte | ✅ dans l'application pendant la frappe, et **appliqué par le serveur** qui refuse la publication |
 | §3 Blocage automatique par signalements | ✅ tenu par le serveur : 3 voisins **réellement distincts** → 3 jours ; récidive → définitif |

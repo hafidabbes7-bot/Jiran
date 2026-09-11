@@ -120,4 +120,6 @@ export interface Neighbor {
   building?: string;
   /** Voisin désigné comme personne de confiance pour l'alerte SOS. */
   trusted: boolean;
+  /** Date d'arrivée dans le quartier, pour repérer les nouveaux venus. */
+  joinedAt: string;
 }

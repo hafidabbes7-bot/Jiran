@@ -111,6 +111,12 @@ export const fr = {
     searchPlaceholder: 'Chercher une publication ou un voisin',
     empty: 'Rien de neuf dans le quartier pour le moment.',
     offline: 'Serveur injoignable — tire vers le bas pour réessayer.',
+    alertBannerMeta: '{time} · signalé par {author}',
+    welcomeTitle: 'Souhaite la bienvenue à {name} !',
+    welcomeSubtitle: 'Nouveau voisin · arrivé cette semaine',
+    welcomeSubtitleBuilding: 'Nouveau voisin · {building} · arrivé cette semaine',
+    firstPostHint:
+      'Ton quartier démarre. Publie le premier message : une demande de coup de main, une annonce, ou une information utile.',
     emptyFiltered: 'Aucune publication dans cette catégorie.',
     twinnedNotice:
       '{neighborhood} partage son fil avec {twin} le temps d’atteindre {threshold} voisins vérifiés.',
