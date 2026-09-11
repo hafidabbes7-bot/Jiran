@@ -14,9 +14,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Jiran utilise ta position pour vérifier que tu habites bien dans le quartier que tu déclares, et pour joindre ta position à une alerte SOS."
-      }
+      "bundleIdentifier": "dz.jiran.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -27,9 +25,13 @@
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "dz.jiran.app",
+      "allowBackup": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,7 +40,12 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Jiran utilise ta position pour vérifier ton quartier et pour joindre ta position à une alerte SOS."
+          "locationWhenInUsePermission": "Jiran utilise ta position une seule fois à l'inscription, pour vérifier que tu habites bien dans le quartier que tu déclares, et pour joindre ta position à une alerte SOS.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "motionUsagePermission": false
         }
       ],
       [

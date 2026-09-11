@@ -56,3 +56,9 @@ jobs:
       # qu'elle compile : c'est ce qui attrape les erreurs de bundling.
       - name: Construire le paquet
         run: npm run build:check --prefix mobile
+
+      # Génère les projets Android et iOS. Sans device ni SDK, c'est ce qui
+      # vérifie que les greffons de configuration tiennent : permissions,
+      # identifiants de paquet, canal de notification.
+      - name: Générer les projets natifs
+        run: npm run prebuild:check --prefix mobile

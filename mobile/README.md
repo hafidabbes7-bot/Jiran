@@ -22,7 +22,8 @@ EXPO_PUBLIC_API_URL=http://localhost:4000 npm start
 #   puis « a » pour Android, « i » pour iOS, « w » pour le web
 npm test           # logique métier (filtre de texte, géolocalisation, téléphone)
 npm run typecheck
-npm run build:check  # prouve que l'application se construit vraiment
+npm run build:check    # prouve que l'application se construit vraiment
+npm run prebuild:check # régénère les projets Android et iOS
 ```
 
 Sur un téléphone physique, `localhost` désigne le téléphone lui-même :
@@ -48,6 +49,29 @@ remplacez-le par l'adresse de votre machine sur le réseau local
 | §7.7 Notifications d'alerte | ✅ appareil enregistré au serveur ; SOS et alertes sécurité poussés en priorité haute — reste à brancher un service d'envoi |
 | Bilingue FR / AR avec RTL | ✅ bascule immédiate, sans redémarrage |
 
+## Projets natifs
+
+`npm run prebuild:check` régénère `android/` et `ios/` à partir de `app.json`.
+Ces dossiers ne sont pas versionnés : ils se reconstruisent, et les modifier à
+la main serait perdu au prebuild suivant. Tout passe par `app.json`.
+
+Ce qui y est réglé, et vérifié dans les fichiers produits :
+
+- **Identifiant de paquet** `dz.jiran.app`, sur les deux plateformes. ⚠️ Il
+  devient **définitif à la première publication** sur les stores et ne peut
+  plus changer ensuite — à trancher en même temps que le nom (§1), tant que
+  c'est encore gratuit.
+- **Une seule autorisation demandée** : la position pendant l'utilisation. Pas
+  de position en arrière-plan, pas de capteurs de mouvement — l'application
+  n'en a pas besoin, et réclamer plus inquiète les voisins pour rien.
+- **Textes des autorisations en français**, traduits en arabe dans `locales/`.
+  Par défaut, iOS affichait des phrases anglaises génériques.
+- **Sauvegardes Android désactivées** : le jeton de session ne doit pas partir
+  dans une sauvegarde cloud, d'où il pourrait être restauré sur un autre
+  appareil.
+- **Canal de notification `alertes`**, celui que le serveur vise pour les SOS
+  et les alertes de sécurité.
+
 ## Ce qui n'est pas encore branché
 
 Ces points sont des **dépendances externes**, pas des oublis ; ils sont signalés
@@ -65,6 +89,11 @@ dans le code et dans l'interface là où l'utilisateur pourrait s'y tromper.
   — et l'écran SOS le dit, plutôt que d'afficher une confirmation trompeuse.
   Sur Android, les notifications distantes demandent un *development build* :
   elles ne fonctionnent plus dans Expo Go depuis le SDK 53.
+- **Rien n'a encore tourné sur un vrai téléphone.** Les parcours ont été
+  vérifiés via l'export web, et les projets natifs sont générés et relus, mais
+  la géolocalisation, les notifications et le rendu réel restent à confirmer
+  sur un appareil : c'est la prochaine étape de vérification, avant toute
+  nouvelle fonctionnalité.
 - **Modération de texte locale seulement** : la liste de mots est un premier
   filet contre l'insulte évidente, elle ne remplace pas la modération IA
   côté serveur demandée au §7.3.
