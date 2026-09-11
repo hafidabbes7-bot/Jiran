@@ -1,4 +1,5 @@
 import type {
+  ActiveSos,
   Category,
   ChatMessage,
   Comment,
@@ -72,6 +73,9 @@ export interface JiranRepository {
     neighborIds: string[],
     position?: { latitude: number; longitude: number }
   ): Promise<SosResult>;
+
+  /** Alertes SOS en cours qui concernent ce voisin — les siennes comprises. */
+  loadActiveSos(): Promise<ActiveSos[]>;
 
   /** Annule un SOS : les mêmes voisins sont prévenus que c'est une fausse alerte. */
   cancelSos(alertId: string): Promise<void>;

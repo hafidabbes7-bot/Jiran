@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 
 import type {
+  ActiveSos,
   Category,
   Comment,
   Game,
@@ -19,8 +20,19 @@ import type {
   ReportReason,
   Session,
 } from '../domain/types';
+import { AppState } from 'react-native';
+
 import { registerForPush } from '../data/pushRegistration';
 import { RepositoryError, type JiranRepository, type SosResult } from '../data/repository';
+
+/**
+ * Intervalle de rafraîchissement du fil, en millisecondes.
+ *
+ * Douze secondes : assez court pour qu'un message entre voisins arrive sans
+ * qu'on ait à tirer l'écran, assez long pour ne pas vider la batterie ni
+ * assommer un hébergement gratuit.
+ */
+const REFRESH_MS = 12_000;
 
 export interface PublishInput {
   category: Category;
@@ -40,6 +52,8 @@ interface AppValue {
   session: Session | null;
   posts: Post[];
   neighbors: Neighbor[];
+  /** Alertes SOS en cours qui concernent ce voisin (§4.16). */
+  activeSos: ActiveSos[];
   /** Chargement du fil en cours (premier affichage ou rafraîchissement). */
   loading: boolean;
   /** Dernière erreur de chargement, à montrer sans vider le fil affiché. */
@@ -92,6 +106,7 @@ export function AppProvider({
   const [session, setSession] = useState<Session | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [neighbors, setNeighbors] = useState<Neighbor[]>([]);
+  const [activeSos, setActiveSos] = useState<ActiveSos[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
 
@@ -120,12 +135,14 @@ export function AppProvider({
     async (options?: { session?: Session; allowRepair?: boolean }) => {
       setLoading(true);
       try {
-        const [feed, people] = await Promise.all([
+        const [feed, people, sos] = await Promise.all([
           repository.loadFeed(),
           repository.loadNeighbors(),
+          repository.loadActiveSos(),
         ]);
         setPosts(feed);
         setNeighbors(people);
+        setActiveSos(sos);
         setLoadFailed(false);
       } catch (error) {
         const kind = error instanceof RepositoryError ? error.kind : 'network';
@@ -215,6 +232,36 @@ export function AppProvider({
   );
 
   const signOut = forgetSession;
+
+  /**
+   * Rafraîchissement périodique du fil et des alertes.
+   *
+   * Sans lui, une publication d'un voisin n'apparaissait qu'en tirant l'écran
+   * vers le bas — et un SOS, jamais. Les notifications ne suffisent pas : tant
+   * qu'aucun service de remise n'est branché, l'application est la seule à
+   * pouvoir prévenir.
+   *
+   * On ne demande rien quand l'application est en arrière-plan, et on
+   * rafraîchit tout de suite au retour à l'écran.
+   */
+  useEffect(() => {
+    if (!session) return;
+
+    const timer = setInterval(() => {
+      if (AppState.currentState === 'active') refresh();
+    }, REFRESH_MS);
+
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+
+    return () => {
+      clearInterval(timer);
+      subscription.remove();
+    };
+    // `session` ne sert qu'à savoir s'il y a quelqu'un de connecté : se lier à
+    // l'objet entier relancerait l'effet à chaque rafraîchissement.
+  }, [session?.token, refresh]);
 
   const move = useCallback(
     async (neighborhoodId: string, building?: string, locationVerified = true) => {
@@ -371,6 +418,7 @@ export function AppProvider({
       session,
       posts,
       neighbors,
+      activeSos,
       loading,
       loadFailed,
       register,
@@ -399,6 +447,7 @@ export function AppProvider({
       session,
       posts,
       neighbors,
+      activeSos,
       loading,
       loadFailed,
       register,

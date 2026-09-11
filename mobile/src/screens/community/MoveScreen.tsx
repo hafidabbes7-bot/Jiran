@@ -66,7 +66,7 @@ export function MoveScreen({ navigation }: Props) {
     if (!needle) return NEIGHBORHOODS;
     const folded = fold(needle);
     return NEIGHBORHOODS.filter((item) =>
-      [item.name, item.nameAr, item.wilaya, item.wilayaAr].some((field) =>
+      [item.name, item.nameAr, item.daira, item.wilaya, item.wilayaAr].some((field) =>
         fold(field).includes(folded)
       )
     );
@@ -193,7 +193,7 @@ export function MoveScreen({ navigation }: Props) {
             <Card style={active ? styles.pillActive : undefined}>
               <Text style={[styles.title, rtl.text]}>{localizedName(item)}</Text>
               <Text style={[styles.meta, rtl.text]}>
-                {language === 'ar' ? item.wilayaAr : item.wilaya}
+                {language === 'ar' ? item.wilayaAr : `${item.daira} · ${item.wilaya}`}
               </Text>
             </Card>
           </Pressable>

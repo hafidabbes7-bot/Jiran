@@ -5,6 +5,18 @@ import type { PushMessage, PushSender } from '../push/index.js';
 import { sharedFeedNeighborhoodIds } from './neighborhoods.js';
 import type { Member } from './repository.js';
 
+/** Une alerte SOS en cours, telle qu'elle s'affiche dans l'application. */
+export interface ActiveSos {
+  id: string;
+  fromName: string;
+  building?: string;
+  /** Vrai si c'est l'alerte lancée par celui qui regarde. */
+  mine: boolean;
+  latitude?: number;
+  longitude?: number;
+  createdAt: string;
+}
+
 export interface SosResult {
   alertId: string;
   /** Voisins réellement prévenus. */
@@ -51,6 +63,9 @@ export class AlertService {
    * Les destinataires sont filtrés sur le fil du demandeur : on ne peut pas
    * faire sonner le téléphone de quelqu'un d'un autre quartier.
    */
+  /** Au-delà de deux heures, une alerte n'est plus « en cours ». */
+  private static readonly WINDOW_MS = 2 * 60 * 60 * 1000;
+
   async triggerSos(
     member: Member,
     targetIds: string[],
@@ -103,6 +118,46 @@ export class AlertService {
   }
 
   /** Fausse alerte : les mêmes voisins sont prévenus que c'est fini. */
+  /**
+   * Alertes SOS encore vivantes pour ce voisin : celles qu'on lui a adressées,
+   * et la sienne s'il en a lancé une.
+   *
+   * Le SOS ne peut pas dépendre des seules notifications : tant qu'aucun
+   * service de remise n'est branché — et même après, si le voisin a coupé les
+   * notifications ou n'a pas encore ouvert l'application — l'alerte doit se
+   * voir dans l'application. Une alerte d'urgence qui ne s'affiche nulle part
+   * n'est pas une alerte.
+   */
+  activeSos(member: Member, now: Date = new Date()): ActiveSos[] {
+    const depuis = new Date(now.getTime() - AlertService.WINDOW_MS).toISOString();
+
+    const rows = this.db
+      .prepare(
+        `SELECT a.id, a.latitude, a.longitude, a.created_at, a.member_id,
+                m.first_name, m.building,
+                (a.member_id = ?1) AS mine
+         FROM sos_alerts a
+         JOIN members m ON m.id = a.member_id
+         WHERE a.cancelled_at IS NULL
+           AND a.created_at >= ?2
+           AND (a.member_id = ?1 OR EXISTS (
+                 SELECT 1 FROM sos_targets t WHERE t.alert_id = a.id AND t.member_id = ?1))
+         ORDER BY a.created_at DESC
+         LIMIT 20`
+      )
+      .all(member.id, depuis) as Record<string, string | number | null>[];
+
+    return rows.map((row) => ({
+      id: String(row.id),
+      fromName: String(row.first_name),
+      building: (row.building as string | null) ?? undefined,
+      mine: Number(row.mine) === 1,
+      latitude: row.latitude === null ? undefined : Number(row.latitude),
+      longitude: row.longitude === null ? undefined : Number(row.longitude),
+      createdAt: String(row.created_at),
+    }));
+  }
+
   async cancelSos(member: Member, alertId: string): Promise<boolean> {
     const alert = this.db
       .prepare('SELECT id, member_id, cancelled_at FROM sos_alerts WHERE id = ?')

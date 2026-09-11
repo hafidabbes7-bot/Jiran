@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type {
+  ActiveSos,
   Category,
   ChatMessage,
   Comment,
@@ -422,6 +423,21 @@ export class HttpRepository implements JiranRepository {
       devices: Number(data.devices) || 0,
       delivered: Boolean(data.delivered),
     };
+  }
+
+  async loadActiveSos(): Promise<ActiveSos[]> {
+    const data = await this.request('GET', '/sos/active');
+    return (Array.isArray(data.alerts) ? data.alerts : []).map(
+      (raw: JsonObject): ActiveSos => ({
+        id: String(raw.id),
+        fromName: String(raw.fromName),
+        building: raw.building ? String(raw.building) : undefined,
+        mine: Boolean(raw.mine),
+        latitude: raw.latitude === undefined || raw.latitude === null ? undefined : Number(raw.latitude),
+        longitude: raw.longitude === undefined || raw.longitude === null ? undefined : Number(raw.longitude),
+        createdAt: String(raw.createdAt),
+      })
+    );
   }
 
   async cancelSos(alertId: string): Promise<void> {

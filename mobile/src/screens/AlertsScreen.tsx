@@ -9,6 +9,7 @@ import { ReportSheet } from '../components/ReportSheet';
 import { useToast } from '../components/Toast';
 import type { ReportReason } from '../domain/types';
 import { useI18n } from '../i18n/I18nProvider';
+import { SosBanner } from '../components/SosBanner';
 import { useApp } from '../state/AppProvider';
 import { colors, fontSizes, spacing } from '../theme/theme';
 import type { RootStackParamList, TabParamList } from '../navigation/types';
@@ -46,6 +47,7 @@ export function AlertsScreen({ navigation }: Props) {
         }
         ListHeaderComponent={
           <View style={styles.header}>
+            <SosBanner />
             <Text style={[styles.title, rtl.text]}>{s.alerts.title}</Text>
             <Text style={[styles.subtitle, rtl.text]}>{s.alerts.subtitle}</Text>
           </View>

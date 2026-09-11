@@ -27,8 +27,14 @@ export function SosScreen({ navigation }: Props) {
   const { neighbors, setTrusted, triggerSos, cancelSos } = useApp();
   const toast = useToast();
 
+  // Tous les voisins du quartier sont sélectionnables. Ceux marqués « de
+  // confiance » remontent en tête et sont cochés d'avance — mais en urgence,
+  // personne n'a le temps d'aller d'abord marquer quelqu'un de confiance.
   const trusted = useMemo(() => neighbors.filter((n) => n.trusted), [neighbors]);
-  const others = useMemo(() => neighbors.filter((n) => !n.trusted), [neighbors]);
+  const ordonnés = useMemo(
+    () => [...neighbors].sort((a, b) => Number(b.trusted) - Number(a.trusted)),
+    [neighbors]
+  );
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -73,7 +79,7 @@ export function SosScreen({ navigation }: Props) {
     });
   };
 
-  const allSelected = selected.size > 0 && selected.size === trusted.length;
+  const allSelected = selected.size > 0 && selected.size === neighbors.length;
 
   const send = async () => {
     if (selected.size === 0) {
@@ -145,14 +151,14 @@ export function SosScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={[styles.subtitle, rtl.text]}>{s.sos.subtitle}</Text>
 
-        {trusted.length === 0 ? (
-          <Text style={[styles.empty, rtl.text]}>{s.sos.noTrusted}</Text>
+        {neighbors.length === 0 ? (
+          <Text style={[styles.empty, rtl.text]}>{s.sos.noNeighbor}</Text>
         ) : (
           <>
             <Pressable
               accessibilityRole="button"
               onPress={() =>
-                setSelected(allSelected ? new Set() : new Set(trusted.map((n) => n.id)))
+                setSelected(allSelected ? new Set() : new Set(neighbors.map((n) => n.id)))
               }
             >
               <Text style={[styles.selectAll, rtl.text]}>
@@ -160,43 +166,39 @@ export function SosScreen({ navigation }: Props) {
               </Text>
             </Pressable>
 
-            {trusted.map((neighbor) => (
-              <Pressable
-                key={neighbor.id}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: selected.has(neighbor.id) }}
-                onPress={() => toggle(neighbor.id)}
-                style={[styles.row, rtl.row, selected.has(neighbor.id) && styles.rowSelected]}
-              >
-                <Text style={styles.rowEmoji}>{selected.has(neighbor.id) ? '☑️' : '⬜'}</Text>
-                <View style={styles.flex}>
-                  <Text style={[styles.rowName, rtl.text]}>{neighbor.name}</Text>
-                  {neighbor.building ? (
-                    <Text style={[styles.rowMeta, rtl.text]}>{neighbor.building}</Text>
-                  ) : null}
-                </View>
-              </Pressable>
+            {ordonnés.map((neighbor) => (
+              <View key={neighbor.id} style={[styles.row, rtl.row, selected.has(neighbor.id) && styles.rowSelected]}>
+                <Pressable
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: selected.has(neighbor.id) }}
+                  accessibilityLabel={neighbor.name}
+                  onPress={() => toggle(neighbor.id)}
+                  style={[styles.pick, rtl.row]}
+                >
+                  <Text style={styles.rowEmoji}>{selected.has(neighbor.id) ? '☑️' : '⬜'}</Text>
+                  <View style={styles.flex}>
+                    <Text style={[styles.rowName, rtl.text]}>
+                      {neighbor.trusted ? '⭐ ' : ''}
+                      {neighbor.name}
+                    </Text>
+                    {neighbor.building ? (
+                      <Text style={[styles.rowMeta, rtl.text]}>{neighbor.building}</Text>
+                    ) : null}
+                  </View>
+                </Pressable>
+
+                <Switch
+                  value={neighbor.trusted}
+                  onValueChange={(value) => setTrusted(neighbor.id, value)}
+                  trackColor={{ true: colors.brand, false: colors.line }}
+                  accessibilityLabel={s.neighborhood.trustedAdd}
+                />
+              </View>
             ))}
+
+            <Text style={[styles.empty, rtl.text]}>{s.sos.trustedHint}</Text>
           </>
         )}
-
-        <Text style={[styles.sectionTitle, rtl.text]}>{s.sos.othersTitle}</Text>
-        {others.map((neighbor) => (
-          <View key={neighbor.id} style={[styles.row, rtl.row]}>
-            <View style={styles.flex}>
-              <Text style={[styles.rowName, rtl.text]}>{neighbor.name}</Text>
-              {neighbor.building ? (
-                <Text style={[styles.rowMeta, rtl.text]}>{neighbor.building}</Text>
-              ) : null}
-            </View>
-            <Switch
-              value={false}
-              onValueChange={() => setTrusted(neighbor.id, true)}
-              trackColor={{ true: colors.brand, false: colors.line }}
-              accessibilityLabel={s.neighborhood.trustedAdd}
-            />
-          </View>
-        ))}
 
       </ScrollView>
 
@@ -210,6 +212,7 @@ export function SosScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   flex: { flex: 1 },
+  pick: { flex: 1, alignItems: 'center', gap: 12 },
   content: { padding: spacing.lg, paddingBottom: 120 },
   subtitle: { fontSize: fontSizes.small, color: colors.muted, marginBottom: spacing.md, lineHeight: 18 },
   empty: { fontSize: fontSizes.small, color: colors.muted, marginBottom: spacing.md },

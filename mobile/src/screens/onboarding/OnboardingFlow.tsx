@@ -105,7 +105,7 @@ export function OnboardingFlow({
     if (!query) return NEIGHBORHOODS;
     const needle = fold(query);
     return NEIGHBORHOODS.filter((item) =>
-      [item.name, item.nameAr, item.wilaya, item.wilayaAr].some((field) =>
+      [item.name, item.nameAr, item.daira, item.wilaya, item.wilayaAr].some((field) =>
         fold(field).includes(needle)
       )
     );
@@ -604,7 +604,9 @@ export function OnboardingFlow({
                           {localizedName(item)}
                         </Text>
                         <Text style={[styles.neighborhoodWilaya, rtl.text]}>
-                          {language === 'ar' ? item.wilayaAr : item.wilaya}
+                          {language === 'ar'
+                            ? item.wilayaAr
+                            : `${item.daira} · ${item.wilaya}`}
                         </Text>
                       </Pressable>
                     );

@@ -347,6 +347,10 @@ export function createContentRouter(
     response.status(201).json(result);
   });
 
+  router.get('/sos/active', authenticate, (request: MemberRequest, response: Response) => {
+    response.json({ alerts: alerts.activeSos(request.member!) });
+  });
+
   router.post(
     '/sos/:id/cancel',
     authenticate,

@@ -143,13 +143,29 @@ Toujours à faire : les autres jeux (échecs, dames, belote, dominos), le
 classement mensuel du quartier, et les réglages de notifications par catégorie
 (§4.17).
 
+## Ce qui arrive sans qu'on touche à l'écran
+
+Le fil, les alertes et les SOS se rafraîchissent toutes les 12 secondes tant que
+l'application est à l'écran, et tout de suite au retour au premier plan. Les
+notifications ne suffisent pas : tant qu'aucun service de remise n'est branché —
+et même après, pour qui les a coupées — l'application est la seule à pouvoir
+prévenir. Un SOS s'affiche donc en bandeau rouge en tête du fil et des alertes,
+chez les voisins choisis comme chez son auteur, qui peut l'annuler de là.
+
 ## Couverture du territoire
 
-Les 97 quartiers de `mobile/src/data/neighborhoods.ts` couvrent les 69 wilayas —
-les 58 d'avant, plus les 11 créées par la loi n° 26-06 du 4 avril 2026 (Aflou,
-Barika, El Kantara, Bir El Ater, El Aricha, Ksar Chellala, Aïn Oussara, Messaad,
-Ksar El Boukhari, Bou Saâda, El Abiodh Sidi Cheikh). Les communes d'Alger et de
-Béjaïa y figurent au quartier près, le chef-lieu partout ailleurs. C'est volontairement grossier hors de ces deux wilayas — un chef-lieu
+`mobile/src/data/neighborhoods.ts` contient **les 1541 communes d'Algérie**, avec
+leur daïra et leur wilaya — les 69 wilayas du découpage de 2026 (loi n° 26-06),
+dont les 11 dernières, codes 59 à 69. Les noms bilingues, les daïras et les
+coordonnées viennent du jeu de données public `geoalgeria`. La recherche de
+l'inscription porte sur les trois : commune, daïra, wilaya, en français comme en
+arabe.
+
+Le rayon accepté pour la vérification n'est pas fixe : c'est la moitié de la
+distance à la commune la plus proche, borné entre 2,5 et 20 km. Une commune
+serrée entre deux autres garde un rayon serré ; une commune du Sahara, seule à
+cent kilomètres à la ronde, en obtient un large — sans quoi ses habitants ne
+pourraient jamais confirmer leur position. C'est volontairement grossier hors de ces deux wilayas — un chef-lieu
 se découpera en quartiers quand il y aura assez de voisins pour que ça ait un
 sens. Personne ne doit rester sans entrée : un voisin absent de la liste ne peut
 pas s'inscrire. Quand sa commune manque quand même, l'inscription reste possible

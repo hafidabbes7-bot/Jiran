@@ -13,8 +13,10 @@ export interface Neighborhood {
   nameAr: string;
   wilaya: string;
   wilayaAr: string;
-  /** Code de wilaya officiel (16 = Alger, 35 = Boumerdès, 09 = Blida...). */
+  /** Code de wilaya officiel, de 01 à 69 (16 = Alger, 06 = Béjaïa...). */
   wilayaCode: string;
+  /** Daïra dont dépend la commune — sert à s'y retrouver dans la recherche. */
+  daira: string;
   latitude: number;
   longitude: number;
   /** Rayon accepté pour la vérification par géolocalisation, en mètres. */
@@ -242,4 +244,16 @@ export interface SolidarityAction {
   participants: number;
   joined: boolean;
   createdByMe: boolean;
+}
+
+/** Une alerte SOS en cours, telle que l'application la montre (§4.16). */
+export interface ActiveSos {
+  id: string;
+  fromName: string;
+  building?: string;
+  /** Vrai s'il s'agit de sa propre alerte : on propose alors de l'annuler. */
+  mine: boolean;
+  latitude?: number;
+  longitude?: number;
+  createdAt: string;
 }

@@ -4,11 +4,7 @@ import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import {
-  NEIGHBORHOODS,
-  TWINNING_THRESHOLD,
-  findNeighborhood,
-} from '../data/neighborhoods';
+import { NEIGHBORHOODS, findNeighborhood } from '../data/neighborhoods';
 import { useI18n, useLocalizedName } from '../i18n/I18nProvider';
 import { useApp } from '../state/AppProvider';
 import { colors, fontSizes, radii, spacing } from '../theme/theme';
@@ -25,7 +21,7 @@ type Props = CompositeScreenProps<
  * modération.
  */
 export function NeighborhoodScreen({ navigation }: Props) {
-  const { s, format, rtl } = useI18n();
+  const { s, format, language, rtl } = useI18n();
   const localizedName = useLocalizedName();
   const { session, neighbors, posts, setTrusted } = useApp();
 
@@ -49,7 +45,8 @@ export function NeighborhoodScreen({ navigation }: Props) {
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={[styles.title, rtl.text]}>{localizedName(neighborhood)}</Text>
       <Text style={[styles.subtitle, rtl.text]}>
-        {format(s.neighborhood.verified, { count: neighborhood.verifiedNeighbors })}
+        {/* Le compte réel, celui du serveur : les voisins du fil, plus soi. */}
+        {format(s.neighborhood.verified, { count: neighbors.length + 1 })}
       </Text>
 
       {twinned.length > 0 ? (
@@ -57,28 +54,14 @@ export function NeighborhoodScreen({ navigation }: Props) {
           <Text style={[styles.cardTitle, rtl.text]}>{s.neighborhood.twinnedTitle}</Text>
           <Text style={[styles.cardText, rtl.text]}>{s.neighborhood.twinnedExplain}</Text>
 
+          {/* Le nombre de voisins d'une autre commune n'est pas connu d'ici :
+              on nomme les communes rattachées, sans inventer de compteur. */}
           {twinned.map((item) => (
             <View key={item.id} style={styles.twinRow}>
               <Text style={[styles.twinName, rtl.text]}>{localizedName(item)}</Text>
               <Text style={[styles.twinMeta, rtl.text]}>
-                {format(s.neighborhood.twinnedMeta, {
-                  count: item.verifiedNeighbors,
-                  threshold: TWINNING_THRESHOLD,
-                })}
+                {item.daira} · {language === 'ar' ? item.wilayaAr : item.wilaya}
               </Text>
-              <View style={styles.progressTrack}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    {
-                      width: `${Math.min(
-                        100,
-                        Math.round((item.verifiedNeighbors / TWINNING_THRESHOLD) * 100)
-                      )}%`,
-                    },
-                  ]}
-                />
-              </View>
             </View>
           ))}
         </View>

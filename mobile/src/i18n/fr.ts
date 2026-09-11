@@ -194,6 +194,11 @@ export const fr = {
       '⚠️ Aucun de ces voisins n’a encore ouvert Jiran sur son téléphone : ils verront l’alerte à leur prochaine ouverture, sans notification.',
     sendFailed: 'L’alerte n’a pas pu partir. Réessaie.',
     noReachable: 'Aucun des voisins choisis ne peut être alerté.',
+    activeFrom: '🚨 {name} a besoin d’aide, maintenant',
+    activeMine: '🚨 Ton alerte est en cours',
+    openMap: 'Voir où',
+    noNeighbor: 'Aucun voisin inscrit pour l’instant — personne à alerter.',
+    trustedHint: 'L’interrupteur marque un voisin « de confiance » : il sera coché d’avance la prochaine fois.',
     othersTitle: 'Autres voisins du quartier',
   },
   neighborhood: {

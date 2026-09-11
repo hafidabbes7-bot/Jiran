@@ -25,6 +25,7 @@ import { useToast } from '../components/Toast';
 import { TWINNING_THRESHOLD, findNeighborhood } from '../data/neighborhoods';
 import type { CategoryFilter, ReportReason } from '../domain/types';
 import { useI18n, useLocalizedName } from '../i18n/I18nProvider';
+import { SosBanner } from '../components/SosBanner';
 import { useApp } from '../state/AppProvider';
 import { colors, fontSizes, radii, spacing } from '../theme/theme';
 import type { RootStackParamList, TabParamList } from '../navigation/types';
@@ -88,6 +89,7 @@ export function FeedScreen({ navigation }: Props) {
         }
         ListHeaderComponent={
           <View>
+            <SosBanner />
             <View style={[styles.topbar, rtl.row]}>
               <View style={styles.flex}>
                 <Text style={[styles.title, rtl.text]}>Jiran</Text>
