@@ -132,6 +132,28 @@ export class CommunityService {
     return { ids, places: ids.map(() => '?').join(', ') };
   }
 
+  /**
+   * Une conversation déjà entamée reste ouverte, même si l'un des deux a
+   * déménagé : ce qui a été échangé appartient aux deux personnes, pas au
+   * quartier. Seule une *nouvelle* conversation exige d'être voisins.
+   */
+  private conversationExiste(member: Member, neighborId: string): boolean {
+    return Boolean(
+      this.db
+        .prepare(
+          `SELECT 1 FROM messages
+           WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)
+           LIMIT 1`
+        )
+        .get(member.id, neighborId, neighborId, member.id)
+    );
+  }
+
+  /** Voisin joignable : du même fil, ou déjà en conversation avec lui. */
+  private joignable(member: Member, neighborId: string): boolean {
+    return Boolean(this.neighborOf(member, neighborId)) || this.conversationExiste(member, neighborId);
+  }
+
   /** Vérifie qu'un voisin existe et partage bien le fil de celui qui demande. */
   private neighborOf(member: Member, neighborId: string): { id: string; first_name: string } | undefined {
     const { ids, places } = this.scope(member);
@@ -190,7 +212,7 @@ export class CommunityService {
 
   /** Fil d'une conversation. La lecture marque d'office les messages reçus comme lus. */
   messages(member: Member, neighborId: string, now: Date = new Date()): Message[] | CommunityError {
-    if (!this.neighborOf(member, neighborId)) return 'voisin_inconnu';
+    if (!this.joignable(member, neighborId)) return 'voisin_inconnu';
 
     this.db
       .prepare('UPDATE messages SET read_at = ? WHERE sender_id = ? AND recipient_id = ? AND read_at IS NULL')
@@ -226,7 +248,7 @@ export class CommunityService {
     text: string,
     now: Date = new Date()
   ): Message | CommunityError {
-    if (!this.neighborOf(member, neighborId)) return 'voisin_inconnu';
+    if (!this.joignable(member, neighborId)) return 'voisin_inconnu';
     if (!moderateText(text).clean) return 'texte_refuse';
 
     const id = newId();

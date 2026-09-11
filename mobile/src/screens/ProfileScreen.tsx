@@ -55,6 +55,7 @@ export function ProfileScreen({ navigation }: Props) {
     { emoji: '🎲', label: s.profile.games, onPress: () => navigation.navigate('Games') },
     { emoji: '📍', label: s.profile.neighborhood, onPress: () => navigation.navigate('Neighborhood') },
     { emoji: '🚨', label: s.profile.alerts, onPress: () => navigation.navigate('Alerts') },
+    { emoji: '📦', label: s.community.moveTitle, onPress: () => navigation.navigate('Move') },
   ];
   if (session.isModerator) {
     entrées.push({

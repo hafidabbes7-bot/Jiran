@@ -16,6 +16,7 @@ import { GroupsScreen } from '../screens/community/GroupsScreen';
 import { ItemsScreen } from '../screens/community/ItemsScreen';
 import { MapScreen } from '../screens/community/MapScreen';
 import { MessagesScreen } from '../screens/community/MessagesScreen';
+import { MoveScreen } from '../screens/community/MoveScreen';
 import { ServicesScreen } from '../screens/community/ServicesScreen';
 import { SolidarityScreen } from '../screens/community/SolidarityScreen';
 import { VacationScreen } from '../screens/community/VacationScreen';
@@ -177,6 +178,11 @@ export function RootNavigator() {
             name="Solidarity"
             component={SolidarityScreen}
             options={{ title: s.community.solidarityTitle }}
+          />
+          <Stack.Screen
+            name="Move"
+            component={MoveScreen}
+            options={{ title: s.community.moveTitle }}
           />
         </Stack.Navigator>
       </NavigationContainer>

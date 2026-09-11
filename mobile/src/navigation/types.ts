@@ -14,6 +14,7 @@ export type RootStackParamList = {
   Vacation: undefined;
   Waste: undefined;
   Solidarity: undefined;
+  Move: undefined;
 };
 
 export type TabParamList = {

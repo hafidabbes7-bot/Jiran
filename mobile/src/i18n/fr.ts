@@ -287,6 +287,13 @@ export const fr = {
     noNeighborYet: 'Aucun voisin inscrit pour l’instant.',
 
     openChat: 'Écrire à {name}',
+    moveTitle: 'J’ai déménagé',
+    moveIntro:
+      'Choisis ton nouveau quartier et confirme ta position sur place. Ton numéro reste vérifié : ni SMS ni nouvelle inscription.',
+    moveConfirm: 'Changer de quartier',
+    moveSame: 'C’est déjà ton quartier.',
+    moveKeeps:
+      'Tes publications restent dans le fil où tu les as écrites, et tes conversations privées déjà ouvertes continuent. Objets prêtés, groupes et veilles de vacances restent rattachés à l’ancien quartier.',
     messagesTitle: 'Messages',
     messagesEmpty: 'Aucune conversation pour l’instant.',
     messagesStart: 'DÉMARRER UNE CONVERSATION',

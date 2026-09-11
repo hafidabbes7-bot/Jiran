@@ -114,6 +114,22 @@ Puis toute la vie de quartier, accessible depuis le profil : messagerie privée
 d'intérêt (§4.11), carte du quartier (§4.12), mode vacances (§4.13), collecte
 des déchets (§4.14) et actions solidaires (§4.15).
 
+Déménagement et voyage, deux cas qu'on confond souvent :
+
+Un voyage ne change rien. La position n'est vérifiée qu'à l'inscription et au
+déménagement ; le quartier est attaché au compte, pas à l'endroit où le
+téléphone se trouve. On suit donc sa rue depuis l'étranger — et le mode vacances
+sert à prévenir les voisins choisis.
+
+Un déménagement se déclare : « J'ai déménagé » dans le profil, avec la même
+confirmation par géolocalisation qu'à l'inscription, mais sans SMS ni
+réinscription — le serveur reconnaît le voisin à son numéro et met son profil à
+jour au lieu d'en créer un second. Les publications ne suivent pas leur auteur :
+elles appartiennent au fil où elles ont été écrites. Les conversations privées
+déjà entamées, elles, restent ouvertes des deux côtés — ce qui a été échangé
+appartient aux deux personnes, pas au quartier. Une conversation *nouvelle*
+exige toujours d'être voisins.
+
 Trois choix assumés dans ce lot :
  — la carte est une liste triée par distance qui ouvre l'itinéraire dans
    l'application de cartes du téléphone, plutôt qu'une carte dessinée qui

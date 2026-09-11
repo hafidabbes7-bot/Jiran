@@ -207,3 +207,67 @@ describe('vie de quartier', () => {
     });
   });
 });
+
+describe('déménagement', () => {
+  it('garde le compte, déplace le fil, et laisse les anciennes publications derrière', () => {
+    const db = openDatabase(':memory:');
+    const content = new ContentRepository(db);
+    const hafid = content.saveMember({
+      phone: '0555000001',
+      firstName: 'Hafid',
+      neighborhoodId: 'bejaia-centre',
+    });
+    content.createPost(hafid, { category: 'annonce', text: 'Table à donner' });
+
+    const déménagé = content.saveMember({
+      phone: '0555000001',
+      firstName: 'Hafid',
+      neighborhoodId: 'akbou',
+    });
+
+    assert.equal(déménagé.id, hafid.id, 'le déménagement ne doit pas créer un second compte');
+    assert.equal(déménagé.neighborhoodId, 'akbou');
+    // La publication ne suit pas son auteur : elle appartient au fil où elle a
+    // été écrite, et les voisins d'avant continuent de la voir.
+    assert.equal(content.feed(déménagé).length, 0, 'le nouveau fil ne montre pas l’ancienne publication');
+    assert.equal(content.feed(hafid).length, 1, 'l’ancien quartier la garde');
+  });
+
+  it('laisse lire et poursuivre une conversation entamée avant le déménagement', () => {
+    const db = openDatabase(':memory:');
+    const content = new ContentRepository(db);
+    const community = new CommunityService(db);
+    const hafid = content.saveMember({
+      phone: '0555000001',
+      firstName: 'Hafid',
+      neighborhoodId: 'bejaia-centre',
+    });
+    const salim = content.saveMember({
+      phone: '0555000002',
+      firstName: 'Salim',
+      neighborhoodId: 'bejaia-centre',
+    });
+    const karim = content.saveMember({
+      phone: '0555000003',
+      firstName: 'Karim',
+      neighborhoodId: 'bejaia-centre',
+    });
+
+    community.sendMessage(hafid, salim.id, 'Salam, on se voit demain ?');
+
+    const loin = content.saveMember({
+      phone: '0555000001',
+      firstName: 'Hafid',
+      neighborhoodId: 'oran',
+    });
+
+    const fil = community.messages(loin, salim.id);
+    assert.notEqual(typeof fil, 'string', 'la conversation entamée doit rester lisible');
+    assert.notEqual(typeof community.sendMessage(loin, salim.id, 'J’ai déménagé à Oran'), 'string');
+    assert.notEqual(typeof community.messages(salim, loin.id), 'string');
+
+    // En revanche, aucune nouvelle conversation avec un voisin de l'ancien
+    // quartier : le déménagement ne doit pas ouvrir un carnet d'adresses.
+    assert.equal(community.sendMessage(loin, karim.id, 'Salam'), 'voisin_inconnu');
+  });
+});

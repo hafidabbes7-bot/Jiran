@@ -48,6 +48,8 @@ interface AppValue {
   register: (session: Session) => Promise<void>;
   signOut: () => Promise<void>;
   updateLanguage: (language: Session['language']) => Promise<void>;
+  /** Change de quartier après un déménagement, sans refaire vérifier le numéro. */
+  move: (neighborhoodId: string, building?: string, locationVerified?: boolean) => Promise<void>;
 
   refresh: () => Promise<void>;
   publish: (input: PublishInput) => Promise<void>;
@@ -214,6 +216,23 @@ export function AppProvider({
 
   const signOut = forgetSession;
 
+  const move = useCallback(
+    async (neighborhoodId: string, building?: string, locationVerified = true) => {
+      const current = sessionRef.current;
+      if (!current) return;
+
+      // Le serveur reconnaît le voisin à son numéro : le profil est mis à jour,
+      // pas recréé. Il garde donc son identifiant, ses messages et ses parties.
+      const next = { ...current, neighborhoodId, building, locationVerified };
+      const { isModerator } = await repository.saveProfile(next);
+      const session = { ...next, isModerator };
+      await repository.saveSession(session);
+      setSession(session);
+      await refresh({ session });
+    },
+    [repository, refresh]
+  );
+
   const updateLanguage = useCallback(
     async (language: Session['language']) => {
       if (!session || session.language === language) return;
@@ -357,6 +376,7 @@ export function AppProvider({
       register,
       signOut,
       updateLanguage,
+      move,
       refresh,
       publish,
       toggleLike,
@@ -384,6 +404,7 @@ export function AppProvider({
       register,
       signOut,
       updateLanguage,
+      move,
       refresh,
       publish,
       toggleLike,

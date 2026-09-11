@@ -129,4 +129,5 @@ export const styles = StyleSheet.create({
   pillTextActive: { color: colors.brand },
   pillRow: { flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.sm },
   link: { color: colors.brand, fontWeight: '700', fontSize: fontSizes.small },
+  moveError: { marginTop: spacing.sm, fontSize: fontSizes.small, color: colors.alert },
 });
