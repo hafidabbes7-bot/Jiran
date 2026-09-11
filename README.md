@@ -12,6 +12,7 @@ espace dédié, vérifié et organisé par quartier.
 | `server/` | Serveur : vérification du numéro et fil de quartier partagé ([README](server/README.md)) |
 | `docs/cahier-des-charges.md` | Toutes les décisions de conception validées (concept, regroupement par quartier, modération, 24 écrans, périmètre V1) |
 | `prototype/jiran-accueil.html` | Prototype visuel HTML autonome — 24 écrans navigables, bilingue FR/AR avec bascule RTL |
+| `essai/jiran-essai.html` | Version d'essai en une page, publiée sur claude.ai : le socle fonctionne à plusieurs, sans rien installer ([README](essai/README.md)) |
 
 ## Essayer tout de suite
 

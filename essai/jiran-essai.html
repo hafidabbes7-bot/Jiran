@@ -1,0 +1,1231 @@
+<title>Jiran</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* Palette du projet : terracotta et brique sur sable, décidée pendant la
+     phase de conception et distincte du vert d'As3ar. */
+  :root {
+    --sable: #F6EFE3;
+    --papier: #FBF7EF;
+    --carte: #FFFFFF;
+    --encre: #241C17;
+    --estompe: #8A8078;
+    --trait: #EAE1D4;
+    --brique: #B5502E;
+    --brique-fonce: #8F3D22;
+    --alerte: #C1272D;
+    --alerte-douce: #F6DEDD;
+    --entraide: #2F7A5C;
+    --entraide-douce: #DEEDE6;
+    --annonce: #C9962C;
+    --annonce-douce: #F5EBD4;
+    --evenement: #3B6EA5;
+    --evenement-douce: #DEE8F2;
+    --ombre: rgba(36, 28, 23, 0.10);
+
+    --pas: 4px;
+    --rayon: 16px;
+    --serif: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  }
+
+  /* Tokens du thème sombre, définis une fois et appliqués dans les deux
+     cas : préférence du système, et choix explicite du lecteur. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sable: #211913;
+      --papier: #191310;
+      --carte: #241C17;
+      --encre: #F4EADD;
+      --estompe: #A19386;
+      --trait: #3A2E27;
+      --brique: #D4714C;
+      --brique-fonce: #E08A66;
+      --alerte: #E04B51;
+      --alerte-douce: #3A1F20;
+      --entraide: #6BBE97;
+      --entraide-douce: #1E3A2E;
+      --annonce: #E0B255;
+      --annonce-douce: #3A2F1B;
+      --evenement: #7FAEDC;
+      --evenement-douce: #1F2C3A;
+      --ombre: rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --sable: #211913;
+    --papier: #191310;
+    --carte: #241C17;
+    --encre: #F4EADD;
+    --estompe: #A19386;
+    --trait: #3A2E27;
+    --brique: #D4714C;
+    --brique-fonce: #E08A66;
+    --alerte: #E04B51;
+    --alerte-douce: #3A1F20;
+    --entraide: #6BBE97;
+    --entraide-douce: #1E3A2E;
+    --annonce: #E0B255;
+    --annonce-douce: #3A2F1B;
+    --evenement: #7FAEDC;
+    --evenement-douce: #1F2C3A;
+    --ombre: rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--papier);
+    color: var(--encre);
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app {
+    max-width: 460px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    padding: 0 16px 96px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  button { font-family: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--brique);
+    outline-offset: 2px;
+  }
+
+  .principal {
+    background: var(--brique);
+    color: #FFF;
+    border: none;
+    border-radius: 14px;
+    padding: 15px 18px;
+    font-size: 15px;
+    font-weight: 700;
+    width: 100%;
+  }
+  .principal:disabled { background: var(--trait); color: var(--estompe); cursor: not-allowed; }
+  .fantome {
+    background: transparent;
+    color: var(--encre);
+    border: 1px solid var(--trait);
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    width: 100%;
+  }
+  .danger { background: var(--alerte); }
+
+  label.champ { display: block; margin-bottom: 14px; }
+  label.champ > span {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--estompe);
+    margin-bottom: 5px;
+  }
+  input, select, textarea {
+    width: 100%;
+    background: var(--carte);
+    color: var(--encre);
+    border: 1px solid var(--trait);
+    border-radius: 10px;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 15px;
+  }
+  textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
+
+  /* --- Inscription --- */
+  .etapes { display: flex; gap: 6px; justify-content: center; padding: 16px 0; }
+  .etape { width: 7px; height: 7px; border-radius: 4px; background: var(--trait); transition: width .2s; }
+  .etape.active { background: var(--brique); width: 22px; }
+
+  .ouverture { text-align: center; padding: 32px 0 20px; }
+  .logo {
+    width: 68px; height: 68px; border-radius: 18px; background: var(--brique);
+    display: grid; place-items: center; margin: 0 auto 14px; font-size: 32px;
+  }
+  .marque { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
+  .accroche { color: var(--estompe); font-size: 14px; margin-top: 4px; }
+
+  h1 { font-size: 22px; font-weight: 700; margin: 0; text-wrap: balance; }
+  .sous-titre { color: var(--estompe); font-size: 13px; margin: 4px 0 18px; }
+
+  .regle {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--carte); border: 1px solid var(--trait);
+    border-radius: 14px; padding: 13px; margin-bottom: 8px;
+  }
+  .regle span:first-child { font-size: 17px; line-height: 1.2; }
+  .regle span:last-child { font-size: 13.5px; line-height: 1.4; }
+
+  .avis {
+    background: var(--annonce-douce); color: var(--brique-fonce);
+    border-radius: 12px; padding: 12px; font-size: 12.5px; line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  /* --- En-tête --- */
+  .entete { display: flex; align-items: flex-start; gap: 10px; padding: 18px 0 12px; }
+  .entete .titre { flex: 1; min-width: 0; }
+  .entete .marque-mini { font-size: 21px; font-weight: 700; line-height: 1.1; }
+  .entete .lieu { font-size: 12.5px; color: var(--estompe); margin-top: 3px; }
+  .langues { display: flex; background: var(--sable); border-radius: 20px; padding: 3px; gap: 2px; }
+  .langues button {
+    border: none; background: transparent; color: var(--estompe);
+    font-size: 12.5px; font-weight: 700; padding: 5px 11px; border-radius: 16px;
+  }
+  .langues button[aria-pressed="true"] { background: var(--encre); color: var(--papier); }
+
+  .recherche { margin-bottom: 12px; }
+  .recherche input { border-radius: 22px; padding: 12px 18px; }
+
+  .filtres { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin: 0 -16px 4px; padding-inline: 16px; scrollbar-width: none; }
+  .filtres::-webkit-scrollbar { display: none; }
+  .puce {
+    flex: 0 0 auto; background: var(--carte); border: 1px solid var(--trait);
+    border-radius: 22px; padding: 8px 14px; font-size: 12.5px; font-weight: 600; color: var(--encre);
+  }
+  .puce[aria-pressed="true"] { background: var(--brique); border-color: var(--brique); color: #FFF; }
+
+  /* --- Mises en avant --- */
+  .banniere-alerte {
+    display: flex; gap: 12px; align-items: center; background: var(--alerte);
+    color: #FFF; border-radius: var(--rayon); padding: 13px 14px; margin-bottom: 12px;
+    border: none; text-align: start; width: 100%;
+  }
+  .banniere-alerte .texte { font-size: 13px; font-weight: 700; line-height: 1.35; }
+  .banniere-alerte .meta { font-size: 11.5px; opacity: .85; margin-top: 3px; }
+
+  .bienvenue {
+    display: flex; gap: 12px; align-items: center; background: var(--entraide-douce);
+    border-radius: var(--rayon); padding: 13px 14px; margin-bottom: 12px;
+  }
+  .bienvenue .rond { width: 34px; height: 34px; border-radius: 50%; background: var(--carte); display: grid; place-items: center; }
+  .bienvenue .nom { font-size: 14px; font-weight: 700; color: var(--entraide); }
+  .bienvenue .quand { font-size: 11.5px; color: var(--entraide); opacity: .8; margin-top: 2px; }
+
+  .sos-recu {
+    background: var(--alerte); color: #FFF; border-radius: var(--rayon);
+    padding: 14px; margin-bottom: 12px;
+  }
+  .sos-recu .titre { font-weight: 700; font-size: 14px; }
+  .sos-recu .detail { font-size: 12.5px; opacity: .9; margin-top: 3px; line-height: 1.4; }
+  .sos-recu a { color: #FFF; }
+
+  /* --- Publications --- */
+  .liste { display: flex; flex-direction: column; gap: 12px; }
+  .publication {
+    background: var(--carte); border: 1px solid var(--trait);
+    border-radius: var(--rayon); padding: 13px;
+  }
+  .publication .haut { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--sable); display: grid; place-items: center; font-size: 15px; flex: 0 0 auto; }
+  .qui { flex: 1; min-width: 0; }
+  .qui .nom { font-size: 14px; font-weight: 700; }
+  .qui .meta { font-size: 11.5px; color: var(--estompe); margin-top: 2px; }
+  .etiquette { font-size: 11px; font-weight: 700; border-radius: 20px; padding: 3px 9px; white-space: nowrap; }
+  .menu { border: none; background: transparent; color: var(--estompe); font-size: 17px; padding: 0 4px; }
+  .corps { font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .actions { display: flex; gap: 18px; margin-top: 10px; align-items: center; }
+  .actions button { border: none; background: transparent; color: var(--estompe); font-size: 12.5px; padding: 2px 0; }
+  .actions button.aime { color: var(--brique); font-weight: 700; }
+
+  .masquee {
+    background: var(--alerte-douce); border: 1px solid var(--alerte-douce);
+    border-radius: var(--rayon); padding: 16px 14px;
+    color: var(--alerte); font-size: 12.5px; font-weight: 600; line-height: 1.45;
+  }
+
+  .vide { text-align: center; color: var(--estompe); font-size: 13px; padding: 40px 8px 0; }
+  .vide p + p { margin-top: 12px; line-height: 1.55; }
+
+  /* --- Réponses --- */
+  .reponse { display: flex; gap: 10px; margin-bottom: 10px; }
+  .reponse .bulle { flex: 1; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 11px; }
+  .reponse .nom { font-size: 12.5px; font-weight: 700; }
+  .reponse .texte { font-size: 14px; margin-top: 2px; line-height: 1.45; overflow-wrap: anywhere; }
+  .reponse .quand { font-size: 11px; color: var(--estompe); margin-top: 4px; }
+  .repondre { display: flex; gap: 8px; margin-top: 14px; }
+  .repondre input { border-radius: 22px; }
+  .repondre button { flex: 0 0 auto; width: 46px; border-radius: 50%; border: none; background: var(--brique); color: #FFF; font-size: 16px; }
+
+  /* --- Feuilles --- */
+  .voile {
+    position: fixed; inset: 0; background: rgba(36, 28, 23, .5);
+    display: flex; align-items: flex-end; justify-content: center; z-index: 40;
+  }
+  .feuille {
+    background: var(--papier); width: 100%; max-width: 460px;
+    border-radius: 20px 20px 0 0; padding: 18px 16px 26px;
+    max-height: 88dvh; overflow-y: auto;
+  }
+  .poignee { width: 44px; height: 4px; border-radius: 2px; background: var(--trait); margin: 0 auto 14px; }
+  .feuille h2 { font-size: 18px; margin: 0 0 14px; }
+  .choix {
+    display: flex; gap: 12px; align-items: center; width: 100%; text-align: start;
+    background: var(--carte); border: 1px solid var(--trait); border-radius: 14px;
+    padding: 13px; margin-bottom: 8px; font-size: 14px; color: var(--encre);
+  }
+  .categories { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; }
+  .categories button {
+    background: var(--carte); border: 1px solid var(--trait); border-radius: 12px;
+    padding: 12px 8px; font-size: 13px; font-weight: 600; color: var(--encre);
+  }
+  .categories button[aria-pressed="true"] { border-color: var(--brique); background: var(--sable); color: var(--brique); }
+  .refus {
+    background: var(--alerte-douce); color: var(--alerte); border-radius: 10px;
+    padding: 11px; font-size: 12.5px; margin-top: 10px; line-height: 1.45;
+  }
+
+  .voisin-ligne {
+    display: flex; gap: 12px; align-items: center;
+    background: var(--carte); border: 1px solid var(--trait);
+    border-radius: 14px; padding: 12px; margin-bottom: 8px; width: 100%; text-align: start;
+    color: var(--encre); font-size: 14px;
+  }
+  .voisin-ligne[aria-pressed="true"] { border-color: var(--brique); }
+  .voisin-ligne .coche { font-size: 16px; }
+
+  /* --- Barre du bas et SOS --- */
+  .barre {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
+    background: var(--papier); border-top: 1px solid var(--trait);
+    display: flex; justify-content: center; gap: 4px;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  }
+  .barre .dedans { display: flex; width: 100%; max-width: 460px; }
+  .barre button {
+    flex: 1; border: none; background: transparent; color: var(--estompe);
+    font-size: 11px; font-weight: 600; display: grid; gap: 2px; justify-items: center; padding: 4px 0;
+  }
+  .barre button .icone { font-size: 17px; }
+  .barre button[aria-pressed="true"] { color: var(--brique); }
+
+  .flottant {
+    position: fixed; bottom: 78px; z-index: 31;
+    width: 56px; height: 56px; border-radius: 50%; border: none;
+    display: grid; place-items: center; box-shadow: 0 6px 18px var(--ombre);
+  }
+  .sos-bouton { background: var(--alerte); color: #FFF; font-size: 13px; font-weight: 700; }
+  .publier-bouton { background: var(--brique); color: #FFF; font-size: 30px; line-height: 1; padding-bottom: 4px; }
+
+  .toast {
+    position: fixed; left: 16px; right: 16px; bottom: 150px; z-index: 50;
+    max-width: 428px; margin: 0 auto;
+    background: var(--encre); color: var(--papier);
+    border-radius: 12px; padding: 13px 16px; font-size: 13px; text-align: center;
+  }
+
+  .pied {
+    margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--trait);
+    font-size: 11.5px; color: var(--estompe); line-height: 1.6;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div id="app" dir="ltr"></div>
+<div id="calques"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ————————————————————————————————————————————————
+  //  Quartiers — mêmes noms que l'application réelle
+  // ————————————————————————————————————————————————
+  const QUARTIERS = [
+    { id: 'bab-ezzouar', fr: 'Bab Ezzouar', ar: 'باب الزوار', wilaya: 'Alger', wilayaAr: 'الجزائر' },
+    { id: 'dar-el-beida', fr: 'Dar El Beïda', ar: 'الدار البيضاء', wilaya: 'Alger', wilayaAr: 'الجزائر' },
+    { id: 'bordj-el-kiffan', fr: 'Bordj El Kiffan', ar: 'برج الكيفان', wilaya: 'Alger', wilayaAr: 'الجزائر' },
+    { id: 'el-harrach', fr: 'El Harrach', ar: 'الحراش', wilaya: 'Alger', wilayaAr: 'الجزائر' },
+    { id: 'rouiba', fr: 'Rouiba', ar: 'الرويبة', wilaya: 'Alger', wilayaAr: 'الجزائر' },
+    { id: 'reghaia', fr: 'Reghaïa', ar: 'رغاية', wilaya: 'Alger', wilayaAr: 'الجزائر' },
+    { id: 'alger-centre', fr: 'Alger-Centre', ar: 'الجزائر الوسطى', wilaya: 'Alger', wilayaAr: 'الجزائر' },
+    { id: 'kouba', fr: 'Kouba', ar: 'القبة', wilaya: 'Alger', wilayaAr: 'الجزائر' },
+    { id: 'boumerdes-centre', fr: 'Boumerdès Centre', ar: 'بومرداس الوسط', wilaya: 'Boumerdès', wilayaAr: 'بومرداس' },
+    { id: 'blida-centre', fr: 'Blida Centre', ar: 'البليدة الوسط', wilaya: 'Blida', wilayaAr: 'البليدة' },
+  ];
+
+  const CATEGORIES = ['securite', 'entraide', 'annonce', 'evenement'];
+  const MOTIFS = ['spam', 'inapproprie', 'fausse_alerte', 'autre'];
+
+  // ————————————————————————————————————————————————
+  //  Textes
+  // ————————————————————————————————————————————————
+  const T = {
+    fr: {
+      accroche: 'Le réseau de ton quartier, entre voisins',
+      essai: "Version d'essai : ton nom est simplement déclaré, il n'est pas vérifié par SMS comme dans l'application. Tout ce que tu publies est visible par les voisins qui ont ce lien.",
+      commencer: 'Commencer',
+      identiteTitre: 'Comment tu t’appelles ?',
+      identiteSous: 'Ton prénom apparaîtra sur tes publications.',
+      prenom: 'Prénom',
+      prenomExemple: 'Ex : Hafid',
+      continuer: 'Continuer',
+      lieuTitre: 'Où habites-tu ?',
+      lieuSous: 'Choisis le même quartier que tes voisins, sinon vous ne vous verrez pas.',
+      quartier: 'Quartier',
+      batiment: 'Cité / Immeuble (optionnel)',
+      batimentExemple: 'Ex : Cité 500 Logts, Bât. C',
+      reglesTitre: 'Les règles du quartier',
+      reglesSous: 'À lire avant de commencer — merci de les respecter.',
+      regle1: 'Respect entre voisins, pas d’insultes ni de harcèlement.',
+      regle2: 'N’alerte que sur des informations vérifiées.',
+      regle3: 'Pas de publicité commerciale ni de contenu inapproprié.',
+      regle4: '3 signalements = contenu masqué 3 jours. Une 2ᵉ fois = masquage définitif.',
+      accepte: 'J’ai compris, je m’engage à les respecter',
+      accepteDecompte: 'J’ai compris, je m’engage à les respecter ({s} s)',
+      chercher: 'Chercher une publication ou un voisin',
+      tout: 'Tout',
+      securite: 'Sécurité',
+      entraide: 'Entraide',
+      annonce: 'Annonce',
+      evenement: 'Événement',
+      vide: 'Rien de neuf dans le quartier pour le moment.',
+      videAide: 'Ton quartier démarre. Publie le premier message : une demande de coup de main, une annonce, ou une information utile.',
+      videFiltre: 'Aucune publication dans cette catégorie.',
+      bienvenue: 'Souhaite la bienvenue à {nom} !',
+      bienvenueSous: 'Nouveau voisin · arrivé récemment',
+      bienvenueSousBat: 'Nouveau voisin · {bat} · arrivé récemment',
+      alerteMeta: '{quand} · signalé par {qui}',
+      repondre: 'Répondre',
+      uneReponse: '1 réponse',
+      desReponses: '{n} réponses',
+      masqueeTemp: '🚫 Contenu masqué — signalé par 3 voisins différents. Masqué pendant 3 jours.',
+      masqueeDef: '🚫 Contenu masqué définitivement après plusieurs signalements.',
+      nouvelle: 'Nouvelle publication',
+      categorie: 'Catégorie',
+      quoiDeNeuf: 'Qu’est-ce que tu veux partager avec tes voisins ?',
+      publier: 'Publier',
+      publie: '✓ Publication envoyée à ton quartier',
+      motsInterdits: '⚠️ Ce message contient des termes inappropriés. Merci de reformuler.',
+      trop: 'Écris au moins quelques mots.',
+      reponsesTitre: 'Réponses',
+      ecrireReponse: 'Écrire une réponse…',
+      premiereReponse: 'Sois le premier à répondre.',
+      signalerTitre: 'Signaler cette publication',
+      spam: 'Spam ou publicité',
+      inapproprie: 'Contenu inapproprié',
+      fausse_alerte: 'Fausse alerte',
+      autre: 'Autre raison',
+      signale: '✓ Merci, signalement envoyé',
+      dejaSignale: 'Tu as déjà signalé cette publication.',
+      alertesTitre: 'Alertes du quartier',
+      alertesSous: 'Sécurité, coupures et objets perdus.',
+      alertesVide: 'Aucune alerte en cours. Bonne nouvelle.',
+      quartierTitre: 'Mon quartier',
+      voisinsCompte: '{n} voisins dans ce quartier',
+      voisinsListe: 'Les voisins',
+      seul: 'Tu es le premier ici. Partage le lien à tes voisins.',
+      moderationTitre: 'Modération',
+      moderationCompte: '{n} contenus actuellement masqués',
+      reglesLien: 'Les règles du quartier',
+      changer: 'Changer de quartier ou de prénom',
+      sosTitre: 'Alerte SOS',
+      sosSous: 'Choisis les voisins à prévenir. Eux seuls verront ton appel.',
+      sosTous: 'Tout sélectionner',
+      sosAucun: 'Tout désélectionner',
+      sosEnvoyer: 'Envoyer l’alerte',
+      sosRien: 'Choisis au moins un voisin.',
+      sosPersonne: 'Personne d’autre n’est encore inscrit dans ton quartier.',
+      sosEnvoye: '🆘 {nom} demande de l’aide',
+      sosDetail: 'Ouvre l’application, ou appelle-le directement.',
+      sosPosition: 'Position : {p}',
+      sosAnnuler: 'Fausse alerte, annuler',
+      sosAnnule: 'Alerte annulée.',
+      sosPartage: '✓ {n} voisin(s) alerté(s)',
+      navAccueil: 'Accueil',
+      navAlertes: 'Alertes',
+      navQuartier: 'Quartier',
+      pied: 'Version d’essai de Jiran, pour tester le principe entre voisins. Pas de vérification par SMS, pas de notifications : l’application réelle les fait. Tout le monde ayant ce lien voit ce fil.',
+      attente: 'Connexion au quartier…',
+      indisponible: 'Le quartier partagé n’est pas accessible depuis cette vue. Rouvre le lien depuis claude.ai.',
+    },
+    ar: {
+      accroche: 'شبكة حيّك، بين الجيران',
+      essai: 'نسخة تجريبية: اسمك مُصرَّح به فقط، وغير مؤكَّد برسالة قصيرة كما في التطبيق. كل ما تنشره يراه الجيران الذين لديهم هذا الرابط.',
+      commencer: 'ابدأ',
+      identiteTitre: 'ما اسمك؟',
+      identiteSous: 'سيظهر اسمك على منشوراتك.',
+      prenom: 'الاسم',
+      prenomExemple: 'مثال : حفيظ',
+      continuer: 'متابعة',
+      lieuTitre: 'أين تسكن؟',
+      lieuSous: 'اختر نفس الحي الذي اختاره جيرانك، وإلا لن يرى بعضكم بعضاً.',
+      quartier: 'الحي',
+      batiment: 'الحي السكني / العمارة (اختياري)',
+      batimentExemple: 'مثال : حي 500 مسكن، عمارة C',
+      reglesTitre: 'قواعد الحي',
+      reglesSous: 'اقرأها قبل البدء — نرجو احترامها.',
+      regle1: 'احترام بين الجيران، ممنوع الشتم أو المضايقة.',
+      regle2: 'لا تنبّه إلا بمعلومات مؤكدة.',
+      regle3: 'ممنوع الإشهار التجاري والمحتوى غير اللائق.',
+      regle4: '3 بلاغات = إخفاء المحتوى 3 أيام. مرة ثانية = إخفاء نهائي.',
+      accepte: 'فهمت، وألتزم باحترامها',
+      accepteDecompte: 'فهمت، وألتزم باحترامها ({s})',
+      chercher: 'ابحث عن منشور أو جار',
+      tout: 'الكل',
+      securite: 'أمن',
+      entraide: 'تعاون',
+      annonce: 'إعلان',
+      evenement: 'فعالية',
+      vide: 'لا جديد في الحي حالياً.',
+      videAide: 'حيّك ينطلق. انشر أول رسالة: طلب مساعدة، إعلان، أو معلومة مفيدة.',
+      videFiltre: 'لا يوجد منشور في هذه الفئة.',
+      bienvenue: 'رحّب بـ {nom} !',
+      bienvenueSous: 'جار جديد · وصل حديثاً',
+      bienvenueSousBat: 'جار جديد · {bat} · وصل حديثاً',
+      alerteMeta: '{quand} · أبلغ عنه {qui}',
+      repondre: 'ردّ',
+      uneReponse: 'رد واحد',
+      desReponses: '{n} ردود',
+      masqueeTemp: '🚫 محتوى مخفي — أبلغ عنه 3 جيران مختلفون. مخفي لمدة 3 أيام.',
+      masqueeDef: '🚫 محتوى مخفي نهائياً بعد عدة بلاغات.',
+      nouvelle: 'منشور جديد',
+      categorie: 'الفئة',
+      quoiDeNeuf: 'ما الذي تريد مشاركته مع جيرانك؟',
+      publier: 'نشر',
+      publie: '✓ تم إرسال المنشور إلى حيّك',
+      motsInterdits: '⚠️ هذه الرسالة تحتوي على ألفاظ غير لائقة. أعد صياغتها.',
+      trop: 'اكتب بضع كلمات على الأقل.',
+      reponsesTitre: 'الردود',
+      ecrireReponse: 'اكتب ردّاً…',
+      premiereReponse: 'كن أول من يردّ.',
+      signalerTitre: 'الإبلاغ عن هذا المنشور',
+      spam: 'سبام أو إشهار',
+      inapproprie: 'محتوى غير لائق',
+      fausse_alerte: 'تنبيه كاذب',
+      autre: 'سبب آخر',
+      signale: '✓ شكراً، تم إرسال البلاغ',
+      dejaSignale: 'سبق أن أبلغت عن هذا المنشور.',
+      alertesTitre: 'تنبيهات الحي',
+      alertesSous: 'الأمن، الانقطاعات والأشياء الضائعة.',
+      alertesVide: 'لا توجد تنبيهات حالياً. خبر سار.',
+      quartierTitre: 'حيّي',
+      voisinsCompte: '{n} جيران في هذا الحي',
+      voisinsListe: 'الجيران',
+      seul: 'أنت أول من وصل. شارك الرابط مع جيرانك.',
+      moderationTitre: 'الإشراف',
+      moderationCompte: '{n} محتويات مخفية حالياً',
+      reglesLien: 'قواعد الحي',
+      changer: 'تغيير الحي أو الاسم',
+      sosTitre: 'نداء استغاثة',
+      sosSous: 'اختر الجيران الذين تريد تنبيههم. هم وحدهم سيرون نداءك.',
+      sosTous: 'اختيار الكل',
+      sosAucun: 'إلغاء اختيار الكل',
+      sosEnvoyer: 'إرسال النداء',
+      sosRien: 'اختر جاراً واحداً على الأقل.',
+      sosPersonne: 'لا يوجد جار آخر مسجَّل في حيّك بعد.',
+      sosEnvoye: '🆘 {nom} يطلب المساعدة',
+      sosDetail: 'افتح التطبيق، أو اتصل به مباشرة.',
+      sosPosition: 'الموقع : {p}',
+      sosAnnuler: 'تنبيه كاذب، إلغاء',
+      sosAnnule: 'تم إلغاء النداء.',
+      sosPartage: '✓ تم تنبيه {n} من الجيران',
+      navAccueil: 'الرئيسية',
+      navAlertes: 'تنبيهات',
+      navQuartier: 'الحي',
+      pied: 'نسخة تجريبية من Jiran لاختبار الفكرة بين الجيران. بلا تحقق برسالة قصيرة وبلا إشعارات: التطبيق الحقيقي يقوم بهما. كل من لديه الرابط يرى هذا الخيط.',
+      attente: 'جارٍ الاتصال بالحي…',
+      indisponible: 'الحي المشترك غير متاح في هذا العرض. أعد فتح الرابط من claude.ai.',
+    },
+  };
+
+  const EMOJI = { tout: '🏘️', securite: '🚨', entraide: '🤝', annonce: '🛍️', evenement: '📅' };
+  const COULEUR = {
+    securite: ['var(--alerte)', 'var(--alerte-douce)'],
+    entraide: ['var(--entraide)', 'var(--entraide-douce)'],
+    annonce: ['var(--annonce)', 'var(--annonce-douce)'],
+    evenement: ['var(--evenement)', 'var(--evenement-douce)'],
+  };
+
+  // ————————————————————————————————————————————————
+  //  Filtre de texte — même principe que l'application
+  // ————————————————————————————————————————————————
+  const INTERDITS = ['con', 'connard', 'connasse', 'pute', 'putain', 'salope', 'merde', 'encule',
+    'batard', 'nique', 'ntm', 'fuck', 'shit', 'bitch', 'قحبة', 'زامل', 'gahba', 'kahba', 'nikomok'];
+  const TOLERES = ['concert', 'conseil', 'concierge', 'construction', 'contact', 'content',
+    'confiance', 'connexion', 'connaissance', 'controle', 'balcon', 'flacon', 'conte', 'connu', 'cone'];
+  const LEET = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b', '9': 'g', '@': 'a', '$': 's', '!': 'i' };
+
+  const normaliser = (t) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[01345789@$!]/g, (c) => LEET[c] || c);
+  const tasser = (m) => m.replace(/(.)\1+/g, '$1');
+
+  function texteAcceptable(texte) {
+    const LETTRE = 'a-z؀-ۿ';
+    const espace = new RegExp('(^|[^' + LETTRE + '])([' + LETTRE + '](?:[\\s._\\-*]+[' + LETTRE + ']){2,})(?![' + LETTRE + '])', 'g');
+    const recolle = normaliser(texte).replace(espace, (m, avant, suite) => avant + suite.replace(/[\s._\-*]+/g, ''));
+    const mots = recolle.split(new RegExp('[^' + LETTRE + '0-9]+')).filter(Boolean).map(tasser);
+    const permis = new Set(TOLERES.map((m) => tasser(normaliser(m))));
+    const bannis = INTERDITS.map((m) => tasser(normaliser(m)));
+
+    return !mots.some((mot) =>
+      !permis.has(mot) && bannis.some((b) => mot === b || (mot.startsWith(b) && mot.length - b.length === 1))
+    );
+  }
+
+  // ————————————————————————————————————————————————
+  //  Modération : 3 voisins distincts → 3 jours ; récidive → définitif
+  // ————————————————————————————————————————————————
+  const JOUR = 86400000;
+
+  function verdict(signalements, maintenant) {
+    const distincts = [...new Map(signalements.map((s) => [s.voisinId, s])).values()]
+      .sort((a, b) => String(a.creeA).localeCompare(String(b.creeA)));
+    const cycles = Math.floor(distincts.length / 3);
+
+    if (cycles === 0) return { cycles: 0, masque: false, definitif: false };
+    if (cycles >= 2) return { cycles, masque: true, definitif: true };
+
+    const fin = new Date(distincts[2].creeA).getTime() + 3 * JOUR;
+    return { cycles: 1, definitif: false, masque: maintenant < fin };
+  }
+
+  // ————————————————————————————————————————————————
+  //  État
+  // ————————————————————————————————————————————————
+  const CLE = 'jiran/moi';
+  let db = null;
+  let moi = null;
+  let langue = 'fr';
+  let pret = false;
+  let dbIndisponible = false;
+
+  const etat = {
+    onglet: 'accueil',
+    filtre: 'tout',
+    recherche: '',
+    feuille: null,
+    brouillon: { categorie: 'entraide', texte: '', refus: null },
+    sosChoisis: new Set(),
+    etape: 'ouverture',
+    decompte: 3,
+    identite: { nom: '', quartier: QUARTIERS[0].id, batiment: '' },
+  };
+
+  const donnees = { voisins: [], publications: [], reponses: [], mentions: [], signalements: [], sos: [] };
+
+  const t = (cle, vars) => {
+    let s = (T[langue] && T[langue][cle]) || T.fr[cle] || cle;
+    if (vars) for (const [k, v] of Object.entries(vars)) s = s.split('{' + k + '}').join(v);
+    return s;
+  };
+
+  const quartierDe = (id) => QUARTIERS.find((q) => q.id === id) || QUARTIERS[0];
+  const nomQuartier = (q) => (langue === 'ar' ? q.ar : q.fr);
+  const nomWilaya = (q) => (langue === 'ar' ? q.wilayaAr : q.wilaya);
+
+  function ilYA(iso) {
+    const ecart = Math.max(0, Date.now() - new Date(iso).getTime());
+    const min = Math.floor(ecart / 60000);
+    if (min < 1) return langue === 'ar' ? 'الآن' : "à l'instant";
+    if (min < 60) return langue === 'ar' ? 'قبل ' + min + ' د' : 'il y a ' + min + ' min';
+    const h = Math.floor(min / 60);
+    if (h < 24) return langue === 'ar' ? 'قبل ' + h + ' سا' : 'il y a ' + h + ' h';
+    const j = Math.floor(h / 24);
+    if (j === 1) return langue === 'ar' ? 'البارح' : 'hier';
+    return langue === 'ar' ? 'قبل ' + j + ' أيام' : 'il y a ' + j + ' jours';
+  }
+
+  const echapper = (s) => String(s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+  // ————————————————————————————————————————————————
+  //  Chargement
+  // ————————————————————————————————————————————————
+  function lireMoi() {
+    try {
+      const brut = localStorage.getItem(CLE);
+      return brut ? JSON.parse(brut) : null;
+    } catch { return null; }
+  }
+
+  function ecrireMoi(valeur) {
+    moi = valeur;
+    try { localStorage.setItem(CLE, JSON.stringify(valeur)); } catch { /* navigation privée */ }
+  }
+
+  const nouvelId = () =>
+    (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2));
+
+  async function demarrer() {
+    moi = lireMoi();
+    if (moi && moi.langue) langue = moi.langue;
+    rendre();
+
+    db = await claude.use('db');
+    if (!db) { dbIndisponible = true; rendre(); return; }
+
+    const suivre = (nom, requete) => {
+      requete.onSnapshot(
+        (snap) => {
+          donnees[nom] = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+          pret = true;
+          rendre();
+        },
+        () => { pret = true; rendre(); }
+      );
+    };
+
+    suivre('voisins', db.collection('voisins'));
+    suivre('publications', db.collection('publications'));
+    suivre('reponses', db.collection('reponses'));
+    suivre('mentions', db.collection('mentions'));
+    suivre('signalements', db.collection('signalements'));
+    suivre('sos', db.collection('sos'));
+
+    if (moi) inscrireVoisin();
+  }
+
+  function inscrireVoisin() {
+    if (!db || !moi) return;
+    db.doc('voisins/' + moi.id).set({
+      nom: moi.nom, quartier: moi.quartier, batiment: moi.batiment || '', arriveA: moi.arriveA,
+    }).catch(() => {});
+  }
+
+  // ————————————————————————————————————————————————
+  //  Vues dérivées
+  // ————————————————————————————————————————————————
+  const mesVoisins = () => donnees.voisins.filter((v) => v.quartier === moi.quartier && v.id !== moi.id);
+
+  function filDuQuartier() {
+    const maintenant = Date.now();
+    return donnees.publications
+      .filter((p) => p.quartier === moi.quartier)
+      .sort((a, b) => String(b.creeA).localeCompare(String(a.creeA)))
+      .map((p) => {
+        const sig = donnees.signalements.filter((s) => s.publicationId === p.id);
+        return Object.assign({}, p, {
+          verdict: verdict(sig, maintenant),
+          aime: donnees.mentions.filter((m) => m.publicationId === p.id),
+          jAime: donnees.mentions.some((m) => m.publicationId === p.id && m.voisinId === moi.id),
+          signalee: sig.some((s) => s.voisinId === moi.id),
+          reponses: donnees.reponses.filter((r) => r.publicationId === p.id)
+            .sort((a, b) => String(a.creeA).localeCompare(String(b.creeA))),
+        });
+      });
+  }
+
+  const alerteDuMoment = (fil) => fil.find((p) =>
+    p.categorie === 'securite' && !p.verdict.masque && Date.now() - new Date(p.creeA).getTime() < JOUR);
+
+  const dernierArrive = () => mesVoisins()
+    .filter((v) => Date.now() - new Date(v.arriveA).getTime() < 7 * JOUR)
+    .sort((a, b) => String(b.arriveA).localeCompare(String(a.arriveA)))[0];
+
+  const sosPourMoi = () => donnees.sos
+    .filter((s) => !s.annule && Array.isArray(s.pour) && s.pour.includes(moi.id)
+      && Date.now() - new Date(s.creeA).getTime() < 6 * 3600000)
+    .sort((a, b) => String(b.creeA).localeCompare(String(a.creeA)));
+
+  // ————————————————————————————————————————————————
+  //  Actions
+  // ————————————————————————————————————————————————
+  let toastTimer = null;
+  function toast(message) {
+    const boite = document.getElementById('toast');
+    if (boite) boite.remove();
+    const el = document.createElement('div');
+    el.id = 'toast';
+    el.className = 'toast';
+    el.setAttribute('role', 'status');
+    el.textContent = message;
+    document.body.appendChild(el);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.remove(), 2600);
+  }
+
+  const actions = {
+    langue(valeur) {
+      langue = valeur;
+      if (moi) ecrireMoi(Object.assign({}, moi, { langue: valeur }));
+      rendre();
+    },
+
+    etape(valeur) {
+      etat.etape = valeur;
+      if (valeur === 'regles') {
+        etat.decompte = 3;
+        const minuteur = setInterval(() => {
+          etat.decompte -= 1;
+          if (etat.decompte <= 0) { clearInterval(minuteur); etat.decompte = 0; }
+          rendre();
+        }, 1000);
+      }
+      rendre();
+    },
+
+    entrer() {
+      const nom = etat.identite.nom.trim();
+      if (!nom) return;
+      ecrireMoi({
+        id: nouvelId(), nom, quartier: etat.identite.quartier,
+        batiment: etat.identite.batiment.trim(), arriveA: new Date().toISOString(), langue,
+      });
+      inscrireVoisin();
+      etat.etape = 'ouverture';
+      rendre();
+    },
+
+    onglet(valeur) { etat.onglet = valeur; etat.feuille = null; rendre(); },
+    filtre(valeur) { etat.filtre = valeur; rendre(); },
+    recherche(valeur) { etat.recherche = valeur; rendre(); },
+
+    feuille(nom, arg) {
+      etat.feuille = nom ? { nom, arg } : null;
+      if (nom === 'publier') etat.brouillon = { categorie: 'entraide', texte: '', refus: null };
+      if (nom === 'sos') etat.sosChoisis = new Set(mesVoisins().map((v) => v.id));
+      rendre();
+    },
+
+    categorie(valeur) { etat.brouillon.categorie = valeur; rendre(); },
+
+    brouillon(valeur) {
+      etat.brouillon.texte = valeur;
+      const refus = valeur.trim() && !texteAcceptable(valeur) ? t('motsInterdits') : null;
+      if (refus !== etat.brouillon.refus) { etat.brouillon.refus = refus; rendre(); }
+    },
+
+    async publier() {
+      const texte = etat.brouillon.texte.trim();
+      if (texte.length < 3) { toast(t('trop')); return; }
+      if (!texteAcceptable(texte)) { toast(t('motsInterdits')); return; }
+
+      await db.collection('publications').add({
+        auteurId: moi.id, auteurNom: moi.nom, quartier: moi.quartier,
+        batiment: moi.batiment || '', categorie: etat.brouillon.categorie,
+        texte, creeA: new Date().toISOString(),
+      }).catch(() => toast(t('indisponible')));
+
+      etat.feuille = null;
+      etat.brouillon = { categorie: 'entraide', texte: '', refus: null };
+      toast(t('publie'));
+      rendre();
+    },
+
+    async aimer(publicationId, deja) {
+      const cle = publicationId + '__' + moi.id;
+      if (deja) await db.doc('mentions/' + cle).delete().catch(() => {});
+      else await db.doc('mentions/' + cle).set({ publicationId, voisinId: moi.id }).catch(() => {});
+    },
+
+    async repondre(publicationId, champ) {
+      const texte = champ.value.trim();
+      if (texte.length < 2) return;
+      if (!texteAcceptable(texte)) { toast(t('motsInterdits')); return; }
+
+      champ.value = '';
+      await db.collection('reponses').add({
+        publicationId, auteurNom: moi.nom, texte, creeA: new Date().toISOString(),
+      }).catch(() => toast(t('indisponible')));
+    },
+
+    async signaler(publicationId, motif) {
+      etat.feuille = null;
+      const cle = publicationId + '__' + moi.id;
+      const deja = donnees.signalements.some((s) => s.id === cle);
+      if (deja) { toast(t('dejaSignale')); rendre(); return; }
+
+      await db.doc('signalements/' + cle).set({
+        publicationId, voisinId: moi.id, motif, creeA: new Date().toISOString(),
+      }).catch(() => {});
+      toast(t('signale'));
+      rendre();
+    },
+
+    sosBascule(id) {
+      if (etat.sosChoisis.has(id)) etat.sosChoisis.delete(id);
+      else etat.sosChoisis.add(id);
+      rendre();
+    },
+
+    sosTous() {
+      const tous = mesVoisins().map((v) => v.id);
+      etat.sosChoisis = etat.sosChoisis.size === tous.length ? new Set() : new Set(tous);
+      rendre();
+    },
+
+    async sosEnvoyer() {
+      const pour = [...etat.sosChoisis];
+      if (!pour.length) { toast(t('sosRien')); return; }
+
+      let position = '';
+      try {
+        const p = await new Promise((ok, non) =>
+          navigator.geolocation.getCurrentPosition(ok, non, { timeout: 6000 }));
+        position = p.coords.latitude.toFixed(5) + ', ' + p.coords.longitude.toFixed(5);
+      } catch { /* la position est un plus, jamais un blocage */ }
+
+      await db.collection('sos').add({
+        deId: moi.id, deNom: moi.nom, quartier: moi.quartier, pour,
+        position, annule: false, creeA: new Date().toISOString(),
+      }).catch(() => toast(t('indisponible')));
+
+      etat.feuille = null;
+      toast(t('sosPartage', { n: pour.length }));
+      rendre();
+    },
+
+    async sosAnnuler(id) {
+      await db.doc('sos/' + id).update({ annule: true }).catch(() => {});
+      toast(t('sosAnnule'));
+    },
+
+    recommencer() {
+      try { localStorage.removeItem(CLE); } catch { /* ignore */ }
+      moi = null;
+      etat.etape = 'ouverture';
+      rendre();
+    },
+  };
+
+  window.jiran = actions;
+
+  // ————————————————————————————————————————————————
+  //  Rendu
+  // ————————————————————————————————————————————————
+  function barreLangues() {
+    return '<div class="langues" role="group">' +
+      ['fr', 'ar'].map((l) =>
+        '<button type="button" aria-pressed="' + (langue === l ? 'true' : 'false') +
+        '" onclick="jiran.langue(\'' + l + '\')">' + (l === 'fr' ? 'FR' : 'ع') + '</button>').join('') +
+      '</div>';
+  }
+
+  function vueOuverture() {
+    return '<div class="ouverture">' +
+      '<div class="logo">🏘️</div>' +
+      '<div class="marque">Jiran</div>' +
+      '<div class="accroche">' + echapper(t('accroche')) + '</div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:center;margin-bottom:18px">' + barreLangues() + '</div>' +
+      '<div class="avis">' + echapper(t('essai')) + '</div>' +
+      '<button class="principal" type="button" onclick="jiran.etape(\'identite\')">' +
+      echapper(t('commencer')) + '</button>';
+  }
+
+  function vueIdentite() {
+    return '<h1>' + echapper(t('identiteTitre')) + '</h1>' +
+      '<p class="sous-titre">' + echapper(t('identiteSous')) + '</p>' +
+      '<label class="champ"><span>' + echapper(t('prenom')) + '</span>' +
+      '<input id="nom" value="' + echapper(etat.identite.nom) + '" placeholder="' + echapper(t('prenomExemple')) +
+      '" autocomplete="given-name" oninput="jiran._nom(this.value)"></label>' +
+      '<button class="principal" type="button" id="suite-identite" ' +
+      (etat.identite.nom.trim() ? '' : 'disabled ') +
+      'onclick="jiran.etape(\'lieu\')">' + echapper(t('continuer')) + '</button>';
+  }
+
+  function vueLieu() {
+    return '<h1>' + echapper(t('lieuTitre')) + '</h1>' +
+      '<p class="sous-titre">' + echapper(t('lieuSous')) + '</p>' +
+      '<label class="champ"><span>' + echapper(t('quartier')) + '</span>' +
+      '<select id="quartier" onchange="jiran._quartier(this.value)">' +
+      QUARTIERS.map((q) =>
+        '<option value="' + q.id + '"' + (etat.identite.quartier === q.id ? ' selected' : '') + '>' +
+        echapper(nomQuartier(q) + ' · ' + nomWilaya(q)) + '</option>').join('') +
+      '</select></label>' +
+      '<label class="champ"><span>' + echapper(t('batiment')) + '</span>' +
+      '<input id="batiment" value="' + echapper(etat.identite.batiment) + '" placeholder="' +
+      echapper(t('batimentExemple')) + '" oninput="jiran._batiment(this.value)"></label>' +
+      '<button class="principal" type="button" onclick="jiran.etape(\'regles\')">' +
+      echapper(t('continuer')) + '</button>';
+  }
+
+  function vueRegles() {
+    const verrouille = etat.decompte > 0;
+    const libelle = verrouille ? t('accepteDecompte', { s: etat.decompte }) : t('accepte');
+
+    return '<h1>' + echapper(t('reglesTitre')) + '</h1>' +
+      '<p class="sous-titre">' + echapper(t('reglesSous')) + '</p>' +
+      [['🤝', 'regle1'], ['✅', 'regle2'], ['🚫', 'regle3'], ['⚠️', 'regle4']].map(([e, cle]) =>
+        '<div class="regle"><span>' + e + '</span><span>' + echapper(t(cle)) + '</span></div>').join('') +
+      '<button class="principal" type="button" style="margin-top:14px" ' +
+      (verrouille ? 'disabled ' : '') + 'onclick="jiran.entrer()">' + echapper(libelle) + '</button>';
+  }
+
+  function vueInscription() {
+    const ordre = ['ouverture', 'identite', 'lieu', 'regles'];
+    const points = '<div class="etapes">' + ordre.map((e) =>
+      '<div class="etape' + (etat.etape === e ? ' active' : '') + '"></div>').join('') + '</div>';
+
+    const corps = etat.etape === 'identite' ? vueIdentite()
+      : etat.etape === 'lieu' ? vueLieu()
+      : etat.etape === 'regles' ? vueRegles()
+      : vueOuverture();
+
+    return points + corps;
+  }
+
+  function carteBienvenue() {
+    const nouveau = dernierArrive();
+    if (!nouveau) return '';
+    const sous = nouveau.batiment
+      ? t('bienvenueSousBat', { bat: echapper(nouveau.batiment) })
+      : t('bienvenueSous');
+
+    return '<div class="bienvenue"><div class="rond">👋</div><div>' +
+      '<div class="nom">' + echapper(t('bienvenue', { nom: nouveau.nom })) + '</div>' +
+      '<div class="quand">' + sous + '</div></div></div>';
+  }
+
+  function bannieres(fil) {
+    let html = sosPourMoi().map((s) =>
+      '<div class="sos-recu"><div class="titre">' + echapper(t('sosEnvoye', { nom: s.deNom })) + '</div>' +
+      '<div class="detail">' + echapper(t('sosDetail')) +
+      (s.position ? '<br>' + echapper(t('sosPosition', { p: s.position })) : '') + '</div></div>').join('');
+
+    const alerte = alerteDuMoment(fil);
+    if (alerte) {
+      html += '<button class="banniere-alerte" type="button" onclick="jiran.feuille(\'detail\',\'' + alerte.id + '\')">' +
+        '<span style="font-size:20px">🚨</span><span><span class="texte">' + echapper(alerte.texte) + '</span>' +
+        '<span class="meta" style="display:block">' +
+        echapper(t('alerteMeta', { quand: ilYA(alerte.creeA), qui: alerte.auteurNom })) +
+        '</span></span></button>';
+    }
+    return html;
+  }
+
+  function vuePublication(p, avecReponses) {
+    if (p.verdict.masque) {
+      return '<div class="masquee">' + echapper(p.verdict.definitif ? t('masqueeDef') : t('masqueeTemp')) + '</div>';
+    }
+
+    const [texte, fond] = COULEUR[p.categorie] || COULEUR.entraide;
+    const lieu = [p.batiment, nomQuartier(quartierDe(p.quartier))].filter(Boolean).join(' · ');
+    const nb = p.reponses.length;
+    const libelleReponses = nb === 0 ? t('repondre') : nb === 1 ? t('uneReponse') : t('desReponses', { n: nb });
+
+    return '<article class="publication">' +
+      '<div class="haut"><div class="avatar">👤</div>' +
+      '<div class="qui"><div class="nom">' + echapper(p.auteurNom) + '</div>' +
+      '<div class="meta">' + echapper(lieu + ' · ' + ilYA(p.creeA)) + '</div></div>' +
+      '<span class="etiquette" style="color:' + texte + ';background:' + fond + '">' +
+      echapper(t(p.categorie)) + '</span>' +
+      '<button class="menu" type="button" aria-label="' + echapper(t('signalerTitre')) +
+      '" onclick="jiran.feuille(\'signaler\',\'' + p.id + '\')">⋮</button></div>' +
+      '<div class="corps">' + echapper(p.texte) + '</div>' +
+      '<div class="actions">' +
+      '<button type="button" class="' + (p.jAime ? 'aime' : '') + '" onclick="jiran.aimer(\'' + p.id + '\',' + p.jAime + ')">👍 ' + p.aime.length + '</button>' +
+      '<button type="button" onclick="jiran.feuille(\'detail\',\'' + p.id + '\')">💬 ' + echapper(libelleReponses) + '</button>' +
+      '</div></article>';
+  }
+
+  function vueAccueil() {
+    const fil = filDuQuartier();
+    const q = etat.recherche.trim().toLowerCase();
+    const visibles = fil.filter((p) =>
+      (etat.filtre === 'tout' || p.categorie === etat.filtre) &&
+      (!q || p.texte.toLowerCase().includes(q) || p.auteurNom.toLowerCase().includes(q)));
+
+    const quartier = quartierDe(moi.quartier);
+    const entete = '<header class="entete"><div class="titre">' +
+      '<div class="marque-mini">Jiran</div>' +
+      '<div class="lieu">📍 ' + echapper(nomQuartier(quartier) + ' · ' + nomWilaya(quartier)) + '</div>' +
+      '</div>' + barreLangues() + '</header>';
+
+    const recherche = '<div class="recherche"><input id="recherche" value="' + echapper(etat.recherche) +
+      '" placeholder="' + echapper(t('chercher')) + '" oninput="jiran.recherche(this.value)"></div>';
+
+    const filtres = '<div class="filtres">' + ['tout'].concat(CATEGORIES).map((c) =>
+      '<button class="puce" type="button" aria-pressed="' + (etat.filtre === c ? 'true' : 'false') +
+      '" onclick="jiran.filtre(\'' + c + '\')">' + EMOJI[c] + ' ' + echapper(t(c)) + '</button>').join('') + '</div>';
+
+    const corps = visibles.length
+      ? '<div class="liste">' + visibles.map((p) => vuePublication(p)).join('') + '</div>'
+      : '<div class="vide"><p>' + echapper(etat.filtre === 'tout' && !q ? t('vide') : t('videFiltre')) + '</p>' +
+        (etat.filtre === 'tout' && !q ? '<p>' + echapper(t('videAide')) + '</p>' : '') + '</div>';
+
+    return entete + recherche + filtres + bannieres(fil) + carteBienvenue() + corps;
+  }
+
+  function vueAlertes() {
+    const alertes = filDuQuartier().filter((p) => p.categorie === 'securite');
+    return '<header class="entete"><div class="titre"><h1>' + echapper(t('alertesTitre')) + '</h1>' +
+      '<div class="lieu">' + echapper(t('alertesSous')) + '</div></div></header>' +
+      (alertes.length
+        ? '<div class="liste">' + alertes.map((p) => vuePublication(p)).join('') + '</div>'
+        : '<div class="vide"><p>' + echapper(t('alertesVide')) + '</p></div>');
+  }
+
+  function vueQuartier() {
+    const quartier = quartierDe(moi.quartier);
+    const voisins = mesVoisins();
+    const masquees = filDuQuartier().filter((p) => p.verdict.masque).length;
+
+    const liste = voisins.length
+      ? voisins.map((v) => '<div class="voisin-ligne"><span>👤</span><span>' + echapper(v.nom) +
+          (v.batiment ? ' · ' + echapper(v.batiment) : '') + '</span></div>').join('')
+      : '<p class="sous-titre">' + echapper(t('seul')) + '</p>';
+
+    return '<header class="entete"><div class="titre"><h1>' + echapper(nomQuartier(quartier)) + '</h1>' +
+      '<div class="lieu">' + echapper(t('voisinsCompte', { n: voisins.length + 1 })) + '</div></div>' +
+      barreLangues() + '</header>' +
+      '<h2 style="font-size:15px;margin:14px 0 10px">' + echapper(t('voisinsListe')) + '</h2>' + liste +
+      '<h2 style="font-size:15px;margin:20px 0 8px">' + echapper(t('moderationTitre')) + '</h2>' +
+      '<p class="sous-titre">' + echapper(t('moderationCompte', { n: masquees })) + '</p>' +
+      '<h2 style="font-size:15px;margin:20px 0 8px">' + echapper(t('reglesLien')) + '</h2>' +
+      [['🤝', 'regle1'], ['✅', 'regle2'], ['🚫', 'regle3'], ['⚠️', 'regle4']].map(([e, cle]) =>
+        '<div class="regle"><span>' + e + '</span><span>' + echapper(t(cle)) + '</span></div>').join('') +
+      '<button class="fantome" type="button" style="margin-top:16px" onclick="jiran.recommencer()">' +
+      echapper(t('changer')) + '</button>' +
+      '<p class="pied">' + echapper(t('pied')) + '</p>';
+  }
+
+  function feuilleDetail(id) {
+    const p = filDuQuartier().find((x) => x.id === id);
+    if (!p) return '';
+    if (p.verdict.masque) return vuePublication(p);
+
+    const reponses = p.reponses.length
+      ? p.reponses.map((r) => '<div class="reponse"><div class="avatar">👤</div><div class="bulle">' +
+          '<div class="nom">' + echapper(r.auteurNom) + '</div>' +
+          '<div class="texte">' + echapper(r.texte) + '</div>' +
+          '<div class="quand">' + echapper(ilYA(r.creeA)) + '</div></div></div>').join('')
+      : '<p class="sous-titre">' + echapper(t('premiereReponse')) + '</p>';
+
+    return vuePublication(p) +
+      '<h2 style="font-size:16px;margin:18px 0 12px">' + echapper(t('reponsesTitre')) + '</h2>' + reponses +
+      '<div class="repondre"><input id="reponse" placeholder="' + echapper(t('ecrireReponse')) +
+      '" onkeydown="if(event.key===\'Enter\')jiran.repondre(\'' + p.id + '\',this)">' +
+      '<button type="button" aria-label="' + echapper(t('repondre')) +
+      '" onclick="jiran.repondre(\'' + p.id + '\',document.getElementById(\'reponse\'))">➤</button></div>';
+  }
+
+  function feuillePublier() {
+    return '<h2>' + echapper(t('nouvelle')) + '</h2>' +
+      '<div class="categories">' + CATEGORIES.map((c) =>
+        '<button type="button" aria-pressed="' + (etat.brouillon.categorie === c ? 'true' : 'false') +
+        '" onclick="jiran.categorie(\'' + c + '\')">' + EMOJI[c] + ' ' + echapper(t(c)) + '</button>').join('') +
+      '</div>' +
+      '<textarea id="brouillon" placeholder="' + echapper(t('quoiDeNeuf')) +
+      '" oninput="jiran.brouillon(this.value)">' + echapper(etat.brouillon.texte) + '</textarea>' +
+      (etat.brouillon.refus ? '<div class="refus">' + echapper(etat.brouillon.refus) + '</div>' : '') +
+      '<button class="principal" type="button" style="margin-top:14px"' +
+      (etat.brouillon.refus || etat.brouillon.texte.trim().length < 3 ? ' disabled' : '') +
+      ' onclick="jiran.publier()">' + echapper(t('publier')) + '</button>';
+  }
+
+  function feuilleSignaler(id) {
+    return '<h2>' + echapper(t('signalerTitre')) + '</h2>' +
+      MOTIFS.map((m) => '<button class="choix" type="button" onclick="jiran.signaler(\'' + id + '\',\'' + m + '\')">' +
+        '<span>' + ({ spam: '🚫', inapproprie: '⚠️', fausse_alerte: '🚨', autre: '❓' })[m] + '</span>' +
+        '<span>' + echapper(t(m)) + '</span></button>').join('');
+  }
+
+  function feuilleSos() {
+    const voisins = mesVoisins();
+    if (!voisins.length) {
+      return '<h2>' + echapper(t('sosTitre')) + '</h2>' +
+        '<p class="sous-titre">' + echapper(t('sosPersonne')) + '</p>';
+    }
+
+    const tousChoisis = etat.sosChoisis.size === voisins.length;
+    const mien = donnees.sos.find((s) => s.deId === moi.id && !s.annule &&
+      Date.now() - new Date(s.creeA).getTime() < 6 * 3600000);
+
+    return '<h2>' + echapper(t('sosTitre')) + '</h2>' +
+      '<p class="sous-titre">' + echapper(t('sosSous')) + '</p>' +
+      '<button type="button" class="fantome" style="margin-bottom:12px" onclick="jiran.sosTous()">' +
+      echapper(tousChoisis ? t('sosAucun') : t('sosTous')) + '</button>' +
+      voisins.map((v) => '<button class="voisin-ligne" type="button" aria-pressed="' +
+        (etat.sosChoisis.has(v.id) ? 'true' : 'false') + '" onclick="jiran.sosBascule(\'' + v.id + '\')">' +
+        '<span class="coche">' + (etat.sosChoisis.has(v.id) ? '☑️' : '⬜') + '</span>' +
+        '<span>' + echapper(v.nom) + (v.batiment ? ' · ' + echapper(v.batiment) : '') + '</span></button>').join('') +
+      '<button class="principal danger" type="button" style="margin-top:14px" onclick="jiran.sosEnvoyer()">' +
+      echapper(t('sosEnvoyer')) + '</button>' +
+      (mien ? '<button class="fantome" type="button" style="margin-top:10px" onclick="jiran.sosAnnuler(\'' +
+        mien.id + '\')">' + echapper(t('sosAnnuler')) + '</button>' : '');
+  }
+
+  function vueFeuille() {
+    if (!etat.feuille) return '';
+    const { nom, arg } = etat.feuille;
+    const corps = nom === 'publier' ? feuillePublier()
+      : nom === 'detail' ? feuilleDetail(arg)
+      : nom === 'signaler' ? feuilleSignaler(arg)
+      : nom === 'sos' ? feuilleSos() : '';
+
+    return '<div class="voile" onclick="if(event.target===this)jiran.feuille(null)">' +
+      '<div class="feuille" role="dialog" aria-modal="true"><div class="poignee"></div>' + corps + '</div></div>';
+  }
+
+  function barreBasse() {
+    const onglets = [['accueil', '🏘️', 'navAccueil'], ['alertes', '🚨', 'navAlertes'], ['quartier', '📍', 'navQuartier']];
+    return '<nav class="barre"><div class="dedans">' + onglets.map(([id, emoji, cle]) =>
+      '<button type="button" aria-pressed="' + (etat.onglet === id ? 'true' : 'false') +
+      '" onclick="jiran.onglet(\'' + id + '\')"><span class="icone">' + emoji + '</span>' +
+      '<span>' + echapper(t(cle)) + '</span></button>').join('') + '</div></nav>' +
+      '<button class="flottant sos-bouton" type="button" style="inset-inline-start:16px" ' +
+      'aria-label="' + echapper(t('sosTitre')) + '" onclick="jiran.feuille(\'sos\')">SOS</button>' +
+      '<button class="flottant publier-bouton" type="button" style="inset-inline-end:16px" ' +
+      'aria-label="' + echapper(t('publier')) + '" onclick="jiran.feuille(\'publier\')">+</button>';
+  }
+
+  function rendre() {
+    const app = document.getElementById('app');
+    const calques = document.getElementById('calques');
+    app.dir = langue === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = langue;
+
+    if (dbIndisponible) {
+      app.innerHTML = '<div class="vide"><p>' + echapper(t('indisponible')) + '</p></div>';
+      calques.innerHTML = '';
+      return;
+    }
+
+    if (!moi) {
+      app.innerHTML = vueInscription();
+      calques.innerHTML = '';
+      const champ = document.getElementById('nom');
+      if (champ && document.activeElement !== champ) champ.focus();
+      return;
+    }
+
+    if (!pret) {
+      app.innerHTML = '<div class="vide"><p>' + echapper(t('attente')) + '</p></div>';
+      return;
+    }
+
+    const focusId = document.activeElement && document.activeElement.id;
+    const curseur = focusId && document.activeElement.selectionStart;
+
+    app.innerHTML = etat.onglet === 'alertes' ? vueAlertes()
+      : etat.onglet === 'quartier' ? vueQuartier() : vueAccueil();
+    calques.innerHTML = vueFeuille() + barreBasse();
+
+    // Le rendu remplace le DOM : sans cela, on perdrait le champ en cours de
+    // frappe à chaque publication d'un voisin.
+    if (focusId) {
+      const repris = document.getElementById(focusId);
+      if (repris) {
+        repris.focus();
+        if (curseur != null && repris.setSelectionRange) {
+          try { repris.setSelectionRange(curseur, curseur); } catch { /* select */ }
+        }
+      }
+    }
+  }
+
+  actions._nom = (v) => { etat.identite.nom = v; const b = document.getElementById('suite-identite'); if (b) b.disabled = !v.trim(); };
+  actions._quartier = (v) => { etat.identite.quartier = v; };
+  actions._batiment = (v) => { etat.identite.batiment = v; };
+
+  demarrer();
+})();
+</script>
