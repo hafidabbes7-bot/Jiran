@@ -32,10 +32,15 @@ seule. Le serveur refuse ce réglage quand `NODE_ENV=production`.
 
 ## Canaux d'envoi
 
-**C'est le voisin qui choisit son canal à l'inscription — SMS ou WhatsApp.**
-L'application interroge `GET /auth/channels` et n'affiche que les canaux
-réellement ouverts : proposer WhatsApp sans compte Meta configuré reviendrait à
-promettre un message qui n'arrivera jamais.
+**Le parcours par défaut est celui de toutes les applications : le voisin tape
+son numéro, reçoit un code par SMS, le saisit, et l'application s'ouvre.** Avec
+seulement `SMS_PROVIDER` configuré, il n'y a aucun choix à faire et aucun écran
+supplémentaire.
+
+Les autres canaux ne s'ajoutent que si vous les configurez. L'application
+interroge `GET /auth/channels` et n'affiche un choix que lorsqu'il y en a
+plusieurs : proposer WhatsApp sans compte Meta reviendrait à promettre un
+message qui n'arrivera jamais.
 
 Tout passe par l'interface `MessageProvider` (`src/messaging/provider.ts`) :
 ajouter un canal ou changer d'agrégateur, c'est écrire un fichier.
@@ -46,11 +51,13 @@ ajouter un canal ou changer d'agrégateur, c'est écrire un fichier.
 | SMS | facturé au message par l'agrégateur | `SMS_PROVIDER` vaut `console`, `http` ou `twilio` (`none` le ferme) |
 | WhatsApp (modèle) | facturé au message par Meta | `WHATSAPP_PHONE_NUMBER_ID` et `WHATSAPP_ACCESS_TOKEN` sont renseignés |
 
-### Le canal gratuit, et pourquoi il est aussi le plus sûr
+### Le canal gratuit : une solution de repli, pas le parcours principal
 
 Aucun fournisseur ne délivre de SMS gratuitement, et les modèles WhatsApp
-« authentification » sont facturés au message. Le canal gratuit inverse donc le
-sens du message : **c'est le voisin qui nous écrit**, pas nous.
+« authentification » sont facturés au message. Ce canal inverse donc le sens du
+message : **c'est le voisin qui nous écrit**, pas nous. Il est utile pour un
+lancement sans budget, ou pour les voisins que le SMS n'atteint pas — mais il
+sort de l'habitude, d'où sa place après le SMS dans la liste.
 
 1. L'application demande un défi ; le serveur prépare un jeton et renvoie un
    lien `wa.me` au message pré-rempli. **Rien n'est envoyé.**

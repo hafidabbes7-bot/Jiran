@@ -86,8 +86,8 @@ describe('HttpAuthService', () => {
   });
 
   it('ne retient que les canaux connus annoncés par le serveur', async () => {
-    stubFetch(200, { channels: ['whatsapp_link', 'sms', 'whatsapp', 'pigeon'] });
-    expect(await auth.listChannels()).toEqual(['whatsapp_link', 'sms', 'whatsapp']);
+    stubFetch(200, { channels: ['sms', 'whatsapp', 'whatsapp_link', 'pigeon'] });
+    expect(await auth.listChannels()).toEqual(['sms', 'whatsapp', 'whatsapp_link']);
   });
 
   it('se rabat sur le SMS quand les canaux sont introuvables', async () => {

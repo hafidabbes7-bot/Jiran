@@ -30,11 +30,10 @@ objets à emprunter, services recommandés, carte, mode vacances, collecte des
 déchets, messagerie privée) viendront ensuite, pour ne pas retarder le lancement
 ni diluer le positionnement sécurité / entraide.
 
-L'inscription vérifie le numéro, et le voisin choisit comment. Le canal
-recommandé est **gratuit** : au lieu de lui envoyer un code, c'est lui qui nous
-envoie un message depuis WhatsApp, et c'est WhatsApp qui nous confirme son
-numéro — rien n'est envoyé par le serveur, donc rien n'est facturé. Le SMS et le
-modèle WhatsApp restent disponibles, tous deux facturés au message. Le choix du canal d'envoi et ce qu'il faut obtenir
+L'inscription suit le parcours habituel : le voisin tape son numéro, reçoit un
+code à 6 chiffres par SMS, le saisit, et l'application s'ouvre. Deux options
+WhatsApp — dont une sans aucun frais d'envoi — peuvent s'ajouter si vous les
+configurez ; voir [`server/README.md`](server/README.md). Le choix du canal d'envoi et ce qu'il faut obtenir
 auprès des opérateurs sont expliqués dans [`server/README.md`](server/README.md).
 
 Ce qui reste à brancher côté services externes (modération d'image,

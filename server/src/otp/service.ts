@@ -84,13 +84,18 @@ export class VerificationService {
     private readonly now: () => number = () => Date.now()
   ) {}
 
-  /** Canaux ouverts, dans l'ordre d'affichage souhaité. */
+  /**
+   * Canaux ouverts, dans l'ordre d'affichage.
+   *
+   * Le code reçu par SMS vient en premier : c'est le parcours que tout le
+   * monde connaît, et celui qu'on veut voir par défaut. Le canal gratuit est
+   * une solution de repli proposée ensuite, pas la vitrine.
+   */
   get channels(): Channel[] {
     const open: Channel[] = [];
-    // Le canal gratuit d'abord : c'est celui qu'on veut voir choisi.
-    if (this.options.whatsappBusinessNumber) open.push('whatsapp_link');
     if (this.providers.sms) open.push('sms');
     if (this.providers.whatsapp) open.push('whatsapp');
+    if (this.options.whatsappBusinessNumber) open.push('whatsapp_link');
     return open;
   }
 

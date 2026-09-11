@@ -5,8 +5,8 @@ entraide, SOS et modération** (périmètre décidé au §5 du cahier des charge
 
 ## Démarrer
 
-L'inscription vérifie le numéro (WhatsApp gratuit, SMS, ou WhatsApp par
-modèle) : l'**API de vérification doit tourner**
+L'inscription vérifie le numéro par un code reçu par SMS :
+l'**API de vérification doit tourner**
 (voir [`../server`](../server/README.md)), sinon l'onboarding s'arrête à l'étape
 du code. En développement, aucun SMS n'est réellement envoyé.
 
@@ -14,8 +14,7 @@ du code. En développement, aucun SMS n'est réellement envoyé.
 # terminal 1 — API de vérification
 cd server && npm install && cp .env.example .env
 EXPOSE_DEV_CODE=true npm run dev
-# pour voir aussi le canal gratuit, ajoutez WHATSAPP_BUSINESS_NUMBER,
-# WHATSAPP_APP_SECRET et WHATSAPP_VERIFY_TOKEN dans .env
+# les canaux WhatsApp ne s'ajoutent que si vous les configurez (voir .env.example)
 
 # terminal 2 — application
 cd mobile && npm install
@@ -34,7 +33,7 @@ remplacez-le par l'adresse de votre machine sur le réseau local
 | Cahier des charges | État |
 | --- | --- |
 | §4.1 Onboarding en 5 étapes | ✅ langue, compte téléphone, quartier + géolocalisation, présentation, règles |
-| §7.1 Vérification du numéro | ✅ trois canaux au choix du voisin : **WhatsApp gratuit** (c'est lui qui envoie le message), SMS, ou WhatsApp par modèle ; renvoi avec délai, essais limités — la décision appartient au serveur |
+| §7.1 Vérification du numéro | ✅ parcours habituel — numéro, code à 6 chiffres par SMS, saisie, ouverture ; renvoi avec délai et essais limités. WhatsApp (payant ou gratuit) s'ajoute en option si vous le configurez |
 | §3 Règles obligatoires, bouton verrouillé 3 s | ✅ `useRulesCountdown` |
 | §2 Vérification par géolocalisation | ✅ position réelle comparée au quartier déclaré, correction proposée si erreur |
 | §2 Quartiers nommés + jumelage | ✅ fil partagé entre cités jumelées, origine affichée sur chaque publication |

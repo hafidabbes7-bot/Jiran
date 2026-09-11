@@ -29,11 +29,11 @@ export const fr = {
     createAccount: 'Créer mon compte',
 
     channelLabel: 'Recevoir le code par',
-    channelSms: '💬 SMS',
-    channelWhatsapp: '🟢 WhatsApp',
-    channelWhatsappLink: '🟢 WhatsApp (gratuit)',
+    channelSms: 'SMS',
+    channelWhatsapp: 'WhatsApp',
+    channelWhatsappLink: 'WhatsApp',
     channelFreeHint:
-      'Avec WhatsApp gratuit, c’est toi qui nous envoies un message : ton numéro est confirmé par WhatsApp lui-même.',
+      'Tu n’as pas reçu de SMS ? Avec cette option, c’est toi qui nous envoies un message WhatsApp, et ton numéro est confirmé par WhatsApp lui-même.',
     channelUnavailable: 'Ce canal n’est pas disponible pour le moment. Essaie l’autre.',
 
     linkTitle: 'Envoie-nous un message',

@@ -15,8 +15,11 @@
  */
 export type Channel = 'sms' | 'whatsapp' | 'whatsapp_link';
 
-/** Liste de référence des canaux : un canal ajouté ici l'est partout. */
-export const CHANNELS: readonly Channel[] = ['whatsapp_link', 'sms', 'whatsapp'];
+/**
+ * Liste de référence des canaux, dans l'ordre d'affichage : un canal ajouté
+ * ici l'est partout. Le SMS d'abord — c'est le parcours attendu.
+ */
+export const CHANNELS: readonly Channel[] = ['sms', 'whatsapp', 'whatsapp_link'];
 
 const isChannel = (value: unknown): value is Channel => CHANNELS.includes(value as Channel);
 

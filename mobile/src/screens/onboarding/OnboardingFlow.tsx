@@ -30,6 +30,13 @@ type Step = 1 | 2 | 3 | 4 | 5;
 /** Longueur du code envoyé par SMS — doit correspondre à `OTP_LENGTH` côté serveur. */
 const CODE_LENGTH = 6;
 
+/** Pastille du canal, réservée aux boutons de choix — pas aux phrases. */
+const CHANNEL_EMOJI: Record<Channel, string> = {
+  sms: '💬',
+  whatsapp: '🟢',
+  whatsapp_link: '🟢',
+};
+
 type PositionStatus =
   | { kind: 'idle' }
   | { kind: 'checking' }
@@ -338,7 +345,7 @@ export function OnboardingFlow({
                           <Text
                             style={[styles.channelText, active && styles.channelTextActive]}
                           >
-                            {channelName(option)}
+                            {CHANNEL_EMOJI[option]} {channelName(option)}
                           </Text>
                         </Pressable>
                       );

@@ -99,6 +99,8 @@ export const config = {
     appSecret: process.env.WHATSAPP_APP_SECRET ?? '',
     /** Jeton choisi par vous, que Meta renvoie pour valider l'URL du webhook. */
     verifyToken: process.env.WHATSAPP_VERIFY_TOKEN ?? '',
+    /** Développement : ouvre le canal WhatsApp par modèle sans compte Meta. */
+    devConsole: process.env.WHATSAPP_DEV_CONSOLE === 'true',
   },
 
   /**

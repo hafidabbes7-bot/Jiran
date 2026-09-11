@@ -44,9 +44,13 @@ function createSmsProvider(): MessageProvider | undefined {
 }
 
 /**
- * Fournisseur du canal WhatsApp. Il s'ouvre dès que les identifiants Meta sont
- * présents ; en développement avec le fournisseur console, il s'ouvre aussi,
- * pour pouvoir tester le choix du canal sans compte WhatsApp Business.
+ * Fournisseur du canal WhatsApp par modèle. Il s'ouvre quand les identifiants
+ * Meta sont présents.
+ *
+ * En développement, `WHATSAPP_DEV_CONSOLE=true` l'ouvre aussi sans compte Meta,
+ * pour tester le choix du canal. Ce n'est pas le défaut : sans cela,
+ * l'inscription afficherait un choix de canaux alors que le parcours attendu
+ * est simplement « je reçois un code et je le saisis ».
  */
 function createWhatsAppProvider(): MessageProvider | undefined {
   const { phoneNumberId, accessToken, templateName, templateLanguage } = config.whatsapp;
@@ -55,7 +59,7 @@ function createWhatsAppProvider(): MessageProvider | undefined {
     return new WhatsAppProvider(phoneNumberId, accessToken, templateName, templateLanguage);
   }
 
-  if (!config.isProduction && config.sms.provider === 'console') {
+  if (!config.isProduction && config.sms.provider === 'console' && config.whatsapp.devConsole) {
     return new ConsoleProvider('whatsapp');
   }
 

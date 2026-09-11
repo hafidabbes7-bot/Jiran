@@ -89,7 +89,7 @@ describe('VerificationService', () => {
       () => clock
     );
 
-    assert.deepEqual(smsOnly.channels, ['whatsapp_link', 'sms']);
+    assert.deepEqual(smsOnly.channels, ['sms', 'whatsapp_link']);
     assert.deepEqual(await smsOnly.requestCode('0555123456', 'whatsapp'), {
       ok: false,
       reason: 'channel_unavailable',

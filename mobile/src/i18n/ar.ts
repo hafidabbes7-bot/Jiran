@@ -30,11 +30,11 @@ export const ar: Strings = {
     createAccount: 'إنشاء حسابي',
 
     channelLabel: 'استلام الرمز عبر',
-    channelSms: '💬 رسالة قصيرة',
-    channelWhatsapp: '🟢 واتساب',
-    channelWhatsappLink: '🟢 واتساب (مجاني)',
+    channelSms: 'رسالة قصيرة',
+    channelWhatsapp: 'واتساب',
+    channelWhatsappLink: 'واتساب',
     channelFreeHint:
-      'مع واتساب المجاني، أنت من يرسل لنا الرسالة: واتساب نفسه يؤكّد رقمك.',
+      'لم تصلك الرسالة القصيرة؟ مع هذا الخيار، أنت من يرسل لنا رسالة واتساب، وواتساب نفسه يؤكّد رقمك.',
     channelUnavailable: 'هذه القناة غير متاحة حالياً. جرّب الأخرى.',
 
     linkTitle: 'أرسل لنا رسالة',
