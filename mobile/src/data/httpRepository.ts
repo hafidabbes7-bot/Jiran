@@ -6,6 +6,7 @@ import type {
   ModerationState,
   Neighbor,
   Post,
+  QueuedPost,
   ReportReason,
   Session,
 } from '../domain/types';
@@ -62,13 +63,14 @@ export class HttpRepository implements JiranRepository {
 
   // --- Profil ----------------------------------------------------------
 
-  async saveProfile(session: Session): Promise<void> {
+  async saveProfile(session: Session): Promise<{ isModerator: boolean }> {
     this.token = session.token;
-    await this.request('POST', '/profile', {
+    const data = await this.request('POST', '/profile', {
       firstName: session.firstName,
       neighborhoodId: session.neighborhoodId,
       ...(session.building ? { building: session.building } : {}),
     });
+    return { isModerator: Boolean(data.isModerator) };
   }
 
   // --- Fil -------------------------------------------------------------
@@ -144,6 +146,43 @@ export class HttpRepository implements JiranRepository {
       ? [...new Set([...current, neighborId])]
       : current.filter((id) => id !== neighborId);
     await AsyncStorage.setItem(KEYS.trusted, JSON.stringify(next));
+  }
+
+  // --- Modération ------------------------------------------------------
+
+  async loadModerationQueue(): Promise<QueuedPost[]> {
+    const data = await this.request('GET', '/moderation/queue');
+    const posts = Array.isArray(data.posts) ? data.posts : [];
+
+    return posts.map(
+      (raw: JsonObject): QueuedPost => ({
+        postId: String(raw.postId),
+        authorName: String(raw.authorName),
+        category: String(raw.category) as Category,
+        text: String(raw.text),
+        neighborhoodId: String(raw.neighborhoodId),
+        createdAt: String(raw.createdAt),
+        reports: (Array.isArray(raw.reports) ? raw.reports : []).map((report: JsonObject) => ({
+          reason: String(report.reason) as ReportReason,
+          createdAt: String(report.createdAt),
+        })),
+        moderation: toModeration(raw.moderation),
+        ...(raw.note ? { note: String(raw.note) } : {}),
+      })
+    );
+  }
+
+  async decideModeration(
+    postId: string,
+    decision: 'block' | 'restore',
+    note?: string
+  ): Promise<ModerationState> {
+    const data = await this.request(
+      'POST',
+      `/moderation/posts/${encodeURIComponent(postId)}/decision`,
+      { decision, ...(note ? { note } : {}) }
+    );
+    return toModeration(data.moderation);
   }
 
   // --- Alertes ---------------------------------------------------------
@@ -234,6 +273,9 @@ function toModeration(value: unknown): ModerationState {
     permanent: Boolean(raw.permanent),
     hidden: Boolean(raw.hidden),
     ...(typeof raw.hiddenUntil === 'string' ? { hiddenUntil: raw.hiddenUntil } : {}),
+    ...(raw.decidedByModerator === 'block' || raw.decidedByModerator === 'restore'
+      ? { decidedByModerator: raw.decidedByModerator }
+      : {}),
   };
 }
 

@@ -7,6 +7,7 @@ import { config } from './config.js';
 import { AlertService } from './content/alerts.js';
 import { openDatabase } from './content/db.js';
 import { ContentRepository } from './content/repository.js';
+import { ModerationQueue } from './content/moderationQueue.js';
 import { createContentRouter } from './content/routes.js';
 import { createPushSender, type PushSender } from './push/index.js';
 import { maskPhone } from './phone.js';
@@ -83,6 +84,7 @@ export function createServer(options?: {
   const content = new ContentRepository(database);
   const push = options?.push ?? createPushSender();
   const alerts = new AlertService(database, push);
+  const moderation = new ModerationQueue(database, config.moderatorPhones);
 
   const verification = new VerificationService(store, providers, {
     length: config.otp.length,
@@ -292,7 +294,7 @@ export function createServer(options?: {
     }
   });
 
-  app.use(createContentRouter(content, alerts));
+  app.use(createContentRouter(content, alerts, moderation));
 
   /** Contrôle qu'un jeton est encore valable, et à quel numéro il correspond. */
   app.get('/auth/me', (request: Request, response: Response) => {

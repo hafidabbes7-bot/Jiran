@@ -1,5 +1,8 @@
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
   NEIGHBORHOODS,
@@ -9,13 +12,19 @@ import {
 import { useI18n, useLocalizedName } from '../i18n/I18nProvider';
 import { useApp } from '../state/AppProvider';
 import { colors, fontSizes, radii, spacing } from '../theme/theme';
+import type { RootStackParamList, TabParamList } from '../navigation/types';
+
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<TabParamList, 'Neighborhood'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
 
 /**
  * Écran « Mon quartier » (§2) : nombre de voisins vérifiés, cités jumelées avec
  * leur progression vers le seuil, voisins de confiance et état de la
  * modération.
  */
-export function NeighborhoodScreen() {
+export function NeighborhoodScreen({ navigation }: Props) {
   const { s, format, rtl } = useI18n();
   const localizedName = useLocalizedName();
   const { session, neighbors, posts, setTrusted } = useApp();
@@ -104,6 +113,14 @@ export function NeighborhoodScreen() {
         <Text style={[styles.cardText, rtl.text]}>
           {format(s.neighborhood.moderationPending, { count: hiddenCount })}
         </Text>
+
+        {/* Entrée réservée aux modérateurs ; le serveur refuse la file aux
+            autres, ce drapeau ne fait que masquer un lien inutile. */}
+        {session?.isModerator ? (
+          <Pressable accessibilityRole="button" onPress={() => navigation.navigate('Moderation')}>
+            <Text style={[styles.link, rtl.text]}>{s.neighborhood.moderationOpen} →</Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <View style={styles.card}>
@@ -162,4 +179,10 @@ const styles = StyleSheet.create({
   neighborName: { fontSize: fontSizes.body, color: colors.ink, fontWeight: '600' },
   neighborMeta: { fontSize: fontSizes.caption, color: colors.muted, marginTop: 2 },
   rule: { fontSize: fontSizes.small, color: colors.ink, marginTop: spacing.sm, lineHeight: 18 },
+  link: {
+    marginTop: spacing.md,
+    color: colors.brand,
+    fontWeight: '700',
+    fontSize: fontSizes.small,
+  },
 });

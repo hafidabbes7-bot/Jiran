@@ -42,6 +42,7 @@ remplacez-le par l'adresse de votre machine sur le réseau local
 | §3 Filtre de texte | ✅ dans l'application pendant la frappe, et **appliqué par le serveur** qui refuse la publication |
 | §3 Blocage automatique par signalements | ✅ tenu par le serveur : 3 voisins **réellement distincts** → 3 jours ; récidive → définitif |
 | §7.4 Fil partagé entre voisins | ✅ publications, réponses et « j'aime » sur le serveur — deux voisins voient le même quartier |
+| §7.4 File des signalements | ✅ écran modérateur : motifs invoqués, décision `bloquer` / `rétablir` avec note |
 | §4.16 Alerte SOS | ✅ bouton flottant sur tous les écrans, choix des voisins alertés, position jointe, annulation qui les prévient |
 | §7.7 Notifications d'alerte | ✅ appareil enregistré au serveur ; SOS et alertes sécurité poussés en priorité haute — reste à brancher un service d'envoi |
 | Bilingue FR / AR avec RTL | ✅ bascule immédiate, sans redémarrage |
@@ -63,9 +64,6 @@ dans le code et dans l'interface là où l'utilisateur pourrait s'y tromper.
   — et l'écran SOS le dit, plutôt que d'afficher une confirmation trompeuse.
   Sur Android, les notifications distantes demandent un *development build* :
   elles ne fonctionnent plus dans Expo Go depuis le SDK 53.
-- **Pas de file de modération humaine** (§7.4) : les signalements sont
-  conservés et le blocage automatique s'applique, mais aucun écran modérateur
-  n'existe encore.
 - **Modération de texte locale seulement** : la liste de mots est un premier
   filet contre l'insulte évidente, elle ne remplace pas la modération IA
   côté serveur demandée au §7.3.

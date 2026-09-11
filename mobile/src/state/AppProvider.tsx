@@ -10,8 +10,10 @@ import React, {
 import type {
   Category,
   Comment,
+  ModerationState,
   Neighbor,
   Post,
+  QueuedPost,
   ReportReason,
   Session,
 } from '../domain/types';
@@ -51,6 +53,13 @@ interface AppValue {
     position?: { latitude: number; longitude: number }
   ) => Promise<SosResult>;
   cancelSos: (alertId: string) => Promise<void>;
+
+  loadModerationQueue: () => Promise<QueuedPost[]>;
+  decideModeration: (
+    postId: string,
+    decision: 'block' | 'restore',
+    note?: string
+  ) => Promise<ModerationState>;
 }
 
 const AppContext = createContext<AppValue | null>(null);
@@ -130,9 +139,10 @@ export function AppProvider({
     async (next: Session) => {
       // Le profil part au serveur avant d'être gardé en local : sans lui, le
       // voisin aurait une session valide et un fil inaccessible.
-      await repository.saveProfile(next);
-      await repository.saveSession(next);
-      setSession(next);
+      const { isModerator } = await repository.saveProfile(next);
+      const session = { ...next, isModerator };
+      await repository.saveSession(session);
+      setSession(session);
       await refresh();
     },
     [repository, refresh]
@@ -239,6 +249,23 @@ export function AppProvider({
     [repository]
   );
 
+  const loadModerationQueue = useCallback(
+    () => repository.loadModerationQueue(),
+    [repository]
+  );
+
+  const decideModeration = useCallback(
+    async (postId: string, decision: 'block' | 'restore', note?: string) => {
+      const moderation = await repository.decideModeration(postId, decision, note);
+      // Le fil affiché doit suivre la décision sans attendre un rechargement.
+      setPosts((current) =>
+        current.map((post) => (post.id === postId ? { ...post, moderation } : post))
+      );
+      return moderation;
+    },
+    [repository]
+  );
+
   const setTrusted = useCallback(
     async (neighborId: string, trusted: boolean) => {
       await repository.setTrusted(neighborId, trusted);
@@ -271,6 +298,8 @@ export function AppProvider({
       setTrusted,
       triggerSos,
       cancelSos,
+      loadModerationQueue,
+      decideModeration,
     }),
     [
       ready,
@@ -291,6 +320,8 @@ export function AppProvider({
       setTrusted,
       triggerSos,
       cancelSos,
+      loadModerationQueue,
+      decideModeration,
     ]
   );
 

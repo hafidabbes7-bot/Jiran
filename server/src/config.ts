@@ -104,6 +104,19 @@ export const config = {
   },
 
   /**
+   * Numéros des modérateurs, séparés par des virgules.
+   *
+   * Le cahier des charges laisse la question ouverte (§3 : « qui a le rôle
+   * modérateur ? validation manuelle au départ probablement »). Une liste
+   * tenue par l'équipe est la réponse la plus simple pour démarrer, et elle
+   * se remplace par un vrai rôle en base sans toucher aux écrans.
+   */
+  moderatorPhones: (process.env.MODERATOR_PHONES ?? '')
+    .split(',')
+    .map((phone) => phone.trim())
+    .filter(Boolean),
+
+  /**
    * Notifications. `expo` remet réellement ; `console` se contente d'afficher,
    * et l'application prévient alors qu'aucune alerte ne part.
    */

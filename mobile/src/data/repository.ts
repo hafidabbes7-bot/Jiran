@@ -4,6 +4,7 @@ import type {
   ModerationState,
   Neighbor,
   Post,
+  QueuedPost,
   ReportReason,
   Session,
 } from '../domain/types';
@@ -24,8 +25,11 @@ export interface JiranRepository {
   saveSession(session: Session): Promise<void>;
   clearSession(): Promise<void>;
 
-  /** Enregistre le profil du voisin auprès du serveur, après vérification. */
-  saveProfile(session: Session): Promise<void>;
+  /**
+   * Enregistre le profil du voisin auprès du serveur après vérification, et
+   * renvoie ce que le serveur en dit — dont son rôle de modérateur.
+   */
+  saveProfile(session: Session): Promise<{ isModerator: boolean }>;
 
   /** Fil du quartier, jumelage compris — le plus récent d'abord. */
   loadFeed(): Promise<Post[]>;
@@ -56,6 +60,14 @@ export interface JiranRepository {
 
   /** Annule un SOS : les mêmes voisins sont prévenus que c'est une fausse alerte. */
   cancelSos(alertId: string): Promise<void>;
+
+  /** File des contenus signalés — réservée aux modérateurs par le serveur. */
+  loadModerationQueue(): Promise<QueuedPost[]>;
+  decideModeration(
+    postId: string,
+    decision: 'block' | 'restore',
+    note?: string
+  ): Promise<ModerationState>;
 }
 
 export interface SosResult {

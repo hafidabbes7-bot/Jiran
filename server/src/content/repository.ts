@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
 
+import { readDecision } from './decisions.js';
 import { moderationState, type ModerationState } from './moderation.js';
 import { sharedFeedNeighborhoodIds } from './neighborhoods.js';
 
@@ -269,7 +270,10 @@ export class ContentRepository {
 
     return moderationState(
       rows.map((row) => row.created_at),
-      now
+      now,
+      // La décision d'un modérateur prime sur le compteur, dans le fil comme
+      // dans sa file.
+      readDecision(this.db, postId)
     );
   }
 

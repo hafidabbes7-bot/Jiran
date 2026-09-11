@@ -9,6 +9,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import { AlertsScreen } from '../screens/AlertsScreen';
 import { ComposeScreen } from '../screens/ComposeScreen';
 import { FeedScreen } from '../screens/FeedScreen';
+import { ModerationScreen } from '../screens/ModerationScreen';
 import { NeighborhoodScreen } from '../screens/NeighborhoodScreen';
 import { PostDetailScreen } from '../screens/PostDetailScreen';
 import { SosScreen } from '../screens/SosScreen';
@@ -107,6 +108,11 @@ export function RootNavigator() {
             options={{ title: s.detail.repliesTitle }}
           />
           <Stack.Screen name="Sos" component={SosScreen} options={{ title: s.sos.title }} />
+          <Stack.Screen
+            name="Moderation"
+            component={ModerationScreen}
+            options={{ title: s.moderation.title }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
 

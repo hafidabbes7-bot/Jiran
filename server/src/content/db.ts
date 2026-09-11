@@ -76,6 +76,16 @@ export function openDatabase(location: string): DatabaseSync {
     );
     CREATE INDEX IF NOT EXISTS devices_by_member ON devices (member_id);
 
+    -- Décision d'un modérateur sur une publication : elle prime sur le
+    -- compteur automatique. Une seule décision courante par publication.
+    CREATE TABLE IF NOT EXISTS moderation_decisions (
+      post_id      TEXT PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+      moderator_id TEXT NOT NULL REFERENCES members(id),
+      decision     TEXT NOT NULL,
+      note         TEXT,
+      decided_at   TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS sos_alerts (
       id          TEXT PRIMARY KEY,
       member_id   TEXT NOT NULL REFERENCES members(id),

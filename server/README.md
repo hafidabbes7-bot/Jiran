@@ -1,8 +1,9 @@
 # Jiran — serveur
 
 Trois choses : la **vérification du numéro** à l'inscription (§7.1), le **fil de
-quartier partagé** avec sa modération (§7.4), et les **alertes** — sécurité et
-SOS — remises sur les téléphones (§7.7).
+quartier partagé** avec sa modération automatique et sa **file pour modérateurs
+humains** (§7.4), et les **alertes** — sécurité et SOS — remises sur les
+téléphones (§7.7).
 
 ## Pourquoi un serveur
 
@@ -150,6 +151,25 @@ autre, ni lire le fil d'un quartier où il n'habite pas.
 | `GET` / `POST /posts/:id/comments` | Lit et ajoute les réponses |
 | `POST /posts/:id/report` | Signale — `409` si ce voisin avait déjà signalé ; renvoie le verdict à jour |
 
+### Modération humaine
+
+| Route | Effet |
+| --- | --- |
+| `GET /moderation/queue` | Contenus signalés du quartier, les plus signalés d'abord |
+| `POST /moderation/posts/:id/decision` | `block` ou `restore`, avec une note facultative |
+
+Les modérateurs sont désignés par `MODERATOR_PHONES`. Le cahier des charges
+laisse la question ouverte (« qui a le rôle modérateur ? validation manuelle au
+départ probablement ») : une liste tenue par l'équipe est la réponse la plus
+simple pour démarrer, et elle se remplace par un vrai rôle en base sans toucher
+aux écrans.
+
+**Une décision humaine prime sur le compteur.** `block` masque définitivement,
+même sans avoir atteint le seuil. `restore` rétablit — et surtout, les
+signalements **antérieurs** à la décision cessent de compter : sans cela, le
+contenu que le modérateur vient de juger acceptable serait remasqué à la
+seconde suivante. De nouveaux signalements, eux, comptent normalement.
+
 ### Alertes
 
 | Route | Effet |
@@ -212,9 +232,6 @@ projet, et un code à 6 chiffres se devine en quelques milliers d'essais.
   Correct pour une instance ; passez à Redis ou une table derrière les mêmes
   interfaces (`ChallengeStore`, `SlidingWindowLimiter`) dès qu'il y en a
   plusieurs.
-- **Aucune file de modération humaine** (§7.4) : le blocage automatique
-  s'applique et les signalements sont conservés, mais aucun écran modérateur
-  n'existe encore.
 - **Pas de temps réel** (§7.5) : l'application recharge le fil à l'ouverture et
   au tirer-pour-rafraîchir ; les notifications préviennent des alertes, mais le
   fil lui-même n'arrive pas tout seul.

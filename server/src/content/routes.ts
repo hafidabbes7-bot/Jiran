@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { readSessionToken } from '../session.js';
 import type { AlertService } from './alerts.js';
+import type { ModerationQueue } from './moderationQueue.js';
 import { findNeighborhood } from './neighborhoods.js';
 import { CATEGORIES, type ContentRepository, type Member } from './repository.js';
 import { moderateText } from './textModeration.js';
@@ -30,6 +31,11 @@ const deviceSchema = z.object({
   platform: z.enum(['ios', 'android', 'web']),
 });
 
+const decisionSchema = z.object({
+  decision: z.enum(['block', 'restore']),
+  note: z.string().trim().max(500).optional(),
+});
+
 const sosSchema = z.object({
   neighborIds: z.array(z.string().min(1).max(60)).min(1).max(50),
   position: z
@@ -50,7 +56,8 @@ type MemberRequest = Request & { member?: Member };
  */
 export function createContentRouter(
   repository: ContentRepository,
-  alerts: AlertService
+  alerts: AlertService,
+  moderation: ModerationQueue
 ): Router {
   const router = express.Router();
 
@@ -112,6 +119,9 @@ export function createContentRouter(
       neighborhoodId: member.neighborhoodId,
       building: member.building,
       joinedAt: member.joinedAt,
+      // L'application n'affiche l'entrée « Modération » qu'à ceux qui en ont
+      // l'usage ; c'est le serveur qui tranche, le drapeau n'ouvre aucun droit.
+      isModerator: moderation.isModerator(member.phone),
     });
   });
 
@@ -232,6 +242,54 @@ export function createContentRouter(
       moderation: repository.moderationOf(postId),
     });
   });
+
+  /** Réserve une route aux modérateurs déclarés. */
+  const requireModerator = (request: MemberRequest, response: Response, next: () => void) => {
+    if (!moderation.isModerator(request.member!.phone)) {
+      response.status(403).json({ error: 'not_moderator' });
+      return;
+    }
+    next();
+  };
+
+  /** File des contenus signalés du quartier (§7.4). */
+  router.get(
+    '/moderation/queue',
+    authenticate,
+    requireModerator,
+    (request: MemberRequest, response: Response) => {
+      response.json({ posts: moderation.pending(request.member!) });
+    }
+  );
+
+  /** Décision d'un modérateur : bloquer, ou rétablir un contenu masqué à tort. */
+  router.post(
+    '/moderation/posts/:id/decision',
+    authenticate,
+    requireModerator,
+    (request: MemberRequest, response: Response) => {
+      const parsed = decisionSchema.safeParse(request.body);
+      if (!parsed.success) {
+        response.status(400).json({ error: 'invalid_request' });
+        return;
+      }
+
+      const postId = String(request.params.id);
+      const applied = moderation.decide(
+        request.member!,
+        postId,
+        parsed.data.decision,
+        parsed.data.note
+      );
+
+      if (!applied) {
+        response.status(404).json({ error: 'not_found' });
+        return;
+      }
+
+      response.json({ moderation: repository.moderationOf(postId) });
+    }
+  );
 
   /** Enregistre l'appareil, pour pouvoir joindre ce voisin. */
   router.post('/devices', authenticate, (request: MemberRequest, response: Response) => {

@@ -3,6 +3,7 @@ export type RootStackParamList = {
   Compose: undefined;
   PostDetail: { postId: string };
   Sos: undefined;
+  Moderation: undefined;
 };
 
 export type TabParamList = {

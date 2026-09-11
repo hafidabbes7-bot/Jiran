@@ -45,6 +45,26 @@ export interface Session {
   locationVerified: boolean;
   rulesAcceptedAt: string;
   joinedAt: string;
+  /**
+   * Renseigné par le serveur à l'inscription. N'ouvre aucun droit par
+   * lui-même : il ne fait qu'afficher l'entrée « Modération », le serveur
+   * refusant de toute façon la file à qui n'y a pas droit.
+   */
+  isModerator?: boolean;
+}
+
+/** Une publication signalée, telle que la voit un modérateur (§7.4). */
+export interface QueuedPost {
+  postId: string;
+  authorName: string;
+  category: Category;
+  text: string;
+  neighborhoodId: string;
+  createdAt: string;
+  reports: { reason: ReportReason; createdAt: string }[];
+  moderation: ModerationState;
+  /** Note laissée par le modérateur qui a déjà tranché. */
+  note?: string;
 }
 
 export interface Comment {
@@ -90,6 +110,8 @@ export interface ModerationState {
   permanent: boolean;
   /** Verdict prêt à l'emploi : le contenu doit-il être masqué maintenant. */
   hidden: boolean;
+  /** Renseigné quand un modérateur a tranché lui-même. */
+  decidedByModerator?: 'block' | 'restore';
 }
 
 export interface Neighbor {
