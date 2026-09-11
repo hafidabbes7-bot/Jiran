@@ -1,7 +1,8 @@
 # Jiran — serveur
 
-Deux choses : la **vérification du numéro** à l'inscription (§7.1) et le **fil
-de quartier partagé**, avec sa modération (§7.4).
+Trois choses : la **vérification du numéro** à l'inscription (§7.1), le **fil de
+quartier partagé** avec sa modération (§7.4), et les **alertes** — sécurité et
+SOS — remises sur les téléphones (§7.7).
 
 ## Pourquoi un serveur
 
@@ -149,6 +150,30 @@ autre, ni lire le fil d'un quartier où il n'habite pas.
 | `GET` / `POST /posts/:id/comments` | Lit et ajoute les réponses |
 | `POST /posts/:id/report` | Signale — `409` si ce voisin avait déjà signalé ; renvoie le verdict à jour |
 
+### Alertes
+
+| Route | Effet |
+| --- | --- |
+| `POST /devices` | Enregistre le jeton de notification de l'appareil |
+| `DELETE /devices` | Oublie un appareil |
+| `POST /sos` | Alerte les voisins choisis — `422` si aucun n'est joignable ; renvoie combien ont été prévenus |
+| `POST /sos/:id/cancel` | Fausse alerte : prévient les mêmes voisins |
+
+Une publication de catégorie `securite` déclenche en plus une notification à
+tout le fil, sauf à son auteur.
+
+### Notifications
+
+`PUSH_PROVIDER=expo` passe par le service d'Expo, qui relaie vers FCM et APNs.
+Il faut avoir déposé les identifiants FCM et APNs dans le projet Expo : sans
+eux, les jetons sont acceptés mais rien n'arrive sur les téléphones.
+
+`PUSH_PROVIDER=console` n'envoie rien et l'annonce : la réponse du SOS porte
+`delivered: false`, et l'application affiche alors qu'aucun téléphone ne
+sonnera. C'est volontaire — sur un bouton d'urgence, une confirmation
+trompeuse serait pire que pas de bouton du tout. Le serveur refuse ce réglage
+en production.
+
 ### Stockage
 
 SQLite, par le module `node:sqlite` intégré à Node 22 — aucune dépendance à
@@ -191,6 +216,9 @@ projet, et un code à 6 chiffres se devine en quelques milliers d'essais.
   s'applique et les signalements sont conservés, mais aucun écran modérateur
   n'existe encore.
 - **Pas de temps réel** (§7.5) : l'application recharge le fil à l'ouverture et
-  au tirer-pour-rafraîchir. Ni WebSocket, ni notifications push (§7.7).
+  au tirer-pour-rafraîchir ; les notifications préviennent des alertes, mais le
+  fil lui-même n'arrive pas tout seul.
+- **Notifications à brancher** : `PUSH_PROVIDER=expo` et les identifiants FCM /
+  APNs dans le projet Expo.
 - **Pas de photos** : la modération d'image (§7.3) n'est pas branchée.
 - **HTTPS obligatoire** : le code et le jeton circulent en clair sans lui.

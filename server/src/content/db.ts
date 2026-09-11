@@ -65,6 +65,33 @@ export function openDatabase(location: string): DatabaseSync {
       PRIMARY KEY (post_id, reporter_id)
     );
     CREATE INDEX IF NOT EXISTS reports_by_post ON reports (post_id, created_at);
+
+    -- Un voisin peut avoir plusieurs appareils ; un jeton n'appartient qu'à un
+    -- seul voisin, d'où la clé primaire sur le jeton.
+    CREATE TABLE IF NOT EXISTS devices (
+      token      TEXT PRIMARY KEY,
+      member_id  TEXT NOT NULL REFERENCES members(id),
+      platform   TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS devices_by_member ON devices (member_id);
+
+    CREATE TABLE IF NOT EXISTS sos_alerts (
+      id          TEXT PRIMARY KEY,
+      member_id   TEXT NOT NULL REFERENCES members(id),
+      latitude    REAL,
+      longitude   REAL,
+      created_at  TEXT NOT NULL,
+      cancelled_at TEXT
+    );
+
+    -- Qui a été prévenu : le voisin choisit lui-même ses destinataires (§4.16),
+    -- il faut donc pouvoir les retrouver pour l'annulation.
+    CREATE TABLE IF NOT EXISTS sos_targets (
+      alert_id  TEXT NOT NULL REFERENCES sos_alerts(id) ON DELETE CASCADE,
+      member_id TEXT NOT NULL REFERENCES members(id),
+      PRIMARY KEY (alert_id, member_id)
+    );
   `);
 
   return db;

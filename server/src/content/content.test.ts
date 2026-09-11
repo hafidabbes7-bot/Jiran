@@ -57,6 +57,7 @@ describe('fil de quartier partagé', () => {
       store: new InMemoryChallengeStore(),
       providers: {},
       databasePath: ':memory:',
+      push: { name: 'test', delivers: false, send: async () => {} },
     });
     await new Promise<void>((resolve) => {
       server = app.listen(0, () => resolve()) as never;

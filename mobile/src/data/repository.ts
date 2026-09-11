@@ -44,6 +44,28 @@ export interface JiranRepository {
   /** Voisins du fil, avec leur statut « de confiance » stocké localement. */
   loadNeighbors(): Promise<Neighbor[]>;
   setTrusted(neighborId: string, trusted: boolean): Promise<void>;
+
+  /** Enregistre l'appareil pour recevoir les alertes et les SOS. */
+  registerDevice(token: string, platform: 'ios' | 'android' | 'web'): Promise<void>;
+
+  /** Déclenche un SOS vers les voisins choisis. */
+  triggerSos(
+    neighborIds: string[],
+    position?: { latitude: number; longitude: number }
+  ): Promise<SosResult>;
+
+  /** Annule un SOS : les mêmes voisins sont prévenus que c'est une fausse alerte. */
+  cancelSos(alertId: string): Promise<void>;
+}
+
+export interface SosResult {
+  alertId: string;
+  /** Voisins réellement prévenus. */
+  alerted: number;
+  /** Appareils joints — zéro si aucun n'a encore ouvert l'application. */
+  devices: number;
+  /** `false` si le serveur ne remet pas encore les notifications. */
+  delivered: boolean;
 }
 
 /** Erreur remontée quand le serveur est injoignable ou refuse la requête. */

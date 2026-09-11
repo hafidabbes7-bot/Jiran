@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { config } from '../config.js';
 import { readSessionToken } from '../session.js';
+import type { AlertService } from './alerts.js';
 import { findNeighborhood } from './neighborhoods.js';
 import { CATEGORIES, type ContentRepository, type Member } from './repository.js';
 import { moderateText } from './textModeration.js';
@@ -24,6 +25,18 @@ const reportSchema = z.object({
   reason: z.enum(['spam', 'inapproprie', 'fausse_alerte', 'autre']),
 });
 
+const deviceSchema = z.object({
+  token: z.string().trim().min(10).max(300),
+  platform: z.enum(['ios', 'android', 'web']),
+});
+
+const sosSchema = z.object({
+  neighborIds: z.array(z.string().min(1).max(60)).min(1).max(50),
+  position: z
+    .object({ latitude: z.number(), longitude: z.number() })
+    .optional(),
+});
+
 /** Requête portant le membre reconnu par son jeton de session. */
 type MemberRequest = Request & { member?: Member };
 
@@ -35,7 +48,10 @@ type MemberRequest = Request & { member?: Member };
  * membre. Un client modifié ne peut donc ni publier au nom d'un autre, ni lire
  * le fil d'un quartier où il n'habite pas.
  */
-export function createContentRouter(repository: ContentRepository): Router {
+export function createContentRouter(
+  repository: ContentRepository,
+  alerts: AlertService
+): Router {
   const router = express.Router();
 
   /**
@@ -122,11 +138,21 @@ export function createContentRouter(repository: ContentRepository): Router {
       return;
     }
 
-    const id = repository.createPost(request.member!, {
+    const member = request.member!;
+    const id = repository.createPost(member, {
       category: parsed.data.category as never,
       text: parsed.data.text,
     });
     response.status(201).json({ id });
+
+    // Une alerte de sécurité doit arriver tout de suite, même application
+    // fermée (§7.7). L'envoi ne retarde pas la réponse : la publication est
+    // déjà enregistrée.
+    if (parsed.data.category === 'securite') {
+      alerts
+        .announceSecurityPost(member, id, parsed.data.text)
+        .catch((error) => console.error('[push] annonce sécurité impossible', error));
+    }
   });
 
   router.post('/posts/:id/like', authenticate, (request: MemberRequest, response: Response) => {
@@ -206,6 +232,62 @@ export function createContentRouter(repository: ContentRepository): Router {
       moderation: repository.moderationOf(postId),
     });
   });
+
+  /** Enregistre l'appareil, pour pouvoir joindre ce voisin. */
+  router.post('/devices', authenticate, (request: MemberRequest, response: Response) => {
+    const parsed = deviceSchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    alerts.registerDevice(request.member!, parsed.data.token, parsed.data.platform);
+    response.sendStatus(204);
+  });
+
+  router.delete('/devices', authenticate, (request: MemberRequest, response: Response) => {
+    const parsed = deviceSchema.pick({ token: true }).safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    alerts.forgetDevice(parsed.data.token);
+    response.sendStatus(204);
+  });
+
+  /** Déclenche une alerte SOS vers les voisins de confiance choisis (§4.16). */
+  router.post('/sos', authenticate, async (request: MemberRequest, response: Response) => {
+    const parsed = sosSchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    const result = await alerts.triggerSos(
+      request.member!,
+      parsed.data.neighborIds,
+      parsed.data.position
+    );
+
+    if (result.alerted === 0) {
+      // Aucun destinataire retenu : le dire franchement plutôt que d'afficher
+      // une confirmation trompeuse sur un bouton d'urgence.
+      response.status(422).json({ error: 'no_reachable_neighbor' });
+      return;
+    }
+
+    response.status(201).json(result);
+  });
+
+  router.post(
+    '/sos/:id/cancel',
+    authenticate,
+    async (request: MemberRequest, response: Response) => {
+      const cancelled = await alerts.cancelSos(request.member!, String(request.params.id));
+      response.status(cancelled ? 200 : 404).json({ cancelled });
+    }
+  );
 
   return router;
 }

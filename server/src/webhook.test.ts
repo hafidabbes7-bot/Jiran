@@ -66,6 +66,7 @@ describe('vérification gratuite par WhatsApp', () => {
       store: new InMemoryChallengeStore(),
       providers: {},
       databasePath: ':memory:',
+      push: { name: 'test', delivers: false, send: async () => {} },
     });
     await new Promise<void>((resolve) => {
       server = app.listen(0, () => resolve()) as never;

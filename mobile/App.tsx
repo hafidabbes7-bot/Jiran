@@ -7,12 +7,17 @@ import { getLocales } from 'expo-localization';
 import { ToastProvider } from './src/components/Toast';
 import { HttpAuthService } from './src/data/authService';
 import { HttpRepository } from './src/data/httpRepository';
+import { configureForegroundAlerts } from './src/data/pushRegistration';
 import type { Language } from './src/domain/types';
 import { I18nProvider, useI18n } from './src/i18n/I18nProvider';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { OnboardingFlow } from './src/screens/onboarding/OnboardingFlow';
 import { AppProvider, useApp } from './src/state/AppProvider';
 import { colors } from './src/theme/theme';
+
+// Une alerte de sécurité doit être visible même quand l'application est déjà
+// ouverte, sans quoi elle passerait inaperçue.
+configureForegroundAlerts();
 
 /** Langue de départ : celle du téléphone si c'est l'arabe, sinon le français. */
 function deviceLanguage(): Language {

@@ -25,7 +25,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -36,6 +39,13 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Jiran utilise ta position pour vérifier ton quartier et pour joindre ta position à une alerte SOS."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#C1272D",
+          "defaultChannel": "alertes"
         }
       ]
     ]

@@ -174,7 +174,11 @@ export const fr = {
     positionShared: 'Position partagée : {position}',
     positionUnknown: 'Position non partagée (localisation refusée)',
     deliveryPending:
-      '⚠️ Version de développement : l’alerte est enregistrée sur l’appareil. L’envoi réel demande le service de notifications push (§7.7 du cahier des charges).',
+      '⚠️ Les notifications ne sont pas encore branchées sur ce serveur : l’alerte est enregistrée, mais aucun téléphone ne sonnera.',
+    noDevices:
+      '⚠️ Aucun de ces voisins n’a encore ouvert Jiran sur son téléphone : ils verront l’alerte à leur prochaine ouverture, sans notification.',
+    sendFailed: 'L’alerte n’a pas pu partir. Réessaie.',
+    noReachable: 'Aucun des voisins choisis ne peut être alerté.',
     othersTitle: 'Autres voisins du quartier',
   },
   neighborhood: {

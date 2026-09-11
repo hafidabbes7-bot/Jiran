@@ -15,7 +15,8 @@ import type {
   ReportReason,
   Session,
 } from '../domain/types';
-import { RepositoryError, type JiranRepository } from '../data/repository';
+import { registerForPush } from '../data/pushRegistration';
+import { RepositoryError, type JiranRepository, type SosResult } from '../data/repository';
 
 export interface PublishInput {
   category: Category;
@@ -44,6 +45,12 @@ interface AppValue {
   /** `false` si ce voisin avait déjà signalé cette publication. */
   report: (postId: string, reason: ReportReason) => Promise<boolean>;
   setTrusted: (neighborId: string, trusted: boolean) => Promise<void>;
+
+  triggerSos: (
+    neighborIds: string[],
+    position?: { latitude: number; longitude: number }
+  ) => Promise<SosResult>;
+  cancelSos: (alertId: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppValue | null>(null);
@@ -94,6 +101,30 @@ export function AppProvider({
       cancelled = true;
     };
   }, [repository, refresh]);
+
+  /**
+   * Déclare l'appareil dès qu'une session existe : sans jeton enregistré, le
+   * voisin ne recevrait ni alerte de sécurité ni SOS.
+   */
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+
+    (async () => {
+      const registration = await registerForPush();
+      if (cancelled || !registration) return;
+      try {
+        await repository.registerDevice(registration.token, registration.platform);
+      } catch {
+        // Sans notifications, l'application reste utilisable ; on réessaiera
+        // au prochain lancement.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session, repository]);
 
   const register = useCallback(
     async (next: Session) => {
@@ -197,6 +228,17 @@ export function AppProvider({
     [repository]
   );
 
+  const triggerSos = useCallback(
+    (neighborIds: string[], position?: { latitude: number; longitude: number }) =>
+      repository.triggerSos(neighborIds, position),
+    [repository]
+  );
+
+  const cancelSos = useCallback(
+    (alertId: string) => repository.cancelSos(alertId),
+    [repository]
+  );
+
   const setTrusted = useCallback(
     async (neighborId: string, trusted: boolean) => {
       await repository.setTrusted(neighborId, trusted);
@@ -227,6 +269,8 @@ export function AppProvider({
       addComment,
       report,
       setTrusted,
+      triggerSos,
+      cancelSos,
     }),
     [
       ready,
@@ -245,6 +289,8 @@ export function AppProvider({
       addComment,
       report,
       setTrusted,
+      triggerSos,
+      cancelSos,
     ]
   );
 

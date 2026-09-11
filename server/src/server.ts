@@ -4,9 +4,11 @@ import express, { type Request, type Response } from 'express';
 import { z } from 'zod';
 
 import { config } from './config.js';
+import { AlertService } from './content/alerts.js';
 import { openDatabase } from './content/db.js';
 import { ContentRepository } from './content/repository.js';
 import { createContentRouter } from './content/routes.js';
+import { createPushSender, type PushSender } from './push/index.js';
 import { maskPhone } from './phone.js';
 import { VerificationService } from './otp/service.js';
 import { InMemoryChallengeStore, type ChallengeStore } from './otp/store.js';
@@ -73,12 +75,14 @@ export function createServer(options?: {
   providers?: ChannelProviders;
   /** Base du contenu ; par défaut celle de `DATABASE_PATH`. */
   databasePath?: string;
+  push?: PushSender;
 }) {
   const store = options?.store ?? new InMemoryChallengeStore();
   const providers = options?.providers ?? createChannelProviders();
-  const content = new ContentRepository(
-    openDatabase(options?.databasePath ?? config.databasePath)
-  );
+  const database = openDatabase(options?.databasePath ?? config.databasePath);
+  const content = new ContentRepository(database);
+  const push = options?.push ?? createPushSender();
+  const alerts = new AlertService(database, push);
 
   const verification = new VerificationService(store, providers, {
     length: config.otp.length,
@@ -142,6 +146,7 @@ export function createServer(options?: {
       })),
       // Rend visible une configuration de développement laissée par mégarde.
       devCodeExposed: config.exposeDevCode,
+      push: { provider: push.name, delivers: push.delivers },
     });
   });
 
@@ -287,7 +292,7 @@ export function createServer(options?: {
     }
   });
 
-  app.use(createContentRouter(content));
+  app.use(createContentRouter(content, alerts));
 
   /** Contrôle qu'un jeton est encore valable, et à quel numéro il correspond. */
   app.get('/auth/me', (request: Request, response: Response) => {

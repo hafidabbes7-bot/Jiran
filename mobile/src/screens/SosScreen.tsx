@@ -4,7 +4,9 @@ import * as Location from 'expo-location';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { PrimaryButton } from '../components/PrimaryButton';
+import { RepositoryError } from '../data/repository';
 import { useToast } from '../components/Toast';
+import type { SosResult } from '../data/repository';
 import { useI18n } from '../i18n/I18nProvider';
 import { useApp } from '../state/AppProvider';
 import { colors, fontSizes, radii, spacing } from '../theme/theme';
@@ -22,15 +24,16 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Sos'>;
  */
 export function SosScreen({ navigation }: Props) {
   const { s, format, rtl } = useI18n();
-  const { neighbors, setTrusted } = useApp();
+  const { neighbors, setTrusted, triggerSos, cancelSos } = useApp();
   const toast = useToast();
 
   const trusted = useMemo(() => neighbors.filter((n) => n.trusted), [neighbors]);
   const others = useMemo(() => neighbors.filter((n) => !n.trusted), [neighbors]);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [position, setPosition] = useState<string | null>(null);
-  const [sentTo, setSentTo] = useState<number | null>(null);
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [result, setResult] = useState<SosResult | null>(null);
+  const [sending, setSending] = useState(false);
 
   // Les voisins de confiance sont pré-cochés : en urgence, on veut appuyer une
   // seule fois.
@@ -48,9 +51,10 @@ export function SosScreen({ navigation }: Props) {
           accuracy: Location.Accuracy.Balanced,
         });
         if (cancelled) return;
-        setPosition(
-          `${reading.coords.latitude.toFixed(5)}, ${reading.coords.longitude.toFixed(5)}`
-        );
+        setCoords({
+          latitude: reading.coords.latitude,
+          longitude: reading.coords.longitude,
+        });
       } catch {
         // Sans position, l'alerte part quand même : elle vaut mieux que rien.
       }
@@ -71,35 +75,66 @@ export function SosScreen({ navigation }: Props) {
 
   const allSelected = selected.size > 0 && selected.size === trusted.length;
 
-  const send = () => {
+  const send = async () => {
     if (selected.size === 0) {
       toast(s.sos.noSelection);
       return;
     }
-    // TODO(§7.7) : remettre l'alerte au service de notifications push, pour
-    // qu'elle arrive même application fermée. Ici, elle n'est que confirmée
-    // localement.
-    setSentTo(selected.size);
+
+    setSending(true);
+    try {
+      setResult(await triggerSos([...selected], coords ?? undefined));
+    } catch (error) {
+      // Sur un bouton d'urgence, un échec doit se voir : surtout pas de
+      // confirmation à l'écran si rien n'est parti.
+      const kind = error instanceof RepositoryError ? error.kind : 'network';
+      toast(kind === 'rejected' ? s.sos.noReachable : s.sos.sendFailed);
+    } finally {
+      setSending(false);
+    }
   };
 
-  const cancel = () => {
-    setSentTo(null);
+  const cancel = async () => {
+    const alertId = result?.alertId;
+    setResult(null);
+    if (alertId) {
+      try {
+        await cancelSos(alertId);
+      } catch {
+        // L'annulation n'a pas pu être transmise : le voisin le saura par le
+        // message ci-dessous, et pourra rappeler ses voisins autrement.
+        toast(s.sos.sendFailed);
+      }
+    }
     toast(s.sos.cancelled);
     navigation.goBack();
   };
 
-  if (sentTo !== null) {
+  if (result) {
+    const position = coords
+      ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
+      : null;
+
     return (
       <View style={styles.sentScreen}>
         <Text style={styles.sentEmoji}>🆘</Text>
         <Text style={styles.sentTitle}>{s.sos.sentTitle}</Text>
         <Text style={styles.sentDetail}>
-          {sentTo === 1 ? s.sos.sentDetailOne : format(s.sos.sentDetailMany, { count: sentTo })}
+          {result.alerted === 1
+            ? s.sos.sentDetailOne
+            : format(s.sos.sentDetailMany, { count: result.alerted })}
         </Text>
         <Text style={styles.sentPosition}>
           {position ? format(s.sos.positionShared, { position }) : s.sos.positionUnknown}
         </Text>
-        <Text style={styles.sentPending}>{s.sos.deliveryPending}</Text>
+
+        {/* Ce qui s'est réellement passé, sans arrondi favorable. */}
+        {!result.delivered ? (
+          <Text style={styles.sentPending}>{s.sos.deliveryPending}</Text>
+        ) : result.devices === 0 ? (
+          <Text style={styles.sentPending}>{s.sos.noDevices}</Text>
+        ) : null}
+
         <PrimaryButton label={s.sos.falseAlarm} tone="ghost" onPress={cancel} style={styles.wide} />
       </View>
     );
@@ -163,11 +198,10 @@ export function SosScreen({ navigation }: Props) {
           </View>
         ))}
 
-        <Text style={[styles.pending, rtl.text]}>{s.sos.deliveryPending}</Text>
       </ScrollView>
 
       <View style={styles.footer}>
-        <PrimaryButton label={s.sos.send} tone="alert" onPress={send} />
+        <PrimaryButton label={s.sos.send} tone="alert" loading={sending} onPress={send} />
       </View>
     </View>
   );
@@ -206,12 +240,6 @@ const styles = StyleSheet.create({
   rowEmoji: { fontSize: fontSizes.title },
   rowName: { fontSize: fontSizes.body, fontWeight: '600', color: colors.ink },
   rowMeta: { fontSize: fontSizes.caption, color: colors.muted, marginTop: 2 },
-  pending: {
-    marginTop: spacing.lg,
-    fontSize: fontSizes.caption,
-    color: colors.muted,
-    lineHeight: 16,
-  },
   footer: {
     position: 'absolute',
     left: spacing.lg,

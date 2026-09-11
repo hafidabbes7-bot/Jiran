@@ -10,7 +10,7 @@ import type {
   Session,
 } from '../domain/types';
 import { API_URL } from './authService';
-import { RepositoryError, type JiranRepository } from './repository';
+import { RepositoryError, type JiranRepository, type SosResult } from './repository';
 
 const KEYS = {
   session: 'jiran/session',
@@ -144,6 +144,33 @@ export class HttpRepository implements JiranRepository {
       ? [...new Set([...current, neighborId])]
       : current.filter((id) => id !== neighborId);
     await AsyncStorage.setItem(KEYS.trusted, JSON.stringify(next));
+  }
+
+  // --- Alertes ---------------------------------------------------------
+
+  async registerDevice(token: string, platform: 'ios' | 'android' | 'web'): Promise<void> {
+    await this.request('POST', '/devices', { token, platform });
+  }
+
+  async triggerSos(
+    neighborIds: string[],
+    position?: { latitude: number; longitude: number }
+  ): Promise<SosResult> {
+    const data = await this.request('POST', '/sos', {
+      neighborIds,
+      ...(position ? { position } : {}),
+    });
+
+    return {
+      alertId: String(data.alertId),
+      alerted: Number(data.alerted) || 0,
+      devices: Number(data.devices) || 0,
+      delivered: Boolean(data.delivered),
+    };
+  }
+
+  async cancelSos(alertId: string): Promise<void> {
+    await this.request('POST', `/sos/${encodeURIComponent(alertId)}/cancel`);
   }
 
   private async trustedIds(): Promise<string[]> {

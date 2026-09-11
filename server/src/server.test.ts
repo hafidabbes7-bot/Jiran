@@ -33,6 +33,7 @@ describe('API de vérification', () => {
       store: new InMemoryChallengeStore(),
       providers: { sms, whatsapp },
       databasePath: ':memory:',
+      push: { name: 'test', delivers: false, send: async () => {} },
     });
     await new Promise<void>((resolve) => {
       server = app.listen(0, () => resolve());
@@ -57,6 +58,7 @@ describe('API de vérification', () => {
         { channel: 'whatsapp', provider: 'recording-whatsapp' },
       ],
       devCodeExposed: false,
+      push: { provider: 'test', delivers: false },
     });
   });
 

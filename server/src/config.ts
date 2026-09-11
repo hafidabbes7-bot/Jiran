@@ -104,6 +104,16 @@ export const config = {
   },
 
   /**
+   * Notifications. `expo` remet réellement ; `console` se contente d'afficher,
+   * et l'application prévient alors qu'aucune alerte ne part.
+   */
+  push: {
+    provider: process.env.PUSH_PROVIDER ?? 'console',
+    /** Jeton d'accès Expo, requis si le projet impose l'authentification. */
+    expoAccessToken: process.env.EXPO_ACCESS_TOKEN ?? '',
+  },
+
+  /**
    * Emplacement de la base du contenu. `:memory:` ne survit pas au
    * redémarrage — pratique pour les tests, à proscrire ailleurs.
    */
