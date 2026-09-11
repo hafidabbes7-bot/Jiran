@@ -13,16 +13,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Field } from '../../components/Field';
 import { PrimaryButton } from '../../components/PrimaryButton';
+import type { AuthService, VerifiedSession } from '../../data/authService';
 import { NEIGHBORHOODS, findNeighborhood } from '../../data/neighborhoods';
 import { checkPosition } from '../../domain/location';
-import { isValidAlgerianMobile, normalizePhone } from '../../domain/phone';
+import { isValidAlgerianMobile } from '../../domain/phone';
 import { formatDistance } from '../../domain/time';
 import type { Language, Neighborhood, Session } from '../../domain/types';
 import { useI18n, useLocalizedName } from '../../i18n/I18nProvider';
 import { colors, fontSizes, radii, spacing } from '../../theme/theme';
+import { usePhoneVerification, type VerificationError } from './usePhoneVerification';
 import { useRulesCountdown } from './useRulesCountdown';
 
 type Step = 1 | 2 | 3 | 4 | 5;
+
+/** Longueur du code envoyé par SMS — doit correspondre à `OTP_LENGTH` côté serveur. */
+const CODE_LENGTH = 6;
 
 type PositionStatus =
   | { kind: 'idle' }
@@ -36,14 +41,27 @@ type PositionStatus =
  * Parcours d'inscription en 5 étapes (§4.1). La dernière — les règles du
  * quartier — est obligatoire et son bouton reste verrouillé quelques secondes,
  * pour garantir une vraie lecture avant l'entrée dans l'application (§3).
+ *
+ * L'étape « compte » se déroule en deux volets : le numéro, puis le code reçu
+ * par SMS. On reste à 5 étapes affichées — la vérification fait partie de la
+ * création du compte, elle n'en est pas une de plus.
  */
-export function OnboardingFlow({ onDone }: { onDone: (session: Session) => Promise<void> }) {
+export function OnboardingFlow({
+  auth,
+  onDone,
+}: {
+  auth: AuthService;
+  onDone: (session: Session) => Promise<void>;
+}) {
   const { s, format, language, setLanguage, rtl } = useI18n();
   const localizedName = useLocalizedName();
 
   const [step, setStep] = useState<Step>(1);
+  const [accountPane, setAccountPane] = useState<'phone' | 'code'>('phone');
   const [firstName, setFirstName] = useState('');
   const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const [verified, setVerified] = useState<VerifiedSession | null>(null);
   const [errors, setErrors] = useState<{ firstName?: string; phone?: string }>({});
   const [neighborhoodId, setNeighborhoodId] = useState(NEIGHBORHOODS[0].id);
   const [building, setBuilding] = useState('');
@@ -60,12 +78,76 @@ export function OnboardingFlow({ onDone }: { onDone: (session: Session) => Promi
     setStep(2);
   };
 
-  const submitAccount = () => {
+  const verification = usePhoneVerification(auth);
+
+  /** Message d'erreur de la vérification, dans la langue courante. */
+  const verificationMessage = (failure: VerificationError): string => {
+    switch (failure.key) {
+      case 'invalid_phone':
+        return s.onboarding.phoneError;
+      case 'sms_failed':
+        return s.onboarding.sendFailed;
+      case 'network':
+        return s.onboarding.networkError;
+      case 'rate_limited':
+        return format(s.onboarding.rateLimited, {
+          seconds: failure.retryAfterSeconds ?? 60,
+        });
+      case 'invalid_code':
+        return failure.attemptsLeft === 1
+          ? s.onboarding.codeInvalidOne
+          : format(s.onboarding.codeInvalidMany, { count: failure.attemptsLeft ?? 0 });
+      case 'expired':
+        return s.onboarding.codeExpired;
+      case 'consumed':
+        return s.onboarding.codeConsumed;
+      case 'too_many_attempts':
+        return s.onboarding.codeTooManyAttempts;
+      case 'not_found':
+        return s.onboarding.codeExpired;
+    }
+  };
+
+  /** Code renvoyé par un serveur en mode développement, s'il y en a un. */
+  const devCode =
+    verification.status.kind === 'awaiting-code' || verification.status.kind === 'verifying'
+      ? verification.status.challenge.devCode
+      : undefined;
+
+  const submitAccount = async () => {
     const nextErrors: typeof errors = {};
     if (!firstName.trim()) nextErrors.firstName = s.onboarding.firstNameError;
     if (!isValidAlgerianMobile(phone)) nextErrors.phone = s.onboarding.phoneError;
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length === 0) setStep(3);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    const challenge = await verification.requestCode(phone);
+    if (challenge) {
+      // En développement, le serveur renvoie le code : on le pré-remplit pour
+      // ne pas avoir à le recopier depuis la console.
+      setCode(challenge.devCode ?? '');
+      setAccountPane('code');
+    }
+  };
+
+  const submitCode = async () => {
+    const session = await verification.verifyCode(code);
+    if (session) {
+      setVerified(session);
+      setStep(3);
+    }
+  };
+
+  /** Renvoi d'un code, sans repasser par la saisie du numéro. */
+  const requestNewCode = async () => {
+    const challenge = await verification.requestCode(phone);
+    if (challenge) setCode(challenge.devCode ?? '');
+  };
+
+  const editPhone = () => {
+    verification.reset();
+    setCode('');
+    setAccountPane('phone');
   };
 
   /**
@@ -99,11 +181,15 @@ export function OnboardingFlow({ onDone }: { onDone: (session: Session) => Promi
   const rules = useRulesCountdown(step === 5);
 
   const finish = async () => {
+    if (!verified) return;
     setSubmitting(true);
     try {
       await onDone({
         firstName: firstName.trim(),
-        phone: normalizePhone(phone),
+        // Le numéro retenu est celui que le serveur a vérifié, pas celui saisi.
+        phone: verified.phone,
+        phoneVerifiedAt: new Date().toISOString(),
+        token: verified.token,
         neighborhoodId,
         building: building.trim() || undefined,
         language,
@@ -151,7 +237,7 @@ export function OnboardingFlow({ onDone }: { onDone: (session: Session) => Promi
             </View>
           ) : null}
 
-          {step === 2 ? (
+          {step === 2 && accountPane === 'phone' ? (
             <View>
               <Text style={styles.stepEmoji}>👤</Text>
               <Text style={[styles.heading, rtl.text]}>{s.onboarding.accountTitle}</Text>
@@ -175,7 +261,76 @@ export function OnboardingFlow({ onDone }: { onDone: (session: Session) => Promi
                 hint={s.onboarding.phoneHint}
               />
 
-              <PrimaryButton label={s.onboarding.createAccount} onPress={submitAccount} />
+              <PrimaryButton
+                label={s.onboarding.createAccount}
+                loading={verification.status.kind === 'sending'}
+                onPress={submitAccount}
+              />
+
+              {verification.error ? (
+                <Text style={[styles.positionError, rtl.text]}>
+                  {verificationMessage(verification.error)}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          {step === 2 && accountPane === 'code' ? (
+            <View>
+              <Text style={styles.stepEmoji}>💬</Text>
+              <Text style={[styles.heading, rtl.text]}>{s.onboarding.codeTitle}</Text>
+              <Text style={[styles.sub, rtl.text]}>
+                {format(s.onboarding.codeSubtitle, { length: CODE_LENGTH, phone })}
+              </Text>
+
+              <Field
+                label={s.onboarding.codeLabel}
+                placeholder={s.onboarding.codePlaceholder}
+                value={code}
+                onChangeText={(value) => setCode(value.replace(/\D/g, '').slice(0, CODE_LENGTH))}
+                keyboardType="number-pad"
+                maxLength={CODE_LENGTH}
+                autoFocus
+                textContentType="oneTimeCode"
+                autoComplete="sms-otp"
+                style={styles.codeInput}
+              />
+
+              {verification.error ? (
+                <Text style={[styles.positionError, rtl.text]}>
+                  {verificationMessage(verification.error)}
+                </Text>
+              ) : null}
+
+              {devCode ? (
+                <Text style={[styles.devNotice, rtl.text]}>
+                  {format(s.onboarding.devCodeNotice, { code: devCode })}
+                </Text>
+              ) : null}
+
+              <PrimaryButton
+                label={s.onboarding.verify}
+                disabled={code.length < CODE_LENGTH}
+                loading={verification.status.kind === 'verifying'}
+                onPress={submitCode}
+                style={styles.spaced}
+              />
+
+              <PrimaryButton
+                label={
+                  verification.secondsBeforeResend > 0
+                    ? format(s.onboarding.resendIn, { seconds: verification.secondsBeforeResend })
+                    : s.onboarding.resend
+                }
+                tone="ghost"
+                disabled={verification.secondsBeforeResend > 0}
+                onPress={() => requestNewCode()}
+                style={styles.spaced}
+              />
+
+              <Pressable accessibilityRole="button" onPress={editPhone}>
+                <Text style={[styles.linkButton, rtl.text]}>{s.onboarding.changeNumber}</Text>
+              </Pressable>
             </View>
           ) : null}
 
@@ -403,6 +558,23 @@ const styles = StyleSheet.create({
   neighborhoodName: { fontSize: fontSizes.body, color: colors.ink, fontWeight: '600' },
   neighborhoodWilaya: { fontSize: fontSizes.caption, color: colors.muted, marginTop: 2 },
   spaced: { marginTop: spacing.md },
+  codeInput: {
+    fontSize: fontSizes.heading,
+    letterSpacing: 6,
+    textAlign: 'center',
+  },
+  devNotice: {
+    marginTop: spacing.sm,
+    color: colors.muted,
+    fontSize: fontSizes.small,
+  },
+  linkButton: {
+    marginTop: spacing.lg,
+    textAlign: 'center',
+    color: colors.brand,
+    fontWeight: '700',
+    fontSize: fontSizes.small,
+  },
   positionOk: { marginTop: spacing.sm, color: colors.aid, fontSize: fontSizes.small },
   positionError: { marginTop: spacing.sm, color: colors.alert, fontSize: fontSizes.small },
   positionSuggestion: {

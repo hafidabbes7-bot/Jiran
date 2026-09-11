@@ -9,13 +9,18 @@ espace dédié, vérifié et organisé par quartier.
 | Chemin | Contenu |
 | --- | --- |
 | `mobile/` | Application Expo / React Native — socle V1 en cours de développement ([README](mobile/README.md)) |
+| `server/` | API de vérification du numéro par SMS ou WhatsApp ([README](server/README.md)) |
 | `docs/cahier-des-charges.md` | Toutes les décisions de conception validées (concept, regroupement par quartier, modération, 24 écrans, périmètre V1) |
 | `prototype/jiran-accueil.html` | Prototype visuel HTML autonome — 24 écrans navigables, bilingue FR/AR avec bascule RTL |
 
 ## L'application
 
 ```bash
-cd mobile && npm install && npm start
+# terminal 1 — API de vérification du numéro (aucun SMS envoyé en développement)
+cd server && npm install && cp .env.example .env && EXPOSE_DEV_CODE=true npm run dev
+
+# terminal 2 — application
+cd mobile && npm install && EXPO_PUBLIC_API_URL=http://localhost:4000 npm start
 ```
 
 Le périmètre retenu pour la V1 est le **socle restreint** décrit au §5 du cahier
@@ -25,8 +30,12 @@ objets à emprunter, services recommandés, carte, mode vacances, collecte des
 déchets, messagerie privée) viendront ensuite, pour ne pas retarder le lancement
 ni diluer le positionnement sécurité / entraide.
 
-Ce qui reste à brancher côté services externes (authentification SMS, modération
-d'image, notifications push, backend temps réel) est listé dans
+L'inscription vérifie le numéro par code reçu en SMS (ou WhatsApp), comme dans
+la plupart des applications. Le choix du canal d'envoi et ce qu'il faut obtenir
+auprès des opérateurs sont expliqués dans [`server/README.md`](server/README.md).
+
+Ce qui reste à brancher côté services externes (modération d'image,
+notifications push, backend pour le contenu) est listé dans
 [`mobile/README.md`](mobile/README.md).
 
 ## Le prototype

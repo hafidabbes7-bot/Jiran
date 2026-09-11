@@ -33,6 +33,10 @@ export interface Session {
   firstName: string;
   /** Numéro au format local algérien, normalisé en 0XXXXXXXXX. */
   phone: string;
+  /** Date de la vérification du numéro par SMS. */
+  phoneVerifiedAt: string;
+  /** Jeton de session délivré par le serveur après vérification. */
+  token: string;
   neighborhoodId: string;
   /** Champ optionnel « Cité / Immeuble » (§2). */
   building?: string;

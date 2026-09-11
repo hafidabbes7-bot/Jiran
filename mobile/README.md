@@ -5,19 +5,33 @@ entraide, SOS et modération** (périmètre décidé au §5 du cahier des charge
 
 ## Démarrer
 
+L'inscription vérifie le numéro par SMS : l'**API de vérification doit tourner**
+(voir [`../server`](../server/README.md)), sinon l'onboarding s'arrête à l'étape
+du code. En développement, aucun SMS n'est réellement envoyé.
+
 ```bash
-cd mobile
-npm install
-npm start          # puis « a » pour Android, « i » pour iOS, « w » pour le web
+# terminal 1 — API de vérification
+cd server && npm install && cp .env.example .env
+EXPOSE_DEV_CODE=true npm run dev
+
+# terminal 2 — application
+cd mobile && npm install
+EXPO_PUBLIC_API_URL=http://localhost:4000 npm start
+#   puis « a » pour Android, « i » pour iOS, « w » pour le web
 npm test           # logique métier (modération, blocage, géolocalisation)
 npm run typecheck
 ```
+
+Sur un téléphone physique, `localhost` désigne le téléphone lui-même :
+remplacez-le par l'adresse de votre machine sur le réseau local
+(`EXPO_PUBLIC_API_URL=http://192.168.x.x:4000`).
 
 ## Ce qui est implémenté
 
 | Cahier des charges | État |
 | --- | --- |
 | §4.1 Onboarding en 5 étapes | ✅ langue, compte téléphone, quartier + géolocalisation, présentation, règles |
+| §7.1 Vérification du numéro par SMS | ✅ code à 6 chiffres, renvoi avec délai, essais limités — la décision appartient au serveur |
 | §3 Règles obligatoires, bouton verrouillé 3 s | ✅ `useRulesCountdown` |
 | §2 Vérification par géolocalisation | ✅ position réelle comparée au quartier déclaré, correction proposée si erreur |
 | §2 Quartiers nommés + jumelage | ✅ fil partagé entre cités jumelées, origine affichée sur chaque publication |
@@ -33,11 +47,13 @@ npm run typecheck
 Ces points sont des **dépendances externes**, pas des oublis ; ils sont signalés
 dans le code et dans l'interface là où l'utilisateur pourrait s'y tromper.
 
-- **Pas de backend.** Tout est stocké sur l'appareil (`LocalRepository`). Le
-  contrat `JiranRepository` (`src/data/repository.ts`) est écrit pour qu'un
-  client HTTP/WebSocket le remplace sans toucher aux écrans.
-- **Pas d'authentification SMS** (§7.1) : le numéro est validé dans sa forme,
-  pas vérifié par un code.
+- **Pas de backend pour le contenu.** Le fil, les signalements et les voisins
+  sont stockés sur l'appareil (`LocalRepository`) ; seule la vérification du
+  numéro passe par un serveur. Le contrat `JiranRepository`
+  (`src/data/repository.ts`) est écrit pour qu'un client HTTP/WebSocket le
+  remplace sans toucher aux écrans.
+- **Aucun envoi réel de SMS tant qu'un fournisseur n'est pas branché** : voir
+  le README du serveur pour le choix de l'agrégateur.
 - **Pas de modération d'image** (§7.3) : l'ajout de photo est annoncé comme
   indisponible plutôt que simulé — publier une image non modérée irait contre
   la règle §3.

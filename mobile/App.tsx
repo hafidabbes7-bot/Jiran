@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { getLocales } from 'expo-localization';
 
 import { ToastProvider } from './src/components/Toast';
+import { HttpAuthService } from './src/data/authService';
 import { LocalRepository } from './src/data/localRepository';
 import type { Language } from './src/domain/types';
 import { I18nProvider, useI18n } from './src/i18n/I18nProvider';
@@ -24,7 +25,7 @@ function deviceLanguage(): Language {
  * que l'onboarding — le fil du quartier n'est pas accessible avant d'avoir
  * accepté les règles (§3).
  */
-function Root() {
+function Root({ auth }: { auth: HttpAuthService }) {
   const { ready, session, register } = useApp();
   const { setLanguage } = useI18n();
 
@@ -42,7 +43,7 @@ function Root() {
   }
 
   if (!session) {
-    return <OnboardingFlow onDone={register} />;
+    return <OnboardingFlow auth={auth} onDone={register} />;
   }
 
   return <RootNavigator />;
@@ -50,6 +51,7 @@ function Root() {
 
 export default function App() {
   const repository = useMemo(() => new LocalRepository(), []);
+  const auth = useMemo(() => new HttpAuthService(), []);
 
   return (
     <SafeAreaProvider>
@@ -57,7 +59,7 @@ export default function App() {
         <AppProvider repository={repository}>
           <ToastProvider>
             <StatusBar style="dark" />
-            <Root />
+            <Root auth={auth} />
           </ToastProvider>
         </AppProvider>
       </I18nProvider>
