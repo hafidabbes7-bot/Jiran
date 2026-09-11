@@ -139,9 +139,33 @@ Trois choix assumés dans ce lot :
  — une absence n'est visible que des voisins nommément désignés : l'annoncer au
    quartier reviendrait à donner l'adresse d'un logement vide.
 
-Toujours à faire : les autres jeux (échecs, dames, belote, dominos), le
-classement mensuel du quartier, et les réglages de notifications par catégorie
-(§4.17).
+## Idées gardées de côté
+
+Rien de ce qui suit n'est oublié : c'est mis de côté, volontairement, pour ne
+pas retarder les premiers essais entre vrais voisins.
+
+Dans l'application, à construire quand le quartier le demandera :
+ — les autres jeux (échecs, dames, belote, dominos, Scrabble) et les quiz à
+   thème, puis le classement mensuel du quartier (§4.8) ;
+ — les petits boulots entre voisins — babysitting, cours, travaux (§5) ;
+ — les annonces de vie du quartier : naissances, mariages, condoléances (§5) ;
+ — les alertes météo locales automatiques (§5).
+
+Hors de l'application, chacune demandant un compte, un contrat ou une facture —
+donc une décision de Hafid, pas une ligne de code :
+ — les vraies notifications push, application fermée : compte Firebase pour
+   Android, compte développeur Apple pour iOS (§7.7) ;
+ — les vrais SMS de vérification : contrat avec un agrégateur algérien et
+   approbation du nom d'expéditeur ;
+ — le canal WhatsApp gratuit : compte WhatsApp Business ;
+ — la modération automatique des images : Google Vision, AWS Rekognition ou
+   équivalent (§7.3) ;
+ — la messagerie en temps réel par WebSocket, là où l'application redemande
+   aujourd'hui toutes les 4 secondes (§7.5) ;
+ — un hébergement payant, pour que les données survivent à un redémarrage.
+
+Et une décision qui n'attend que vous : le nom. « Jiran » est un nom de travail
+(§1), à valider avant toute publication sur un magasin d'applications.
 
 ## Photos et stories
 
@@ -221,9 +245,6 @@ besoin hors ligne, le serveur en a besoin comme autorité. Un test du serveur
 compare les deux copies et échoue à la première divergence.
 
 ## Décision encore ouverte
-
-**Nom définitif** (§1) — « Jiran » est un nom de travail, à valider avant
-publication.
 
 Les exigences techniques pour la vraie application (géolocalisation, données
 administratives algériennes, modération IA, messagerie temps réel, notifications
