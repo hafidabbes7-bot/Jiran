@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
-import type { DatabaseSync } from 'node:sqlite';
 
+import type { Db } from '../db/client.js';
+import { estUuid, toIso, toNumber } from '../db/rows.js';
 import type { Member } from './repository.js';
 
 /**
@@ -41,46 +42,49 @@ const GARDE_MS = 7 * 24 * 60 * 60 * 1000;
  * sans que son téléphone ait reçu quoi que ce soit.
  */
 export class NotificationService {
-  constructor(private readonly db: DatabaseSync) {}
+  constructor(private readonly db: Db) {}
 
   /** Dépose la même notification pour plusieurs voisins d'un coup. */
-  notify(
+  async notify(
     memberIds: string[],
     kind: NotificationKind,
     title: string,
     body: string,
     ref?: string,
     now: Date = new Date()
-  ): void {
-    const insert = this.db.prepare(
+  ): Promise<void> {
+    const destinataires = [...new Set(memberIds)].filter(estUuid);
+    if (destinataires.length === 0) return;
+
+    // Une seule requête pour tout le quartier : une alerte de sécurité touche
+    // tout le monde, et autant d'allers-retours que de voisins retarderait la
+    // réponse à celui qui vient de publier.
+    await this.db.query(
       `INSERT INTO notifications (id, member_id, kind, title, body, ref, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+       SELECT gen_random_uuid(), destinataire, $2, $3, $4, $5, $6
+       FROM unnest($1::uuid[]) AS destinataire`,
+      [destinataires, kind, title, body, ref ?? null, now.toISOString()]
     );
-    const stamp = now.toISOString();
-    for (const id of new Set(memberIds)) {
-      insert.run(crypto.randomUUID(), id, kind, title, body, ref ?? null, stamp);
-    }
   }
 
-  list(member: Member, now: Date = new Date()): Notification[] {
+  async list(member: Member, now: Date = new Date()): Promise<Notification[]> {
     const depuis = new Date(now.getTime() - GARDE_MS).toISOString();
-    const rows = this.db
-      .prepare(
-        `SELECT id, kind, title, body, ref, created_at, read_at
-         FROM notifications
-         WHERE member_id = ? AND created_at >= ?
-         ORDER BY created_at DESC, rowid DESC
-         LIMIT 100`
-      )
-      .all(member.id, depuis) as {
+    const rows = await this.db.query<{
       id: string;
       kind: string;
       title: string;
       body: string;
       ref: string | null;
-      created_at: string;
-      read_at: string | null;
-    }[];
+      created_at: Date;
+      read_at: Date | null;
+    }>(
+      `SELECT id, kind, title, body, ref, created_at, read_at
+       FROM notifications
+       WHERE member_id = $1 AND created_at >= $2
+       ORDER BY created_at DESC, id DESC
+       LIMIT 100`,
+      [member.id, depuis]
+    );
 
     return rows.map((row) => ({
       id: row.id,
@@ -88,29 +92,34 @@ export class NotificationService {
       title: row.title,
       body: row.body,
       ref: row.ref ?? undefined,
-      createdAt: row.created_at,
+      createdAt: toIso(row.created_at),
       read: row.read_at !== null,
     }));
   }
 
-  unread(member: Member): number {
-    const row = this.db
-      .prepare('SELECT COUNT(*) AS n FROM notifications WHERE member_id = ? AND read_at IS NULL')
-      .get(member.id) as { n: number };
-    return Number(row.n);
+  async unread(member: Member): Promise<number> {
+    const row = await this.db.one<{ n: string }>(
+      'SELECT COUNT(*) AS n FROM notifications WHERE member_id = $1 AND read_at IS NULL',
+      [member.id]
+    );
+    return toNumber(row?.n);
   }
 
   /** Marque une notification comme lue, ou toutes si aucune n'est précisée. */
-  markRead(member: Member, id?: string, now: Date = new Date()): void {
+  async markRead(member: Member, id?: string, now: Date = new Date()): Promise<void> {
+    if (id && !estUuid(id)) return;
+
     if (id) {
-      this.db
-        .prepare('UPDATE notifications SET read_at = ? WHERE id = ? AND member_id = ? AND read_at IS NULL')
-        .run(now.toISOString(), id, member.id);
+      await this.db.query(
+        'UPDATE notifications SET read_at = $1 WHERE id = $2 AND member_id = $3 AND read_at IS NULL',
+        [now.toISOString(), id, member.id]
+      );
       return;
     }
 
-    this.db
-      .prepare('UPDATE notifications SET read_at = ? WHERE member_id = ? AND read_at IS NULL')
-      .run(now.toISOString(), member.id);
+    await this.db.query(
+      'UPDATE notifications SET read_at = $1 WHERE member_id = $2 AND read_at IS NULL',
+      [now.toISOString(), member.id]
+    );
   }
 }

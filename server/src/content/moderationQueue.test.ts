@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
 import { after, before, describe, it } from 'node:test';
+import { openTestDb } from '../db/testDb.js';
 
 process.env.OTP_SECRET = 'secret-otp-de-test-suffisamment-long-123';
 process.env.SESSION_SECRET = 'secret-session-de-test-assez-long-12345';
@@ -74,7 +75,7 @@ describe('file de modération', () => {
     const app = createServer({
       store: new InMemoryChallengeStore(),
       providers: {},
-      databasePath: ':memory:',
+      db: await openTestDb(),
       push: { name: 'test', delivers: false, send: async () => {} },
     });
     await new Promise<void>((resolve) => {

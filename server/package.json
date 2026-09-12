@@ -7,18 +7,22 @@
   "scripts": {
     "dev": "node --env-file-if-exists=.env --import tsx --watch src/index.ts",
     "start": "node --env-file-if-exists=.env --import tsx src/index.ts",
-    "test": "node --import tsx --test \"src/**/*.test.ts\"",
-    "typecheck": "tsc --noEmit"
+    "test": "node --env-file-if-exists=.env.test --import tsx --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "migrate": "node --env-file-if-exists=.env --import tsx src/db/migrate.ts",
+    "cleanup": "node --env-file-if-exists=.env --import tsx src/maintenance/cleanup.ts"
   },
   "dependencies": {
     "express": "^5.2.1",
     "nodemailer": "^10.0.8",
+    "pg": "^8.23.0",
     "zod": "^4.6.2"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^22.20.2",
     "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.23.1",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2"
   }

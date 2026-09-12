@@ -1,44 +1,68 @@
-import type { DatabaseSync } from 'node:sqlite';
-
+import type { Db } from '../db/client.js';
+import { estUuid, toIso } from '../db/rows.js';
 import type { ModeratorDecision } from './moderation.js';
 
 export type StoredDecision = ModeratorDecision & { note?: string };
 
 /**
- * Décision courante d'un modérateur sur une publication.
+ * Décisions courantes des modérateurs, par publication.
  *
- * Lue à deux endroits — le fil et la file de modération — d'où sa place à part :
- * le verdict affiché aux voisins doit être exactement celui que le modérateur
- * voit dans sa file.
+ * Lues à deux endroits — le fil et la file de modération — d'où leur place à
+ * part : le verdict affiché aux voisins doit être exactement celui que le
+ * modérateur voit dans sa file.
+ *
+ * La lecture se fait par lot : le fil affiche deux cents publications, et une
+ * requête par publication ferait deux cents allers-retours vers la base.
  */
-export function readDecision(db: DatabaseSync, postId: string): StoredDecision | undefined {
-  const row = db
-    .prepare('SELECT decision, note, decided_at FROM moderation_decisions WHERE post_id = ?')
-    .get(postId) as { decision: string; note: string | null; decided_at: string } | undefined;
+export async function readDecisions(
+  db: Db,
+  postIds: readonly string[]
+): Promise<Map<string, StoredDecision>> {
+  const valides = postIds.filter(estUuid);
+  if (valides.length === 0) return new Map();
 
-  if (!row) return undefined;
+  const rows = await db.query<{
+    post_id: string;
+    decision: string;
+    note: string | null;
+    decided_at: Date;
+  }>(
+    `SELECT post_id, decision, note, decided_at
+     FROM moderation_decisions WHERE post_id = ANY($1::uuid[])`,
+    [valides]
+  );
 
-  return {
-    decision: row.decision === 'block' ? 'block' : 'restore',
-    decidedAt: String(row.decided_at),
-    ...(row.note ? { note: row.note } : {}),
-  };
+  return new Map(
+    rows.map((row) => [
+      row.post_id,
+      {
+        decision: row.decision === 'block' ? ('block' as const) : ('restore' as const),
+        decidedAt: toIso(row.decided_at),
+        ...(row.note ? { note: row.note } : {}),
+      },
+    ])
+  );
 }
 
-export function writeDecision(
-  db: DatabaseSync,
+export async function readDecision(db: Db, postId: string): Promise<StoredDecision | undefined> {
+  return (await readDecisions(db, [postId])).get(postId);
+}
+
+export async function writeDecision(
+  db: Db,
   postId: string,
   moderatorId: string,
   decision: 'block' | 'restore',
   note?: string
-): void {
-  db.prepare(
+): Promise<void> {
+  await db.query(
     `INSERT INTO moderation_decisions (post_id, moderator_id, decision, note, decided_at)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(post_id) DO UPDATE SET
+     VALUES ($1, $2, $3, $4, now())
+     ON CONFLICT (post_id) DO UPDATE SET
        moderator_id = excluded.moderator_id,
        decision = excluded.decision,
        note = excluded.note,
-       decided_at = excluded.decided_at`
-  ).run(postId, moderatorId, decision, note ?? null, new Date().toISOString());
+       decided_at = excluded.decided_at`,
+    [postId, moderatorId, decision, note ?? null]
+  );
 }

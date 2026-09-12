@@ -4,8 +4,8 @@ import { after, before, beforeEach, describe, it } from 'node:test';
 
 import type { PushMessage, PushSender } from '../push/sender.js';
 import { AlertService } from './alerts.js';
-import { openDatabase } from './db.js';
-import { ContentRepository } from './repository.js';
+import { openTestDb } from '../db/testDb.js';
+import { ContentRepository, type Member } from './repository.js';
 
 process.env.OTP_SECRET = 'secret-otp-de-test-suffisamment-long-123';
 process.env.SESSION_SECRET = 'secret-session-de-test-assez-long-12345';
@@ -85,7 +85,7 @@ describe('alertes SOS et sécurité', () => {
     const app = createServer({
       store: new InMemoryChallengeStore(),
       providers: {},
-      databasePath: ':memory:',
+      db: await openTestDb(),
       push,
     });
     await new Promise<void>((resolve) => {
@@ -95,7 +95,7 @@ describe('alertes SOS et sécurité', () => {
     baseUrl = `http://127.0.0.1:${port}`;
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     push.sent = [];
   });
 
@@ -229,38 +229,38 @@ describe('alertes SOS et sécurité', () => {
 
 describe('SOS visible dans l’application', () => {
   it('montre l’alerte à ses destinataires et à son auteur, pas aux autres', async () => {
-    const db = openDatabase(':memory:');
+    const db = await openTestDb();
     const content = new ContentRepository(db);
     const alerts = new AlertService(db, new RecordingPush());
 
-    const hafid = content.saveMember({ identifier: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
-    const salim = content.saveMember({ identifier: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
-    const karim = content.saveMember({ identifier: '0555000003', firstName: 'Karim', neighborhoodId: 'bejaia-centre' });
+    const hafid = (await content.saveMember({ identifier: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' }));
+    const salim = (await content.saveMember({ identifier: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' }));
+    const karim = (await content.saveMember({ identifier: '0555000003', firstName: 'Karim', neighborhoodId: 'bejaia-centre' }));
 
     const result = await alerts.triggerSos(hafid, [salim.id], { latitude: 36.75, longitude: 5.06 });
     assert.equal(result.alerted, 1);
 
-    const vuParSalim = alerts.activeSos(salim);
+    const vuParSalim = (await alerts.activeSos(salim));
     assert.equal(vuParSalim.length, 1, 'le destinataire doit voir l’alerte sans notification');
     assert.equal(vuParSalim[0]!.fromName, 'Hafid');
     assert.equal(vuParSalim[0]!.mine, false);
 
-    assert.equal(alerts.activeSos(hafid)[0]!.mine, true, 'l’auteur voit la sienne');
-    assert.deepEqual(alerts.activeSos(karim), [], 'un voisin non choisi ne la voit pas');
+    assert.equal((await alerts.activeSos(hafid))[0]!.mine, true, 'l’auteur voit la sienne');
+    assert.deepEqual((await alerts.activeSos(karim)), [], 'un voisin non choisi ne la voit pas');
 
     await alerts.cancelSos(hafid, result.alertId);
-    assert.deepEqual(alerts.activeSos(salim), [], 'une alerte annulée disparaît');
+    assert.deepEqual((await alerts.activeSos(salim)), [], 'une alerte annulée disparaît');
   });
 
   it('oublie une alerte de plus de deux heures', async () => {
-    const db = openDatabase(':memory:');
+    const db = await openTestDb();
     const content = new ContentRepository(db);
     const alerts = new AlertService(db, new RecordingPush());
-    const hafid = content.saveMember({ identifier: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' });
-    const salim = content.saveMember({ identifier: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' });
+    const hafid = (await content.saveMember({ identifier: '0555000001', firstName: 'Hafid', neighborhoodId: 'bejaia-centre' }));
+    const salim = (await content.saveMember({ identifier: '0555000002', firstName: 'Salim', neighborhoodId: 'bejaia-centre' }));
 
     await alerts.triggerSos(hafid, [salim.id]);
     const plusTard = new Date(Date.now() + 3 * 60 * 60 * 1000);
-    assert.deepEqual(alerts.activeSos(salim, plusTard), []);
+    assert.deepEqual((await alerts.activeSos(salim, plusTard)), []);
   });
 });

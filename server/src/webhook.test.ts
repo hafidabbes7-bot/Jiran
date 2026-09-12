@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import type { AddressInfo } from 'node:net';
 import { after, before, describe, it } from 'node:test';
+import { openTestDb } from './db/testDb.js';
 
 const APP_SECRET = 'secret-application-meta-pour-les-tests';
 const VERIFY_TOKEN = 'jeton-de-validation-webhook';
@@ -65,7 +66,7 @@ describe('vérification gratuite par WhatsApp', () => {
     const app = createServer({
       store: new InMemoryChallengeStore(),
       providers: {},
-      databasePath: ':memory:',
+      db: await openTestDb(),
       push: { name: 'test', delivers: false, send: async () => {} },
     });
     await new Promise<void>((resolve) => {

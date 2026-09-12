@@ -3,7 +3,5 @@ dist/
 .env
 .env.local
 
-# Base du contenu (SQLite)
-*.db
-*.db-shm
-*.db-wal
+# Environnement local : contient l'adresse de la base, jamais commité.
+.env.test

@@ -1,7 +1,7 @@
-import type { DatabaseSync } from 'node:sqlite';
-
+import type { Db } from '../db/client.js';
+import { estUuid, toIso } from '../db/rows.js';
 import { normalizePhone } from '../phone.js';
-import { readDecision, writeDecision, type StoredDecision } from './decisions.js';
+import { readDecision, readDecisions, writeDecision, type StoredDecision } from './decisions.js';
 import { moderationState, type ModerationState } from './moderation.js';
 import { sharedFeedNeighborhoodIds } from './neighborhoods.js';
 import type { Member } from './repository.js';
@@ -33,7 +33,7 @@ export interface QueuedPost {
  */
 export class ModerationQueue {
   constructor(
-    private readonly db: DatabaseSync,
+    private readonly db: Db,
     private readonly moderatorPhones: string[]
   ) {}
 
@@ -47,28 +47,32 @@ export class ModerationQueue {
    * d'abord. Les contenus déjà tranchés restent listés : une décision doit
    * pouvoir être revue.
    */
-  pending(moderator: Member, now: Date = new Date()): QueuedPost[] {
-    const ids = sharedFeedNeighborhoodIds(moderator.neighborhoodId);
-    const placeholders = ids.map(() => '?').join(', ');
+  async pending(moderator: Member, now: Date = new Date()): Promise<QueuedPost[]> {
+    const rows = await this.db.query<Record<string, unknown>>(
+      `SELECT p.id, p.category, p.body, p.neighborhood_id, p.created_at,
+              m.first_name AS author_name
+       FROM posts p
+       JOIN members m ON m.id = p.author_id
+       WHERE p.neighborhood_id = ANY($1)
+         AND EXISTS (SELECT 1 FROM reports r WHERE r.post_id = p.id)
+       ORDER BY p.created_at DESC
+       LIMIT 100`,
+      [sharedFeedNeighborhoodIds(moderator.neighborhoodId)]
+    );
 
-    const rows = this.db
-      .prepare(
-        `SELECT p.id, p.category, p.body, p.neighborhood_id, p.created_at,
-                m.first_name AS author_name
-         FROM posts p
-         JOIN members m ON m.id = p.author_id
-         WHERE p.neighborhood_id IN (${placeholders})
-           AND EXISTS (SELECT 1 FROM reports r WHERE r.post_id = p.id)
-         ORDER BY p.created_at DESC
-         LIMIT 100`
-      )
-      .all(...ids) as Record<string, string>[];
+    // Signalements et décisions en deux requêtes pour toute la file, plutôt
+    // qu'une paire par publication.
+    const ids = rows.map((row) => String(row.id));
+    const [signalements, décisions] = await Promise.all([
+      this.reportsOf(ids),
+      readDecisions(this.db, ids),
+    ]);
 
     return rows
       .map((row) => {
         const postId = String(row.id);
-        const reports = this.reportsOf(postId);
-        const decision = this.decisionOf(postId);
+        const reports = signalements.get(postId) ?? [];
+        const decision = décisions.get(postId);
 
         return {
           postId,
@@ -76,7 +80,7 @@ export class ModerationQueue {
           category: String(row.category),
           text: String(row.body),
           neighborhoodId: String(row.neighborhood_id),
-          createdAt: String(row.created_at),
+          createdAt: toIso(row.created_at),
           reports,
           moderation: moderationState(
             reports.map((report) => report.createdAt),
@@ -90,28 +94,41 @@ export class ModerationQueue {
   }
 
   /** Enregistre la décision d'un modérateur, en remplaçant la précédente. */
-  decide(
+  async decide(
     moderator: Member,
     postId: string,
     decision: 'block' | 'restore',
     note?: string
-  ): boolean {
-    const exists = this.db.prepare('SELECT 1 FROM posts WHERE id = ?').get(postId);
+  ): Promise<boolean> {
+    if (!estUuid(postId)) return false;
+
+    const exists = await this.db.one('SELECT 1 FROM posts WHERE id = $1', [postId]);
     if (!exists) return false;
 
-    writeDecision(this.db, postId, moderator.id, decision, note);
+    await writeDecision(this.db, postId, moderator.id, decision, note);
     return true;
   }
 
-  decisionOf(postId: string): StoredDecision | undefined {
+  async decisionOf(postId: string): Promise<StoredDecision | undefined> {
     return readDecision(this.db, postId);
   }
 
-  private reportsOf(postId: string): QueuedReport[] {
-    const rows = this.db
-      .prepare('SELECT reason, created_at FROM reports WHERE post_id = ? ORDER BY created_at')
-      .all(postId) as { reason: string; created_at: string }[];
+  /** Signalements par publication, pour toute une file d'un coup. */
+  private async reportsOf(postIds: readonly string[]): Promise<Map<string, QueuedReport[]>> {
+    if (postIds.length === 0) return new Map();
 
-    return rows.map((row) => ({ reason: String(row.reason), createdAt: String(row.created_at) }));
+    const rows = await this.db.query<{ post_id: string; reason: string; created_at: Date }>(
+      `SELECT post_id, reason, created_at FROM reports
+       WHERE post_id = ANY($1::uuid[]) ORDER BY created_at`,
+      [postIds]
+    );
+
+    const parPublication = new Map<string, QueuedReport[]>();
+    for (const row of rows) {
+      const liste = parPublication.get(row.post_id) ?? [];
+      liste.push({ reason: row.reason, createdAt: toIso(row.created_at) });
+      parPublication.set(row.post_id, liste);
+    }
+    return parPublication;
   }
 }

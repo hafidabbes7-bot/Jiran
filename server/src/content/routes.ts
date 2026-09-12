@@ -88,7 +88,7 @@ export type MemberRequest = Request & { member?: Member };
  * à un voisin qui n'a pas encore de profil.
  */
 export function memberAuthenticator(repository: ContentRepository) {
-  return (request: MemberRequest, response: Response, next: () => void) => {
+  return async (request: MemberRequest, response: Response, next: () => void) => {
     const header = request.header('authorization') ?? '';
     // Le jeton passe aussi en paramètre d'adresse : une balise <img> ne sait
     // pas poser d'en-tête, et c'est comme ça que les photos s'affichent.
@@ -101,7 +101,7 @@ export function memberAuthenticator(repository: ContentRepository) {
       return;
     }
 
-    const member = repository.findMemberByIdentifier(identifier);
+    const member = await repository.findMemberByIdentifier(identifier);
     if (!member) {
       // Numéro vérifié mais profil pas encore créé : l'application doit
       // d'abord appeler POST /profile.
@@ -127,7 +127,7 @@ export function createContentRouter(
   const authenticate = memberAuthenticator(repository);
 
   /** Crée ou met à jour le profil du voisin vérifié. */
-  router.post('/profile', (request: MemberRequest, response: Response) => {
+  router.post('/profile', async (request: MemberRequest, response: Response) => {
     const header = request.header('authorization') ?? '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : '';
     const identifier = token ? readSessionToken(token, config.sessionSecret) : null;
@@ -148,7 +148,7 @@ export function createContentRouter(
       return;
     }
 
-    const member = repository.saveMember({ identifier, ...parsed.data });
+    const member = await repository.saveMember({ identifier, ...parsed.data });
     response.json({
       id: member.id,
       firstName: member.firstName,
@@ -157,19 +157,19 @@ export function createContentRouter(
       joinedAt: member.joinedAt,
       // L'application n'affiche l'entrée « Modération » qu'à ceux qui en ont
       // l'usage ; c'est le serveur qui tranche, le drapeau n'ouvre aucun droit.
-      isModerator: moderation.isModerator(member.identifier),
+      isModerator: await moderation.isModerator(member.identifier),
     });
   });
 
-  router.get('/feed', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ posts: repository.feed(request.member!) });
+  router.get('/feed', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ posts: await repository.feed(request.member!) });
   });
 
-  router.get('/neighbors', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ neighbors: repository.neighbors(request.member!) });
+  router.get('/neighbors', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ neighbors: await repository.neighbors(request.member!) });
   });
 
-  router.post('/posts', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/posts', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = postSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
@@ -187,12 +187,12 @@ export function createContentRouter(
     const member = request.member!;
     // Une photo jointe doit être celle de l'auteur : sans ce contrôle, un
     // client modifié pourrait accrocher la photo d'un voisin à sa publication.
-    if (parsed.data.photoId && !media.ownsPhoto(member, parsed.data.photoId)) {
+    if (parsed.data.photoId && !(await media.ownsPhoto(member, parsed.data.photoId))) {
       response.status(404).json({ error: 'photo_introuvable' });
       return;
     }
 
-    const id = repository.createPost(member, {
+    const id = await repository.createPost(member, {
       category: parsed.data.category as never,
       text: parsed.data.text,
       photoId: parsed.data.photoId,
@@ -203,15 +203,15 @@ export function createContentRouter(
     // (§4.17). L'auteur ne se prévient pas lui-même.
     const catégorie = parsed.data.category as string;
     if (catégorie === 'securite' || catégorie === 'annonce' || catégorie === 'evenement') {
-      const voisins = repository
-        .memberIdsOfFeed(member)
-        .filter((autre) => autre !== member.id);
+      const voisins = (await repository.memberIdsOfFeed(member)).filter(
+        (autre) => autre !== member.id
+      );
       const titres: Record<string, string> = {
         securite: `🚨 Alerte sécurité de ${member.firstName}`,
         annonce: `📢 Nouvelle annonce de ${member.firstName}`,
         evenement: `📅 ${member.firstName} annonce un événement`,
       };
-      notifications.notify(
+      await notifications.notify(
         voisins,
         catégorie as NotificationKind,
         titres[catégorie]!,
@@ -230,36 +230,36 @@ export function createContentRouter(
     }
   });
 
-  router.post('/posts/:id/like', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/posts/:id/like', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = likeSchema.safeParse(request.body);
     const postId = String(request.params.id);
 
-    if (!parsed.success || !repository.postExists(postId)) {
+    if (!parsed.success || !(await repository.postExists(postId))) {
       response.status(parsed.success ? 404 : 400).json({ error: 'invalid_request' });
       return;
     }
 
-    repository.setLiked(postId, request.member!, parsed.data.liked);
+    await repository.setLiked(postId, request.member!, parsed.data.liked);
     response.sendStatus(204);
   });
 
   router.get(
     '/posts/:id/comments',
     authenticate,
-    (request: MemberRequest, response: Response) => {
+    async (request: MemberRequest, response: Response) => {
     const postId = String(request.params.id);
     if (!repository.postExists(postId)) {
       response.status(404).json({ error: 'not_found' });
       return;
     }
-      response.json({ comments: repository.comments(postId) });
+      response.json({ comments: await repository.comments(postId) });
     }
   );
 
   router.post(
     '/posts/:id/comments',
     authenticate,
-    (request: MemberRequest, response: Response) => {
+    async (request: MemberRequest, response: Response) => {
     const parsed = commentSchema.safeParse(request.body);
     const postId = String(request.params.id);
 
@@ -278,20 +278,20 @@ export function createContentRouter(
     }
 
     // Répondre sous un contenu masqué n'a pas de sens : il n'est plus lisible.
-    if (repository.moderationOf(postId).hidden) {
+    if ((await repository.moderationOf(postId)).hidden) {
       response.status(409).json({ error: 'post_blocked' });
       return;
     }
 
       const member = request.member!;
-      const id = repository.addComment(postId, member, parsed.data.text);
+      const id = await repository.addComment(postId, member, parsed.data.text);
       response.status(201).json({ id });
 
       // L'auteur de la publication est prévenu — sauf s'il se répond à
       // lui-même, ce qui n'apprendrait rien à personne.
-      const auteur = repository.authorOf(postId);
+      const auteur = await repository.authorOf(postId);
       if (auteur && auteur !== member.id) {
-        notifications.notify(
+        await notifications.notify(
           [auteur],
           'reponse',
           `${member.firstName} a répondu à ta publication`,
@@ -302,7 +302,7 @@ export function createContentRouter(
     }
   );
 
-  router.post('/posts/:id/report', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/posts/:id/report', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = reportSchema.safeParse(request.body);
     const postId = String(request.params.id);
 
@@ -315,16 +315,20 @@ export function createContentRouter(
       return;
     }
 
-    const accepted = repository.addReport(postId, request.member!, parsed.data.reason);
+    const accepted = await repository.addReport(postId, request.member!, parsed.data.reason);
     response.status(accepted ? 201 : 409).json({
       accepted,
-      moderation: repository.moderationOf(postId),
+      moderation: await repository.moderationOf(postId),
     });
   });
 
   /** Réserve une route aux modérateurs déclarés. */
-  const requireModerator = (request: MemberRequest, response: Response, next: () => void) => {
-    if (!moderation.isModerator(request.member!.identifier)) {
+  const requireModerator = async (
+    request: MemberRequest,
+    response: Response,
+    next: () => void
+  ) => {
+    if (!(await moderation.isModerator(request.member!.identifier))) {
       response.status(403).json({ error: 'not_moderator' });
       return;
     }
@@ -336,8 +340,8 @@ export function createContentRouter(
     '/moderation/queue',
     authenticate,
     requireModerator,
-    (request: MemberRequest, response: Response) => {
-      response.json({ posts: moderation.pending(request.member!) });
+    async (request: MemberRequest, response: Response) => {
+      response.json({ posts: await moderation.pending(request.member!) });
     }
   );
 
@@ -346,7 +350,7 @@ export function createContentRouter(
     '/moderation/posts/:id/decision',
     authenticate,
     requireModerator,
-    (request: MemberRequest, response: Response) => {
+    async (request: MemberRequest, response: Response) => {
       const parsed = decisionSchema.safeParse(request.body);
       if (!parsed.success) {
         response.status(400).json({ error: 'invalid_request' });
@@ -354,7 +358,7 @@ export function createContentRouter(
       }
 
       const postId = String(request.params.id);
-      const applied = moderation.decide(
+      const applied = await moderation.decide(
         request.member!,
         postId,
         parsed.data.decision,
@@ -366,30 +370,30 @@ export function createContentRouter(
         return;
       }
 
-      response.json({ moderation: repository.moderationOf(postId) });
+      response.json({ moderation: await repository.moderationOf(postId) });
     }
   );
 
   /** Enregistre l'appareil, pour pouvoir joindre ce voisin. */
-  router.post('/devices', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/devices', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = deviceSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
       return;
     }
 
-    alerts.registerDevice(request.member!, parsed.data.token, parsed.data.platform);
+    await alerts.registerDevice(request.member!, parsed.data.token, parsed.data.platform);
     response.sendStatus(204);
   });
 
-  router.delete('/devices', authenticate, (request: MemberRequest, response: Response) => {
+  router.delete('/devices', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = deviceSchema.pick({ token: true }).safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
       return;
     }
 
-    alerts.forgetDevice(parsed.data.token);
+    await alerts.forgetDevice(parsed.data.token);
     response.sendStatus(204);
   });
 
@@ -416,7 +420,7 @@ export function createContentRouter(
 
     // Le bandeau rouge s'affiche déjà chez les voisins choisis ; la
     // notification permet de le retrouver plus tard, avec l'heure.
-    notifications.notify(
+    await notifications.notify(
       parsed.data.neighborIds,
       'sos',
       `🚨 ${request.member!.firstName} a demandé de l'aide`,
@@ -427,8 +431,8 @@ export function createContentRouter(
     response.status(201).json(result);
   });
 
-  router.get('/sos/active', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ alerts: alerts.activeSos(request.member!) });
+  router.get('/sos/active', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ alerts: await alerts.activeSos(request.member!) });
   });
 
   router.post(
@@ -449,22 +453,24 @@ export function createContentRouter(
     return 409;
   };
 
-  router.get('/games', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ games: games.list(request.member!) });
+  router.get('/games', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ games: await games.list(request.member!) });
   });
 
-  router.post('/games', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/games', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = gameSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
       return;
     }
 
-    response.status(201).json({ game: games.create(request.member!, parsed.data.kind as 'morpion') });
+    response
+      .status(201)
+      .json({ game: await games.create(request.member!, parsed.data.kind as 'morpion') });
   });
 
-  router.post('/games/:id/join', authenticate, (request: MemberRequest, response: Response) => {
-    const result = games.join(request.member!, String(request.params.id));
+  router.post('/games/:id/join', authenticate, async (request: MemberRequest, response: Response) => {
+    const result = await games.join(request.member!, String(request.params.id));
     if (typeof result === 'string') {
       response.status(gameStatus(result)).json({ error: result });
       return;
@@ -473,14 +479,14 @@ export function createContentRouter(
     response.json({ game: result });
   });
 
-  router.post('/games/:id/move', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/games/:id/move', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = moveSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
       return;
     }
 
-    const result = games.play(request.member!, String(request.params.id), parsed.data.cell);
+    const result = await games.play(request.member!, String(request.params.id), parsed.data.cell);
     if (typeof result === 'string') {
       response.status(gameStatus(result)).json({ error: result });
       return;
@@ -491,17 +497,17 @@ export function createContentRouter(
 
   // --- Notifications (§4.17) -------------------------------------------
 
-  router.get('/notifications', authenticate, (request: MemberRequest, response: Response) => {
+  router.get('/notifications', authenticate, async (request: MemberRequest, response: Response) => {
     response.json({
-      notifications: notifications.list(request.member!),
-      unread: notifications.unread(request.member!),
+      notifications: await notifications.list(request.member!),
+      unread: await notifications.unread(request.member!),
     });
   });
 
-  router.post('/notifications/read', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/notifications/read', authenticate, async (request: MemberRequest, response: Response) => {
     const id = typeof request.body?.id === 'string' ? request.body.id : undefined;
-    notifications.markRead(request.member!, id);
-    response.json({ unread: notifications.unread(request.member!) });
+    await notifications.markRead(request.member!, id);
+    response.json({ unread: await notifications.unread(request.member!) });
   });
 
   // --- Photos et stories -----------------------------------------------
@@ -513,7 +519,7 @@ export function createContentRouter(
     return 422;
   };
 
-  router.post('/photos', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/photos', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = photoSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
@@ -528,7 +534,7 @@ export function createContentRouter(
     }
 
     const bytes = Buffer.from(parsed.data.data, 'base64');
-    const result = media.savePhoto(request.member!, parsed.data.mime, bytes);
+    const result = await media.savePhoto(request.member!, parsed.data.mime, bytes);
     if (typeof result === 'string') {
       response.status(mediaStatus(result)).json({ error: result });
       return;
@@ -537,31 +543,40 @@ export function createContentRouter(
     response.status(201).json({ id: result.id });
   });
 
-  router.get('/photos/:id', authenticate, (request: MemberRequest, response: Response) => {
-    const result = media.photo(request.member!, String(request.params.id));
+  router.get('/photos/:id', authenticate, async (request: MemberRequest, response: Response) => {
+    const result = await media.photo(request.member!, String(request.params.id));
     if (typeof result === 'string') {
       response.status(mediaStatus(result)).json({ error: result });
       return;
     }
 
     // Une photo ne change jamais : le navigateur peut la garder longtemps.
-    response.setHeader('Content-Type', result.mime);
     response.setHeader('Cache-Control', 'private, max-age=604800, immutable');
+
+    // Rangée dans Supabase Storage : on renvoie vers elle plutôt que de faire
+    // transiter les octets par le serveur, qui n'a ni la bande passante ni le
+    // disque pour ça.
+    if (result.kind === 'url') {
+      response.redirect(302, result.url);
+      return;
+    }
+
+    response.setHeader('Content-Type', result.mime);
     response.end(Buffer.from(result.bytes));
   });
 
-  router.get('/stories', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ stories: media.stories(request.member!) });
+  router.get('/stories', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ stories: await media.stories(request.member!) });
   });
 
-  router.post('/stories', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/stories', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = storySchema.safeParse(request.body);
     if (!parsed.success || (!parsed.data.photoId && !parsed.data.text)) {
       response.status(400).json({ error: 'invalid_request' });
       return;
     }
 
-    const result = media.addStory(request.member!, parsed.data);
+    const result = await media.addStory(request.member!, parsed.data);
     if (typeof result === 'string') {
       response.status(mediaStatus(result)).json({ error: result });
       return;
@@ -570,8 +585,8 @@ export function createContentRouter(
     response.status(201).json({ story: result });
   });
 
-  router.delete('/stories/:id', authenticate, (request: MemberRequest, response: Response) => {
-    const removed = media.removeStory(request.member!, String(request.params.id));
+  router.delete('/stories/:id', authenticate, async (request: MemberRequest, response: Response) => {
+    const removed = await media.removeStory(request.member!, String(request.params.id));
     response.status(removed ? 200 : 404).json({ removed });
   });
 

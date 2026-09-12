@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
-import type { DatabaseSync } from 'node:sqlite';
 
+import type { Db } from '../db/client.js';
+import { estUuid, toBool, toIso } from '../db/rows.js';
 import type { PushMessage, PushSender } from '../push/index.js';
 import { sharedFeedNeighborhoodIds } from './neighborhoods.js';
 import type { Member } from './repository.js';
@@ -35,26 +36,25 @@ export interface SosResult {
  */
 export class AlertService {
   constructor(
-    private readonly db: DatabaseSync,
+    private readonly db: Db,
     private readonly push: PushSender
   ) {}
 
   /** Enregistre l'appareil d'un voisin pour pouvoir le joindre. */
-  registerDevice(member: Member, token: string, platform: string): void {
-    this.db
-      .prepare(
-        `INSERT INTO devices (token, member_id, platform, updated_at)
-         VALUES (?, ?, ?, ?)
-         ON CONFLICT(token) DO UPDATE SET
-           member_id = excluded.member_id,
-           platform = excluded.platform,
-           updated_at = excluded.updated_at`
-      )
-      .run(token, member.id, platform, new Date().toISOString());
+  async registerDevice(member: Member, token: string, platform: string): Promise<void> {
+    await this.db.query(
+      `INSERT INTO devices (token, member_id, platform, updated_at)
+       VALUES ($1, $2, $3, now())
+       ON CONFLICT (token) DO UPDATE SET
+         member_id = excluded.member_id,
+         platform = excluded.platform,
+         updated_at = excluded.updated_at`,
+      [token, member.id, platform]
+    );
   }
 
-  forgetDevice(token: string): void {
-    this.db.prepare('DELETE FROM devices WHERE token = ?').run(token);
+  async forgetDevice(token: string): Promise<void> {
+    await this.db.query('DELETE FROM devices WHERE token = $1', [token]);
   }
 
   /**
@@ -71,28 +71,25 @@ export class AlertService {
     targetIds: string[],
     position?: { latitude: number; longitude: number }
   ): Promise<SosResult> {
-    const allowed = this.membersOfSameFeed(member, targetIds);
+    const allowed = await this.membersOfSameFeed(member, targetIds);
     const alertId = crypto.randomUUID();
 
-    this.db
-      .prepare(
-        `INSERT INTO sos_alerts (id, member_id, latitude, longitude, created_at)
-         VALUES (?, ?, ?, ?, ?)`
-      )
-      .run(
-        alertId,
-        member.id,
-        position?.latitude ?? null,
-        position?.longitude ?? null,
-        new Date().toISOString()
-      );
-
-    const insertTarget = this.db.prepare(
-      'INSERT OR IGNORE INTO sos_targets (alert_id, member_id) VALUES (?, ?)'
+    await this.db.query(
+      `INSERT INTO sos_alerts (id, member_id, latitude, longitude)
+       VALUES ($1, $2, $3, $4)`,
+      [alertId, member.id, position?.latitude ?? null, position?.longitude ?? null]
     );
-    for (const id of allowed) insertTarget.run(alertId, id);
 
-    const tokens = this.tokensOf(allowed);
+    if (allowed.length > 0) {
+      await this.db.query(
+        `INSERT INTO sos_targets (alert_id, member_id)
+         SELECT $1, unnest($2::uuid[])
+         ON CONFLICT DO NOTHING`,
+        [alertId, allowed]
+      );
+    }
+
+    const tokens = await this.tokensOf(allowed);
     const place = member.building ? `${member.building}` : '';
 
     await this.push.send(
@@ -128,56 +125,56 @@ export class AlertService {
    * voir dans l'application. Une alerte d'urgence qui ne s'affiche nulle part
    * n'est pas une alerte.
    */
-  activeSos(member: Member, now: Date = new Date()): ActiveSos[] {
+  async activeSos(member: Member, now: Date = new Date()): Promise<ActiveSos[]> {
     const depuis = new Date(now.getTime() - AlertService.WINDOW_MS).toISOString();
 
-    const rows = this.db
-      .prepare(
-        `SELECT a.id, a.latitude, a.longitude, a.created_at, a.member_id,
-                m.first_name, m.building,
-                (a.member_id = ?1) AS mine
-         FROM sos_alerts a
-         JOIN members m ON m.id = a.member_id
-         WHERE a.cancelled_at IS NULL
-           AND a.created_at >= ?2
-           AND (a.member_id = ?1 OR EXISTS (
-                 SELECT 1 FROM sos_targets t WHERE t.alert_id = a.id AND t.member_id = ?1))
-         ORDER BY a.created_at DESC
-         LIMIT 20`
-      )
-      .all(member.id, depuis) as Record<string, string | number | null>[];
+    const rows = await this.db.query<Record<string, unknown>>(
+      `SELECT a.id, a.latitude, a.longitude, a.created_at, a.member_id,
+              m.first_name, m.building,
+              (a.member_id = $1) AS mine
+       FROM sos_alerts a
+       JOIN members m ON m.id = a.member_id
+       WHERE a.cancelled_at IS NULL
+         AND a.created_at >= $2
+         AND (a.member_id = $1 OR EXISTS (
+               SELECT 1 FROM sos_targets t WHERE t.alert_id = a.id AND t.member_id = $1))
+       ORDER BY a.created_at DESC
+       LIMIT 20`,
+      [member.id, depuis]
+    );
 
     return rows.map((row) => ({
       id: String(row.id),
       fromName: String(row.first_name),
       building: (row.building as string | null) ?? undefined,
-      mine: Number(row.mine) === 1,
+      mine: toBool(row.mine),
       latitude: row.latitude === null ? undefined : Number(row.latitude),
       longitude: row.longitude === null ? undefined : Number(row.longitude),
-      createdAt: String(row.created_at),
+      createdAt: toIso(row.created_at),
     }));
   }
 
   async cancelSos(member: Member, alertId: string): Promise<boolean> {
-    const alert = this.db
-      .prepare('SELECT id, member_id, cancelled_at FROM sos_alerts WHERE id = ?')
-      .get(alertId) as { id: string; member_id: string; cancelled_at: string | null } | undefined;
+    if (!estUuid(alertId)) return false;
+    const alert = await this.db.one<{ member_id: string; cancelled_at: Date | null }>(
+      'SELECT member_id, cancelled_at FROM sos_alerts WHERE id = $1',
+      [alertId]
+    );
 
     // Seul l'auteur peut annuler son alerte.
     if (!alert || alert.member_id !== member.id || alert.cancelled_at) return false;
 
-    this.db
-      .prepare('UPDATE sos_alerts SET cancelled_at = ? WHERE id = ?')
-      .run(new Date().toISOString(), alertId);
+    await this.db.query('UPDATE sos_alerts SET cancelled_at = now() WHERE id = $1', [alertId]);
 
     const targets = (
-      this.db
-        .prepare('SELECT member_id FROM sos_targets WHERE alert_id = ?')
-        .all(alertId) as { member_id: string }[]
+      await this.db.query<{ member_id: string }>(
+        'SELECT member_id FROM sos_targets WHERE alert_id = $1',
+        [alertId]
+      )
     ).map((row) => row.member_id);
 
     await this.push.send(
-      this.tokensOf(targets).map(
+      (await this.tokensOf(targets)).map(
         (token): PushMessage => ({
           to: token,
           title: `✅ Fausse alerte`,
@@ -196,18 +193,14 @@ export class AlertService {
    * de sa propre publication.
    */
   async announceSecurityPost(member: Member, postId: string, text: string): Promise<void> {
-    const ids = sharedFeedNeighborhoodIds(member.neighborhoodId);
-    const placeholders = ids.map(() => '?').join(', ');
-
     const recipients = (
-      this.db
-        .prepare(
-          `SELECT id FROM members WHERE neighborhood_id IN (${placeholders}) AND id != ?`
-        )
-        .all(...ids, member.id) as { id: string }[]
+      await this.db.query<{ id: string }>(
+        'SELECT id FROM members WHERE neighborhood_id = ANY($1) AND id <> $2',
+        [sharedFeedNeighborhoodIds(member.neighborhoodId), member.id]
+      )
     ).map((row) => row.id);
 
-    const tokens = this.tokensOf(recipients);
+    const tokens = await this.tokensOf(recipients);
     const extract = text.length > 120 ? `${text.slice(0, 117)}…` : text;
 
     await this.push.send(
@@ -224,32 +217,29 @@ export class AlertService {
   }
 
   /** Filtre les destinataires demandés sur ceux qui partagent le même fil. */
-  private membersOfSameFeed(member: Member, targetIds: string[]): string[] {
-    if (targetIds.length === 0) return [];
+  private async membersOfSameFeed(member: Member, targetIds: string[]): Promise<string[]> {
+    const valides = targetIds.filter(estUuid);
+    if (valides.length === 0) return [];
 
-    const neighborhoods = sharedFeedNeighborhoodIds(member.neighborhoodId);
-    const targetPlaceholders = targetIds.map(() => '?').join(', ');
-    const neighborhoodPlaceholders = neighborhoods.map(() => '?').join(', ');
-
-    const rows = this.db
-      .prepare(
-        `SELECT id FROM members
-         WHERE id IN (${targetPlaceholders})
-           AND neighborhood_id IN (${neighborhoodPlaceholders})
-           AND id != ?`
-      )
-      .all(...targetIds, ...neighborhoods, member.id) as { id: string }[];
+    const rows = await this.db.query<{ id: string }>(
+      `SELECT id FROM members
+       WHERE id = ANY($1::uuid[])
+         AND neighborhood_id = ANY($2)
+         AND id <> $3`,
+      [valides, sharedFeedNeighborhoodIds(member.neighborhoodId), member.id]
+    );
 
     return rows.map((row) => row.id);
   }
 
-  private tokensOf(memberIds: string[]): string[] {
-    if (memberIds.length === 0) return [];
-    const placeholders = memberIds.map(() => '?').join(', ');
+  private async tokensOf(memberIds: string[]): Promise<string[]> {
+    const valides = memberIds.filter(estUuid);
+    if (valides.length === 0) return [];
 
-    const rows = this.db
-      .prepare(`SELECT token FROM devices WHERE member_id IN (${placeholders})`)
-      .all(...memberIds) as { token: string }[];
+    const rows = await this.db.query<{ token: string }>(
+      'SELECT token FROM devices WHERE member_id = ANY($1::uuid[])',
+      [valides]
+    );
 
     return rows.map((row) => row.token);
   }

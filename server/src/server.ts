@@ -7,7 +7,10 @@ import { z } from 'zod';
 
 import { config } from './config.js';
 import { AlertService } from './content/alerts.js';
-import { openDatabase } from './content/db.js';
+import { createDb, type Db } from './db/client.js';
+import { createPhotoStorage } from './storage/photos.js';
+import { CleanupService } from './maintenance/cleanupService.js';
+import { planifierNettoyage } from './maintenance/scheduler.js';
 import { CommunityService } from './content/community.js';
 import { createCommunityRouter } from './content/communityRoutes.js';
 import { GameService } from './content/games.js';
@@ -126,23 +129,34 @@ function extractTextMessages(payload: unknown): { from: string; text: string }[]
 export function createServer(options?: {
   store?: ChallengeStore;
   providers?: ChannelProviders;
-  /** Base du contenu ; par défaut celle de `DATABASE_PATH`. */
-  databasePath?: string;
+  /** Base du contenu ; par défaut celle de `DATABASE_URL`. */
+  db?: Db;
   push?: PushSender;
   /** Dossier de l'application web à servir en plus de l'API. */
   webDir?: string;
 }) {
   const store = options?.store ?? new InMemoryChallengeStore();
   const providers = options?.providers ?? createChannelProviders();
-  const database = openDatabase(options?.databasePath ?? config.databasePath);
+  // Jamais de création ni de migration ici : le schéma se pose avec
+  // `npm run migrate`, volontairement séparé du démarrage. Un serveur qui
+  // modifie la base à chaque redémarrage est un serveur qui, un jour, l'efface.
+  const database = options?.db ?? createDb(config.databaseUrl);
+  const photoStorage = createPhotoStorage();
   const content = new ContentRepository(database);
   const push = options?.push ?? createPushSender();
   const alerts = new AlertService(database, push);
   const moderation = new ModerationQueue(database, config.moderatorPhones);
   const games = new GameService(database);
   const community = new CommunityService(database);
-  const media = new MediaService(database);
+  const media = new MediaService(database, photoStorage);
   const notifications = new NotificationService(database);
+
+  // Le ménage tourne dans le serveur, faute de tâche planifiée gratuite chez
+  // Render. Il ne touche qu'aux publications arrivées à terme (voir
+  // `maintenance/cleanupService.ts`), jamais aux comptes ni aux messages.
+  if (config.cleanup.enabled && !options?.db) {
+    planifierNettoyage(new CleanupService(database, photoStorage));
+  }
 
   const verification = new VerificationService(store, providers, {
     length: config.otp.length,
@@ -211,6 +225,10 @@ export function createServer(options?: {
       trialMode: config.trialMode,
       verificationDecorative: config.verificationDecorative,
       push: { provider: push.name, delivers: push.delivers },
+      // De quoi vérifier d'un coup d'œil qu'un déploiement est bien branché,
+      // sans jamais rien révéler de l'adresse ni des clés.
+      database: { configured: Boolean(config.databaseUrl) },
+      photos: { storage: photoStorage ? 'supabase' : 'base' },
     });
   });
 
@@ -380,6 +398,17 @@ export function createServer(options?: {
     }
     // `phone` reste là pour les applications déjà installées.
     response.json({ phone: identifier, identifier, identifierKind: kindOf(identifier) });
+  });
+
+  /**
+   * Dernier filet. Express 5 dirige ici les échecs des gestionnaires
+   * asynchrones : sans lui, une base momentanément injoignable renverrait une
+   * page HTML d'erreur à une application qui attend du JSON.
+   */
+  app.use((error: Error, _request: Request, response: Response, _next: () => void) => {
+    console.error('[http] requête en échec', error);
+    if (response.headersSent) return;
+    response.status(500).json({ error: 'server_error' });
   });
 
   return app;

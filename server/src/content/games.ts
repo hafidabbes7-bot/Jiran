@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
-import type { DatabaseSync } from 'node:sqlite';
 
+import type { Db } from '../db/client.js';
+import { estUuid, toIso } from '../db/rows.js';
 import { sharedFeedNeighborhoodIds } from './neighborhoods.js';
 import type { Member } from './repository.js';
 import { EMPTY_BOARD, applyMove, type Mark } from './morpion.js';
@@ -49,8 +50,8 @@ interface GameRow {
   turn: string;
   status: string;
   winner: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 const SELECT = `
@@ -68,51 +69,57 @@ const SELECT = `
  * coupure de réseau — un voisin retrouve sa partie là où il l'a laissée.
  */
 export class GameService {
-  constructor(private readonly db: DatabaseSync) {}
+  constructor(private readonly db: Db) {}
 
   /** Parties du voisin, puis celles qui attendent un adversaire dans son fil. */
-  list(member: Member): GameView[] {
-    const quartiers = sharedFeedNeighborhoodIds(member.neighborhoodId);
-    const places = quartiers.map(() => '?').join(', ');
-    const rows = this.db
-      .prepare(
-        `${SELECT}
-         WHERE g.neighborhood_id IN (${places})
-           AND (g.player_x = ? OR g.player_o = ? OR g.status = 'waiting')
-         ORDER BY g.updated_at DESC
-         LIMIT 40`
-      )
-      .all(...quartiers, member.id, member.id) as unknown as GameRow[];
+  async list(member: Member): Promise<GameView[]> {
+    const rows = await this.db.query<GameRow>(
+      `${SELECT}
+       WHERE g.neighborhood_id = ANY($1)
+         AND (g.player_x = $2 OR g.player_o = $2 OR g.status = 'waiting')
+       ORDER BY g.updated_at DESC
+       LIMIT 40`,
+      [sharedFeedNeighborhoodIds(member.neighborhoodId), member.id]
+    );
 
     return rows.map((row) => this.view(row, member));
   }
 
-  create(member: Member, kind: GameKind, now: Date = new Date()): GameView {
+  async create(member: Member, kind: GameKind, now: Date = new Date()): Promise<GameView> {
     const id = crypto.randomUUID();
     const stamp = now.toISOString();
-    this.db
-      .prepare(
-        `INSERT INTO games (id, kind, neighborhood_id, player_x, player_o, board, turn, status, created_at, updated_at)
-         VALUES (?, ?, ?, ?, NULL, ?, 'X', 'waiting', ?, ?)`
-      )
-      .run(id, kind, member.neighborhoodId, member.id, EMPTY_BOARD, stamp, stamp);
+    await this.db.query(
+      `INSERT INTO games (id, kind, neighborhood_id, player_x, player_o, board, turn, status, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, NULL, $5, 'X', 'waiting', $6, $6)`,
+      [id, kind, member.neighborhoodId, member.id, EMPTY_BOARD, stamp]
+    );
     return this.require(id, member);
   }
 
-  join(member: Member, gameId: string, now: Date = new Date()): GameView | GameError {
-    const row = this.row(gameId);
+  async join(
+    member: Member,
+    gameId: string,
+    now: Date = new Date()
+  ): Promise<GameView | GameError> {
+    const row = await this.row(gameId);
     if (!row) return 'partie_inconnue';
     if (row.player_x === member.id) return 'ta_propre_partie';
     if (row.player_o) return 'partie_pleine';
 
-    this.db
-      .prepare(`UPDATE games SET player_o = ?, status = 'playing', updated_at = ? WHERE id = ?`)
-      .run(member.id, now.toISOString(), gameId);
+    await this.db.query(
+      `UPDATE games SET player_o = $1, status = 'playing', updated_at = $2 WHERE id = $3`,
+      [member.id, now.toISOString(), gameId]
+    );
     return this.require(gameId, member);
   }
 
-  play(member: Member, gameId: string, cell: number, now: Date = new Date()): GameView | GameError {
-    const row = this.row(gameId);
+  async play(
+    member: Member,
+    gameId: string,
+    cell: number,
+    now: Date = new Date()
+  ): Promise<GameView | GameError> {
+    const row = await this.row(gameId);
     if (!row) return 'partie_inconnue';
 
     const mark = this.markOf(row, member);
@@ -125,27 +132,33 @@ export class GameService {
     if (result === 'hors_plateau' || result === 'case_occupee') return result;
 
     const status: GameStatus = result.winner ? 'won' : result.draw ? 'draw' : 'playing';
-    this.db
-      .prepare(`UPDATE games SET board = ?, turn = ?, status = ?, winner = ?, updated_at = ? WHERE id = ?`)
-      .run(
+    await this.db.query(
+      `UPDATE games SET board = $1, turn = $2, status = $3, winner = $4, updated_at = $5 WHERE id = $6`,
+      [
         result.board,
         mark === 'X' ? 'O' : 'X',
         status,
         result.winner ?? null,
         now.toISOString(),
-        gameId
-      );
+        gameId,
+      ]
+    );
     return this.require(gameId, member);
   }
 
   // --- interne ---------------------------------------------------------
 
-  private row(gameId: string): GameRow | undefined {
-    return this.db.prepare(`${SELECT} WHERE g.id = ?`).get(gameId) as unknown as GameRow | undefined;
+  private async row(gameId: string): Promise<GameRow | undefined> {
+    // Un identifiant qui n'a pas la forme attendue ne peut désigner aucune
+    // partie : autant le dire tout de suite, plutôt que de le faire refuser
+    // par la base sous forme d'erreur.
+    if (!estUuid(gameId)) return undefined;
+
+    return this.db.one<GameRow>(`${SELECT} WHERE g.id = $1`, [gameId]);
   }
 
-  private require(gameId: string, member: Member): GameView {
-    const row = this.row(gameId);
+  private async require(gameId: string, member: Member): Promise<GameView> {
+    const row = await this.row(gameId);
     if (!row) throw new Error(`partie introuvable juste après écriture : ${gameId}`);
     return this.view(row, member);
   }
@@ -175,7 +188,7 @@ export class GameService {
       yourMark: mark,
       yourTurn: status === 'playing' && mark === row.turn,
       outcome,
-      updatedAt: row.updated_at,
+      updatedAt: toIso(row.updated_at),
     };
   }
 }

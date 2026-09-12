@@ -81,15 +81,15 @@ export function createCommunityRouter(
 
   // --- Messagerie privée -----------------------------------------------
 
-  router.get('/messages', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ conversations: community.conversations(request.member!) });
+  router.get('/messages', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ conversations: await community.conversations(request.member!) });
   });
 
-  router.get('/messages/:neighborId', authenticate, (request: MemberRequest, response: Response) => {
-    send(response, community.messages(request.member!, String(request.params.neighborId)), 'messages');
+  router.get('/messages/:neighborId', authenticate, async (request: MemberRequest, response: Response) => {
+    send(response, await community.messages(request.member!, String(request.params.neighborId)), 'messages');
   });
 
-  router.post('/messages/:neighborId', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/messages/:neighborId', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = messageSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
@@ -98,11 +98,11 @@ export function createCommunityRouter(
 
     const member = request.member!;
     const destinataire = String(request.params.neighborId);
-    const envoyé = community.sendMessage(member, destinataire, parsed.data.text);
+    const envoyé = await community.sendMessage(member, destinataire, parsed.data.text);
     send(response, envoyé, 'message', true);
 
     if (typeof envoyé !== 'string') {
-      notifications.notify(
+      await notifications.notify(
         [destinataire],
         'message',
         `${member.firstName} t'a écrit`,
@@ -114,21 +114,21 @@ export function createCommunityRouter(
 
   // --- Services recommandés --------------------------------------------
 
-  router.get('/services', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ services: community.services(request.member!) });
+  router.get('/services', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ services: await community.services(request.member!) });
   });
 
-  router.post('/services', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/services', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = serviceSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
       return;
     }
 
-    send(response, community.addService(request.member!, parsed.data), 'service', true);
+    send(response, await community.addService(request.member!, parsed.data), 'service', true);
   });
 
-  router.post('/services/:id/recommend', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/services/:id/recommend', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = recommendSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
@@ -137,28 +137,28 @@ export function createCommunityRouter(
 
     send(
       response,
-      community.recommend(request.member!, String(request.params.id), parsed.data.rating),
+      await community.recommend(request.member!, String(request.params.id), parsed.data.rating),
       'service'
     );
   });
 
   // --- Objets à emprunter ----------------------------------------------
 
-  router.get('/items', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ items: community.items(request.member!) });
+  router.get('/items', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ items: await community.items(request.member!) });
   });
 
-  router.post('/items', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/items', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = itemSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
       return;
     }
 
-    send(response, community.addItem(request.member!, parsed.data.name), 'item', true);
+    send(response, await community.addItem(request.member!, parsed.data.name), 'item', true);
   });
 
-  router.post('/items/:id/borrow', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/items/:id/borrow', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = borrowSchema.safeParse(request.body ?? {});
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
@@ -167,22 +167,22 @@ export function createCommunityRouter(
 
     send(
       response,
-      community.borrow(request.member!, String(request.params.id), parsed.data.dueDate),
+      await community.borrow(request.member!, String(request.params.id), parsed.data.dueDate),
       'item'
     );
   });
 
-  router.post('/items/:id/return', authenticate, (request: MemberRequest, response: Response) => {
-    send(response, community.giveBack(request.member!, String(request.params.id)), 'item');
+  router.post('/items/:id/return', authenticate, async (request: MemberRequest, response: Response) => {
+    send(response, await community.giveBack(request.member!, String(request.params.id)), 'item');
   });
 
   // --- Groupes d'intérêt -----------------------------------------------
 
-  router.get('/groups', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ groups: community.groups(request.member!) });
+  router.get('/groups', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ groups: await community.groups(request.member!) });
   });
 
-  router.post('/groups', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/groups', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = groupSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
@@ -191,13 +191,13 @@ export function createCommunityRouter(
 
     send(
       response,
-      community.createGroup(request.member!, parsed.data.name, parsed.data.emoji),
+      await community.createGroup(request.member!, parsed.data.name, parsed.data.emoji),
       'group',
       true
     );
   });
 
-  router.post('/groups/:id/membership', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/groups/:id/membership', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = membershipSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
@@ -206,16 +206,16 @@ export function createCommunityRouter(
 
     send(
       response,
-      community.setGroupMembership(request.member!, String(request.params.id), parsed.data.joined),
+      await community.setGroupMembership(request.member!, String(request.params.id), parsed.data.joined),
       'group'
     );
   });
 
-  router.get('/groups/:id/posts', authenticate, (request: MemberRequest, response: Response) => {
-    send(response, community.groupPosts(request.member!, String(request.params.id)), 'posts');
+  router.get('/groups/:id/posts', authenticate, async (request: MemberRequest, response: Response) => {
+    send(response, await community.groupPosts(request.member!, String(request.params.id)), 'posts');
   });
 
-  router.post('/groups/:id/posts', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/groups/:id/posts', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = groupPostSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
@@ -224,7 +224,7 @@ export function createCommunityRouter(
 
     send(
       response,
-      community.addGroupPost(request.member!, String(request.params.id), parsed.data.text),
+      await community.addGroupPost(request.member!, String(request.params.id), parsed.data.text),
       'post',
       true
     );
@@ -232,30 +232,30 @@ export function createCommunityRouter(
 
   // --- Carte du quartier -----------------------------------------------
 
-  router.get('/places', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ places: community.places(request.member!) });
+  router.get('/places', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ places: await community.places(request.member!) });
   });
 
-  router.post('/places', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/places', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = placeSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
       return;
     }
 
-    send(response, community.addPlace(request.member!, parsed.data), 'place', true);
+    send(response, await community.addPlace(request.member!, parsed.data), 'place', true);
   });
 
   // --- Mode vacances ---------------------------------------------------
 
-  router.get('/vacation', authenticate, (request: MemberRequest, response: Response) => {
+  router.get('/vacation', authenticate, async (request: MemberRequest, response: Response) => {
     response.json({
-      vacation: community.vacation(request.member!) ?? null,
-      watched: community.watchedVacations(request.member!),
+      vacation: (await community.vacation(request.member!)) ?? null,
+      watched: await community.watchedVacations(request.member!),
     });
   });
 
-  router.post('/vacation', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/vacation', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = vacationSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
@@ -267,52 +267,52 @@ export function createCommunityRouter(
       return;
     }
 
-    send(response, community.declareVacation(request.member!, parsed.data), 'vacation', true);
+    send(response, await community.declareVacation(request.member!, parsed.data), 'vacation', true);
   });
 
-  router.delete('/vacation', authenticate, (request: MemberRequest, response: Response) => {
-    community.cancelVacation(request.member!);
+  router.delete('/vacation', authenticate, async (request: MemberRequest, response: Response) => {
+    await community.cancelVacation(request.member!);
     response.json({ cancelled: true });
   });
 
   // --- Collecte des déchets --------------------------------------------
 
-  router.get('/waste', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ slots: community.wasteSlots(request.member!) });
+  router.get('/waste', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ slots: await community.wasteSlots(request.member!) });
   });
 
-  router.post('/waste', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/waste', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = wasteSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
       return;
     }
 
-    response.status(201).json({ slot: community.addWasteSlot(request.member!, parsed.data) });
+    response.status(201).json({ slot: await community.addWasteSlot(request.member!, parsed.data) });
   });
 
-  router.delete('/waste/:id', authenticate, (request: MemberRequest, response: Response) => {
-    const removed = community.removeWasteSlot(request.member!, String(request.params.id));
+  router.delete('/waste/:id', authenticate, async (request: MemberRequest, response: Response) => {
+    const removed = await community.removeWasteSlot(request.member!, String(request.params.id));
     response.status(removed ? 200 : 404).json({ removed });
   });
 
   // --- Actions solidaires ----------------------------------------------
 
-  router.get('/solidarity', authenticate, (request: MemberRequest, response: Response) => {
-    response.json({ actions: community.solidarityActions(request.member!) });
+  router.get('/solidarity', authenticate, async (request: MemberRequest, response: Response) => {
+    response.json({ actions: await community.solidarityActions(request.member!) });
   });
 
-  router.post('/solidarity', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/solidarity', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = solidaritySchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
       return;
     }
 
-    send(response, community.createSolidarityAction(request.member!, parsed.data), 'action', true);
+    send(response, await community.createSolidarityAction(request.member!, parsed.data), 'action', true);
   });
 
-  router.post('/solidarity/:id/participation', authenticate, (request: MemberRequest, response: Response) => {
+  router.post('/solidarity/:id/participation', authenticate, async (request: MemberRequest, response: Response) => {
     const parsed = membershipSchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(400).json({ error: 'invalid_request' });
@@ -321,7 +321,7 @@ export function createCommunityRouter(
 
     send(
       response,
-      community.setParticipation(request.member!, String(request.params.id), parsed.data.joined),
+      await community.setParticipation(request.member!, String(request.params.id), parsed.data.joined),
       'action'
     );
   });

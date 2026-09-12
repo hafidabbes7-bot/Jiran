@@ -5,6 +5,7 @@ import { after, before, describe, it } from 'node:test';
 import { createServer } from './server.js';
 import { InMemoryChallengeStore } from './otp/store.js';
 import type { MessageProvider } from './messaging/provider.js';
+import { openTestDb } from './db/testDb.js';
 
 class RecordingProvider implements MessageProvider {
   constructor(readonly name: string) {}
@@ -32,7 +33,7 @@ describe('API de vérification', () => {
     const app = createServer({
       store: new InMemoryChallengeStore(),
       providers: { sms, whatsapp },
-      databasePath: ':memory:',
+      db: await openTestDb(),
       push: { name: 'test', delivers: false, send: async () => {} },
     });
     await new Promise<void>((resolve) => {
@@ -61,6 +62,8 @@ describe('API de vérification', () => {
       trialMode: false,
       verificationDecorative: false,
       push: { provider: 'test', delivers: false },
+      database: { configured: Boolean(process.env.DATABASE_URL) },
+      photos: { storage: 'base' },
     });
   });
 

@@ -54,6 +54,12 @@ export const config = {
   trialMode,
   port: intFromEnv('PORT', 4000),
 
+  /**
+   * Adresse de la base PostgreSQL. Jamais de mot de passe dans le code : la
+   * chaîne entière vient de l'environnement, et ne sort jamais du serveur.
+   */
+  databaseUrl: process.env.DATABASE_URL ?? '',
+
   /** Clé de hachage des codes à usage unique. */
   otpSecret: requiredSecret('OTP_SECRET'),
   /** Clé de signature des jetons de session. */
@@ -105,6 +111,17 @@ export const config = {
    * compte WhatsApp Business vérifié et un modèle « authentification »
    * approuvé par Meta sont nécessaires.
    */
+  /**
+   * Supabase Storage, pour les photos. La clé de service donne tous les droits
+   * sur le stockage : elle reste côté serveur, et n'est jamais envoyée au
+   * navigateur.
+   */
+  supabase: {
+    url: process.env.SUPABASE_URL ?? '',
+    serviceKey: process.env.SUPABASE_SERVICE_KEY ?? '',
+    bucket: process.env.SUPABASE_BUCKET ?? 'jiran-photos',
+  },
+
   /**
    * Canal e-mail. Gratuit dans les deux formes :
    *  — `smtp` : une boîte existante (Gmail, Outlook) avec un mot de passe
@@ -183,10 +200,15 @@ export const config = {
   webDir: process.env.WEB_DIR ?? '',
 
   /**
-   * Emplacement de la base du contenu. `:memory:` ne survit pas au
-   * redémarrage — pratique pour les tests, à proscrire ailleurs.
+   * Ménage quotidien des publications.
+   *
+   * Activé par défaut : c'est lui qui tient l'hébergement gratuit dans ses
+   * 500 Mo. `CLEANUP_ENABLED=false` le coupe — utile pour observer une base
+   * sans qu'elle bouge sous les pieds.
    */
-  databasePath: process.env.DATABASE_PATH ?? 'jiran.db',
+  cleanup: {
+    enabled: (process.env.CLEANUP_ENABLED ?? 'true') !== 'false',
+  },
 
   /**
    * Origines autorisées à appeler l'API depuis un navigateur. Nécessaire pour
