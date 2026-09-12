@@ -1,7 +1,7 @@
 import { config } from './config.js';
 import { createServer } from './server.js';
 
-const app = createServer();
+const app = await createServer();
 
 app.listen(config.port, () => {
   console.info(`Jiran — serveur sur le port ${config.port}`);

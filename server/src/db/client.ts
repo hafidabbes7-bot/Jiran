@@ -86,9 +86,36 @@ export function sslFor(url: string): pg.ConnectionConfig['ssl'] {
     hôte.startsWith('192.168.') ||
     hôte.startsWith('10.');
 
-  if (local) return false;
+  // Un choix écrit dans l'adresse l'emporte sur toute déduction.
   if (url.includes('sslmode=disable')) return false;
+  if (/sslmode=(require|verify-ca|verify-full|prefer)/.test(url)) {
+    return { rejectUnauthorized: false };
+  }
+
+  if (local) return false;
   return { rejectUnauthorized: false };
+}
+
+/** Vrai si l'adresse impose elle-même le chiffrement ou l'écarte. */
+export function sslChoisiExplicitement(url: string): boolean {
+  return url.includes('sslmode=');
+}
+
+/**
+ * Vrai si l'échec vient d'un serveur qui ne parle pas TLS.
+ *
+ * Le cas d'une base sur réseau privé — celle que Render crée à côté du
+ * service, par exemple : rien ne sort de la machine, et le chiffrement n'y est
+ * pas configuré.
+ */
+export function serveurSansTls(error: unknown): boolean {
+  return /does not support SSL/i.test((error as Error)?.message ?? '');
+}
+
+/** Vrai si l'échec vient, à l'inverse, d'un serveur qui exige le chiffrement. */
+export function serveurExigeTls(error: unknown): boolean {
+  const message = (error as Error)?.message ?? '';
+  return /SSL.*required|no encryption|SSL off/i.test(message);
 }
 
 class PoolDb implements Db {
@@ -185,4 +212,47 @@ export function createDb(
   });
 
   return new PoolDb(pool);
+}
+
+/**
+ * Ouvre la base en s'accommodant du chiffrement que le serveur veut bien.
+ *
+ * Il y a autant d'hébergeurs que de réglages TLS : Supabase l'impose avec un
+ * certificat maison, une base sur réseau privé ne le propose pas du tout, et
+ * l'erreur qui en résulte — « the server does not support SSL connections » —
+ * n'apprend rien à qui n'a jamais eu à s'en occuper.
+ *
+ * Le premier essai suit la déduction de `sslFor`. S'il échoue *pour cette
+ * raison précise*, on rouvre dans l'autre sens, une fois, et on le dit dans le
+ * journal. Une adresse qui choisit elle-même (`sslmode=…`) est respectée
+ * telle quelle : un chiffrement demandé ne doit jamais être abandonné en
+ * silence.
+ */
+export async function connecter(url: string, maxConnections = 8): Promise<Db> {
+  const db = createDb(url, maxConnections);
+
+  try {
+    await db.query('SELECT 1');
+    return db;
+  } catch (error) {
+    const déduit = !sslChoisiExplicitement(url);
+    const chiffréAuPremierEssai = sslFor(url) !== false;
+    const inverser =
+      déduit &&
+      ((chiffréAuPremierEssai && serveurSansTls(error)) ||
+        (!chiffréAuPremierEssai && serveurExigeTls(error)));
+
+    if (!inverser) {
+      await db.close().catch(() => undefined);
+      throw error;
+    }
+
+    await db.close().catch(() => undefined);
+    const sens = chiffréAuPremierEssai ? 'sans' : 'avec';
+    console.info(`[db] ce serveur veut une liaison ${sens} TLS — nouvelle tentative`);
+
+    const second = createDb(`${url}${url.includes('?') ? '&' : '?'}sslmode=${chiffréAuPremierEssai ? 'disable' : 'require'}`, maxConnections);
+    await second.query('SELECT 1');
+    return second;
+  }
 }

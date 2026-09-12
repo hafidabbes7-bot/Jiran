@@ -6,10 +6,15 @@
 # lancement, il faut renseigner SMS_PROVIDER et retirer EXPOSE_DEV_CODE
 # (voir server/README.md).
 #
-# La base PostgreSQL (Supabase) et les clés de stockage ne sont pas ici : elles
-# se collent dans l'onglet Environment du service. Un mot de passe de base de
-# données n'a rien à faire dans un dépôt, même privé — voir
-# docs/base-de-donnees.md.
+# La base PostgreSQL est créée par Render en même temps que le service, et son
+# adresse est posée toute seule : il n'y a aucun mot de passe à copier, donc
+# aucun à laisser traîner dans le dépôt.
+#
+# ⚠️ Une base gratuite Render est supprimée 30 jours après sa création (plus
+# 14 jours de sursis pour passer à une formule payante). C'est la solution qui
+# marche tout de suite ; pour garder les données au-delà, passez à Supabase,
+# gratuit et sans date de péremption — docs/base-de-donnees.md explique comment,
+# et ça ne change qu'une variable.
 #
 # Les réglages facultatifs — numéros des modérateurs, identifiants WhatsApp —
 # ne figurent pas ici : Render refuse une variable sans valeur. Ils s'ajoutent
@@ -29,25 +34,24 @@ services:
       - key: NODE_VERSION
         value: '22.20.0'
 
-      # Adresse de la base PostgreSQL (Supabase). À coller dans l'onglet
-      # Environment du service, jamais ici : ce fichier est dans le dépôt, et
-      # cette adresse contient le mot de passe de la base.
-      #   Supabase → Project Settings → Database → Connection string
-      # Prenez l'onglet « Session pooler » (aws-0-…​.pooler.supabase.com) :
-      # l'adresse « Direct connection » n'existe qu'en IPv6, que Render ne
-      # sait pas joindre.
-      # `sync: false` demande la valeur à la création du service et ne
-      # l'enregistre pas dans le dépôt.
+      # Adresse de la base, remplie par Render à partir de la base déclarée
+      # plus bas. Rien à copier, rien à coller, et aucun mot de passe ne passe
+      # par ce fichier — donc aucun n'entre dans le dépôt.
+      #
+      # Pour utiliser Supabase à la place (voir docs/base-de-donnees.md),
+      # remplacez ces trois lignes par `sync: false` et collez l'adresse dans
+      # l'onglet Environment du service.
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: jiran-base
+          property: connectionString
 
-      # Stockage des photos (Supabase Storage). Même règle : la clé de service
-      # donne tous les droits, elle ne doit jamais entrer dans le dépôt.
+      # Stockage des photos (Supabase Storage), facultatif. Sans ces valeurs,
+      # les photos sont rangées dans la base elle-même : ça marche, mais ça
+      # remplit vite le gigaoctet offert. La clé de service donne tous les
+      # droits sur le stockage : elle se colle dans l'onglet Environment du
+      # service, jamais ici.
       #   Supabase → Project Settings → API → service_role
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_KEY
-        sync: false
       - key: SUPABASE_BUCKET
         value: jiran-photos
 
@@ -80,3 +84,14 @@ services:
       # vérification gratuite sera activée (docs/verification-whatsapp.md).
       - key: WHATSAPP_VERIFY_TOKEN
         generateValue: true
+
+# La base du contenu. Render la crée, la sauvegarde et fournit son adresse au
+# service ci-dessus. `plan: free` donne 1 Go — largement de quoi démarrer, le
+# ménage quotidien s'occupant de ne pas le remplir.
+databases:
+  - name: jiran-base
+    databaseName: jiran
+    user: jiran
+    plan: free
+    region: frankfurt
+    postgresMajorVersion: '16'

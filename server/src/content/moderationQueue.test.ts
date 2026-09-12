@@ -72,7 +72,7 @@ describe('file de modération', () => {
 
     issue = (phone: string) => issueSessionToken(phone, config.sessionSecret, 1);
 
-    const app = createServer({
+    const app = await createServer({
       store: new InMemoryChallengeStore(),
       providers: {},
       db: await openTestDb(),

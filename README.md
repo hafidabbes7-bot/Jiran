@@ -144,9 +144,11 @@ Trois choix assumés dans ce lot :
 **Les données ne disparaissent plus.** Elles vivaient dans un fichier posé à
 côté du serveur, et ce fichier repartait vide à chaque redéploiement et à
 chaque réveil du service endormi. Elles sont maintenant dans une base
-**PostgreSQL chez Supabase**, et les photos dans son stockage : ni l'une ni les
-autres n'appartiennent plus au serveur, donc elles survivent à son redémarrage.
-Voir [docs/base-de-donnees.md](docs/base-de-donnees.md).
+**PostgreSQL** qui n'appartient plus au serveur, donc elles survivent à son
+redémarrage. `render.yaml` la fait créer par Render sans rien à configurer —
+avec une réserve : une base gratuite Render est supprimée au bout de 30 jours.
+Pour garder les données au-delà, Supabase est gratuit et sans date de fin.
+Les deux chemins sont dans [docs/base-de-donnees.md](docs/base-de-donnees.md).
 
 En échange, les 500 Mo gratuits imposent une règle : une publication s'efface
 d'elle-même au bout de 10 jours si personne n'a réagi, 20, 30 ou 45 jours selon

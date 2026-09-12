@@ -20,7 +20,9 @@ describe('API de vérification', () => {
   const sms = new RecordingProvider('recording-sms');
   const whatsapp = new RecordingProvider('recording-whatsapp');
   let baseUrl: string;
-  let server: ReturnType<ReturnType<typeof createServer>['listen']>;
+  let server: Awaited<ReturnType<typeof createServer>> extends { listen: (...args: never[]) => infer S }
+    ? S
+    : never;
 
   const post = (path: string, body: unknown) =>
     fetch(`${baseUrl}${path}`, {
@@ -30,7 +32,7 @@ describe('API de vérification', () => {
     });
 
   before(async () => {
-    const app = createServer({
+    const app = await createServer({
       store: new InMemoryChallengeStore(),
       providers: { sms, whatsapp },
       db: await openTestDb(),

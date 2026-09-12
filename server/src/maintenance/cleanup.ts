@@ -1,5 +1,5 @@
 import { config } from '../config.js';
-import { createDb } from '../db/client.js';
+import { connecter } from '../db/client.js';
 import { createPhotoStorage } from '../storage/photos.js';
 import { CleanupService } from './cleanupService.js';
 import { PALIERS } from './retention.js';
@@ -12,7 +12,7 @@ import { PALIERS } from './retention.js';
  */
 const appliquer = process.argv.includes('--appliquer') || process.argv.includes('--apply');
 
-const db = createDb(config.databaseUrl);
+const db = await connecter(config.databaseUrl, 2);
 const service = new CleanupService(db, createPhotoStorage());
 
 try {

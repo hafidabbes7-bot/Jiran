@@ -63,7 +63,7 @@ describe('vérification gratuite par WhatsApp', () => {
     const { createServer } = await import('./server.js');
     const { InMemoryChallengeStore } = await import('./otp/store.js');
 
-    const app = createServer({
+    const app = await createServer({
       store: new InMemoryChallengeStore(),
       providers: {},
       db: await openTestDb(),

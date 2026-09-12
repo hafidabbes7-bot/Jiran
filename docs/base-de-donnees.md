@@ -5,12 +5,35 @@ l'hébergement gratuit de Render, ce fichier disparaît à chaque redéploiement
 à chaque réveil du service endormi. C'est ce qui expliquait le « des fois quand
 je rentre à l'app tout mon contenu disparaît ».
 
-Maintenant : **PostgreSQL chez Supabase** pour les données, **Supabase Storage**
-pour les photos. Les deux sont gratuits, et surtout ils survivent au serveur.
+Maintenant : **PostgreSQL**, hors du serveur. Deux chemins, selon ce que vous
+voulez faire tout de suite.
 
 ---
 
-## 1. Créer la base chez Supabase
+## Le chemin rapide : laisser Render créer la base
+
+`render.yaml` déclare la base. Au prochain **Manual sync** du blueprint, Render
+la crée, la relie au service et remplit `DATABASE_URL` tout seul. **Rien à
+copier, aucun compte à ouvrir, aucun mot de passe à manipuler.**
+
+C'est tout ce qu'il y a à faire :
+
+> Render → Blueprints → Jiran → **Manual sync**
+
+Une chose à savoir, et elle compte : **une base gratuite Render est supprimée
+30 jours après sa création**, avec 14 jours de sursis pour passer à une formule
+payante ([Render l'annonce ici](https://render.com/changelog/free-postgresql-instances-now-expire-after-30-days-previously-90)).
+Passé ce délai, les publications et les comptes partent avec elle.
+
+C'est donc la bonne solution pour **remettre l'application en marche
+aujourd'hui** et la faire essayer à des voisins. Avant la fin du mois, passez à
+Supabase — gratuit, sans date de péremption, et ça ne change qu'une variable.
+
+---
+
+## Le chemin durable : Supabase
+
+### 1. Créer la base chez Supabase
 
 1. Allez sur [supabase.com](https://supabase.com) → **Start your project** →
    connectez-vous avec GitHub.
@@ -61,9 +84,11 @@ adresses de photos.
 
 ---
 
-## 2. Les variables à mettre dans Render
+### 2. Les variables à mettre dans Render
 
-Onglet **Environment** du service, bouton **Add Environment Variable** :
+Il faut d'abord détacher le service de la base Render : dans `render.yaml`,
+remplacer les trois lignes `fromDatabase:` sous `DATABASE_URL` par
+`sync: false`. Puis, onglet **Environment** du service :
 
 | Variable | Valeur | Obligatoire |
 | --- | --- | --- |
@@ -80,7 +105,7 @@ quelques centaines de publications.
 
 ---
 
-## 3. Poser les tables
+### 3. Poser les tables
 
 ```bash
 npm run migrate
@@ -98,7 +123,9 @@ Elle ne contient ni `DROP DATABASE`, ni `DROP SCHEMA`, ni aucune remise à zéro
 
 ---
 
-## 4. Ce que contient la base
+---
+
+## Ce que contient la base
 
 28 tables. Les principales :
 
@@ -124,7 +151,7 @@ charge, pas le code, donc il ne peut pas rester d'orphelin.
 
 ---
 
-## 5. Le ménage automatique
+## Le ménage automatique
 
 L'offre gratuite de Supabase donne 500 Mo. Une publication de quartier ne sert
 plus à grand-chose passé quelques semaines. Le ménage garde donc plus longtemps
@@ -176,12 +203,13 @@ retard dès que quelqu'un ouvre l'application.
 
 ---
 
-## 6. Vérifier que tout tient
+## Vérifier que tout tient
 
 Après un redémarrage ou un redéploiement :
 
 1. `https://votre-service.onrender.com/health` doit répondre
-   `"database": {"configured": true}` et `"photos": {"storage": "supabase"}`.
+   `"database": {"configured": true}`, et `"photos": {"storage": "supabase"}` si
+   vous avez branché le stockage.
 2. Rouvrez l'application : le fil, les messages et le profil doivent être là.
 3. Dans Supabase, **Table Editor → posts** montre les mêmes publications.
 
@@ -191,7 +219,7 @@ le dit en toutes lettres.
 
 ---
 
-## 7. En développement
+## En développement
 
 ```bash
 # une base PostgreSQL locale suffit

@@ -1,5 +1,5 @@
 import { config } from '../config.js';
-import { avertissementsAdresse, createDb } from './client.js';
+import { avertissementsAdresse, connecter } from './client.js';
 import { migrate } from './migrations.js';
 
 /**
@@ -47,7 +47,7 @@ for (const avertissement of avertissementsAdresse(config.databaseUrl)) {
   console.error(`[migrate] ⚠️  ${avertissement}`);
 }
 
-const db = createDb(config.databaseUrl);
+const db = await connecter(config.databaseUrl, 2);
 
 try {
   const appliquées = await migrate(db);

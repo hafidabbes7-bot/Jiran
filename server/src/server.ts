@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 import { config } from './config.js';
 import { AlertService } from './content/alerts.js';
-import { createDb, type Db } from './db/client.js';
+import { connecter, type Db } from './db/client.js';
 import { createPhotoStorage } from './storage/photos.js';
 import { CleanupService } from './maintenance/cleanupService.js';
 import { planifierNettoyage } from './maintenance/scheduler.js';
@@ -126,7 +126,7 @@ function extractTextMessages(payload: unknown): { from: string; text: string }[]
   return messages;
 }
 
-export function createServer(options?: {
+export async function createServer(options?: {
   store?: ChallengeStore;
   providers?: ChannelProviders;
   /** Base du contenu ; par défaut celle de `DATABASE_URL`. */
@@ -140,7 +140,7 @@ export function createServer(options?: {
   // Jamais de création ni de migration ici : le schéma se pose avec
   // `npm run migrate`, volontairement séparé du démarrage. Un serveur qui
   // modifie la base à chaque redémarrage est un serveur qui, un jour, l'efface.
-  const database = options?.db ?? createDb(config.databaseUrl);
+  const database = options?.db ?? (await connecter(config.databaseUrl));
   const photoStorage = createPhotoStorage();
   const content = new ContentRepository(database);
   const push = options?.push ?? createPushSender();
