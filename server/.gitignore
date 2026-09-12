@@ -5,3 +5,8 @@ dist/
 
 # Environnement local : contient l'adresse de la base, jamais commité.
 .env.test
+
+# Restes de l'ancienne base SQLite, s'il en traîne encore localement.
+*.db
+*.db-shm
+*.db-wal
