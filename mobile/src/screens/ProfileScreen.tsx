@@ -42,7 +42,7 @@ function maskIdentifier(identifier: string): string {
 export function ProfileScreen({ navigation }: Props) {
   const { s, format, language, setLanguage, rtl } = useI18n();
   const localizedName = useLocalizedName();
-  const { session, posts, signOut, updateLanguage, unreadNotifications } = useApp();
+  const { session, posts, signOut, updateLanguage } = useApp();
 
   const neighborhood = session ? findNeighborhood(session.neighborhoodId) : undefined;
   const mine = useMemo(() => posts.filter((post) => post.authorIsMe), [posts]);
@@ -55,12 +55,11 @@ export function ProfileScreen({ navigation }: Props) {
   };
 
   const entrées: { emoji: string; label: string; onPress: () => void }[] = [
+    // Le compte des non-lues est passé sur la cloche de l'accueil, là où le
+    // voisin arrive. Cette entrée reste : c'est aussi l'écran des réglages.
     {
       emoji: '🔔',
-      label:
-        unreadNotifications > 0
-          ? `${s.notifications.title} (${unreadNotifications})`
-          : s.notifications.title,
+      label: s.notifications.title,
       onPress: () => navigation.navigate('Notifications'),
     },
     { emoji: '✉️', label: s.community.messagesTitle, onPress: () => navigation.navigate('Messages') },

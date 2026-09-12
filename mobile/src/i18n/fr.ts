@@ -460,6 +460,7 @@ export const fr = {
     openAppHint:
       'Jiran doit rester ouvert (même en arrière-plan) pour te prévenir : les notifications qui réveillent un téléphone éteint demandent un compte Firebase et un compte Apple, pas encore branchés.',
     markAll: 'Tout marquer comme lu',
+    bellUnread: 'Notifications, {count} non lue(s)',
     settings: 'ME PRÉVENIR POUR',
     settingsHint:
       'Réglage propre à ce téléphone. La liste ci-dessus, elle, reste complète quoi qu’il arrive.',

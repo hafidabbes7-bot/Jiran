@@ -25,6 +25,7 @@ import { useToast } from '../components/Toast';
 import { TWINNING_THRESHOLD, findNeighborhood } from '../data/neighborhoods';
 import type { CategoryFilter, ReportReason } from '../domain/types';
 import { useI18n, useLocalizedName } from '../i18n/I18nProvider';
+import { NotificationBell } from '../components/NotificationBell';
 import { SosBanner } from '../components/SosBanner';
 import { StoriesRow } from '../components/StoriesRow';
 import { useApp } from '../state/AppProvider';
@@ -123,6 +124,8 @@ export function FeedScreen({ navigation }: Props) {
                 {neighborhood ? ` · ${language === 'ar' ? neighborhood.regionAr : neighborhood.region}` : ''}
               </Text>
             </View>
+
+            <NotificationBell onPress={() => navigation.navigate('Notifications')} />
 
             <View style={[styles.langToggle, rtl.row]}>
               {(['fr', 'ar'] as const).map((code) => (

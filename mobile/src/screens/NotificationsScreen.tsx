@@ -48,10 +48,31 @@ export function NotificationsScreen({ navigation }: Props) {
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
   const [allowed, setAllowed] = useState<boolean | null>(null);
 
+  /**
+   * Ce qui n'était pas lu en arrivant sur cet écran.
+   *
+   * Ouvrir la liste, c'est avoir vu les notifications : la pastille de
+   * l'accueil doit tomber à zéro tout de suite. Mais elles restent surlignées
+   * le temps de cette visite — sinon le voisin voit la pastille disparaître
+   * sans jamais savoir ce qui était nouveau.
+   */
+  const [nouvelles, setNouvelles] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     loadSettings().then(setSettings);
     // On regarde l'état sans rien demander : la demande, elle, part d'un geste.
     notificationPermission().then(setAllowed);
+  }, []);
+
+  // Volontairement sans dépendances : le relevé se fait à l'ouverture, une
+  // fois. Suivre `notifications` ferait re-marquer à chaque rafraîchissement.
+  useEffect(() => {
+    const nonLues = notifications.filter((item) => !item.read).map((item) => item.id);
+    if (nonLues.length === 0) return;
+
+    setNouvelles(new Set(nonLues));
+    void markNotificationsRead();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const basculer = async (kind: NotificationKind, value: boolean) => {
@@ -117,7 +138,7 @@ export function NotificationsScreen({ navigation }: Props) {
             if (!item.read) await markNotificationsRead(item.id);
             await ouvrir(item.kind, item.ref);
           }}
-          style={[styles.card, !item.read && styles.unread]}
+          style={[styles.card, (!item.read || nouvelles.has(item.id)) && styles.unread]}
         >
           <Text style={[styles.title, rtl.text]}>
             {EMOJIS[item.kind]} {item.title}
