@@ -19,14 +19,30 @@ pour les photos. Les deux sont gratuits, et surtout ils survivent au serveur.
    passe de base de données**. Notez-le : il n'est plus affiché ensuite.
 3. Attendez deux minutes que le projet soit prêt.
 
-### L'adresse de connexion
+### L'adresse de connexion — attention, il y en a deux
 
-**Project Settings → Database → Connection string → URI.** Vous obtenez une
-ligne de cette forme :
+**Project Settings → Database → Connection string.** Supabase en propose
+plusieurs, et **celle qui s'affiche en premier ne marche pas sur Render** :
+
+| Onglet | Adresse | Sur Render |
+| --- | --- | --- |
+| Direct connection | `db.abcdefgh.supabase.co` | ❌ **n'existe qu'en IPv6**, que Render ne sait pas joindre |
+| **Session pooler** | `aws-0-eu-central-1.pooler.supabase.com` | ✅ **celle-ci** |
+| Transaction pooler | même hôte, port 6543 | fonctionne aussi |
+
+Prenez donc le **Session pooler**, de cette forme :
 
 ```
 postgresql://postgres.abcdefgh:LE_MOT_DE_PASSE@aws-0-eu-central-1.pooler.supabase.com:5432/postgres
 ```
+
+Remplacez `LE_MOT_DE_PASSE` (affiché `[YOUR-PASSWORD]`) par celui choisi à la
+création du projet. S'il contient `@`, `/`, `:` ou `#`, changez-le pour quelque
+chose de simple : ces caractères ont un sens dans une adresse et la coupent en
+deux.
+
+`npm run migrate` prévient tout seul si vous avez pris la mauvaise adresse ou
+laissé `[YOUR-PASSWORD]` en place — ça évite un déploiement raté pour rien.
 
 C'est la valeur de `DATABASE_URL`. Elle contient le mot de passe de la base :
 elle ne doit **jamais** être écrite dans le code, ni dans un fichier du dépôt,

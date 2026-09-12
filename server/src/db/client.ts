@@ -31,6 +31,44 @@ export interface Db {
  * En local — `localhost` ou une adresse privée — pas de TLS du tout : il n'y a
  * rien à protéger entre deux processus de la même machine.
  */
+/**
+ * Ce qui, dans une adresse, va manifestement échouer une fois en ligne.
+ *
+ * Le cas qui coûte un déploiement raté : Supabase propose deux adresses, et
+ * celle qui s'affiche en premier — `db.<projet>.supabase.co` — n'existe qu'en
+ * IPv6. Render n'a pas d'IPv6 sortant. La connexion part, ne trouve rien, et
+ * le journal se contente d'un « ENETUNREACH » que personne ne relie à ça.
+ *
+ * Mieux vaut le dire avant d'essayer que le laisser deviner.
+ */
+export function avertissementsAdresse(url: string): string[] {
+  const avertissements: string[] = [];
+
+  let hôte = '';
+  try {
+    hôte = new URL(url).hostname;
+  } catch {
+    return ["L'adresse ne ressemble pas à une URL PostgreSQL (postgresql://…)."];
+  }
+
+  if (/^db\..+\.supabase\.co$/.test(hôte)) {
+    avertissements.push(
+      "Cette adresse Supabase (« db." + hôte.split('.')[1] + ".supabase.co ») n'existe qu'en IPv6, " +
+        "que Render ne sait pas joindre. Prenez plutôt l'adresse du « Session pooler », " +
+        'de la forme aws-0-<région>.pooler.supabase.com — même page, onglet voisin.'
+    );
+  }
+
+  if (url.includes('[VOTRE-MOT-DE-PASSE]') || url.includes('[YOUR-PASSWORD]')) {
+    avertissements.push(
+      "L'adresse contient encore le texte « [YOUR-PASSWORD] » : il faut le remplacer par le " +
+        'mot de passe choisi à la création du projet.'
+    );
+  }
+
+  return avertissements;
+}
+
 export function sslFor(url: string): pg.ConnectionConfig['ssl'] {
   const hôte = (() => {
     try {

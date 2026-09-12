@@ -1,5 +1,5 @@
 import { config } from '../config.js';
-import { createDb } from './client.js';
+import { avertissementsAdresse, createDb } from './client.js';
 import { migrate } from './migrations.js';
 
 /**
@@ -39,6 +39,12 @@ const MANQUANT = `
 if (!config.databaseUrl) {
   console.error(MANQUANT);
   process.exit(1);
+}
+
+// Dit avant d'essayer ce qui échouera sûrement : un déploiement raté se paie
+// en minutes d'attente, et le message d'erreur du réseau n'explique rien.
+for (const avertissement of avertissementsAdresse(config.databaseUrl)) {
+  console.error(`[migrate] ⚠️  ${avertissement}`);
 }
 
 const db = createDb(config.databaseUrl);

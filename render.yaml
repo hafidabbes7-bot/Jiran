@@ -32,7 +32,10 @@ services:
       # Adresse de la base PostgreSQL (Supabase). À coller dans l'onglet
       # Environment du service, jamais ici : ce fichier est dans le dépôt, et
       # cette adresse contient le mot de passe de la base.
-      #   Supabase → Project Settings → Database → Connection string → URI
+      #   Supabase → Project Settings → Database → Connection string
+      # Prenez l'onglet « Session pooler » (aws-0-…​.pooler.supabase.com) :
+      # l'adresse « Direct connection » n'existe qu'en IPv6, que Render ne
+      # sait pas joindre.
       # `sync: false` demande la valeur à la création du service et ne
       # l'enregistre pas dans le dépôt.
       - key: DATABASE_URL
