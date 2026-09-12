@@ -196,14 +196,27 @@ en production.
 
 ### Stockage
 
-SQLite, par le module `node:sqlite` intégré à Node 22 — aucune dépendance à
-installer. Le fichier est désigné par `DATABASE_PATH` (`jiran.db` par défaut).
-Node marque ce module expérimental et l'annonce au démarrage ; cela n'affecte
-pas son fonctionnement.
+**PostgreSQL**, désigné par `DATABASE_URL` — chez Supabase en ligne, en local
+sur une base ordinaire. Les photos vont dans **Supabase Storage** ; la base ne
+garde que leur chemin et leur adresse. Détails, création du projet et variables
+à poser : [`docs/base-de-donnees.md`](../docs/base-de-donnees.md).
+
+Le schéma se pose avec `npm run migrate`, jamais au démarrage du serveur : une
+base de production ne doit pas changer de forme parce qu'un processus
+redémarre.
 
 La table `reports` a pour clé primaire `(post_id, reporter_id)` : la règle « un
 voisin ne compte qu'une fois » est tenue par la base elle-même, pas seulement
-par le code.
+par le code. Même idée partout ailleurs — `ON DELETE CASCADE` sur toutes les
+liaisons, pour qu'une suppression ne puisse pas laisser d'orphelin.
+
+### Ménage quotidien
+
+Les publications s'effacent d'elles-mêmes au bout de 10 à 45 jours selon
+l'intérêt qu'elles ont suscité, pour tenir dans les 500 Mo gratuits. Les
+comptes, les conversations, les messages et les traces de modération ne sont
+jamais touchés. `npm run cleanup` en donne l'aperçu ;
+[`docs/base-de-donnees.md`](../docs/base-de-donnees.md) explique les paliers.
 
 ## Ce qui protège le système
 

@@ -73,10 +73,12 @@ interface AppValue {
   /** Dernière erreur de chargement, à montrer sans vider le fil affiché. */
   loadFailed: boolean;
   /**
-   * Vrai quand le serveur ne connaissait plus ce voisin : sur l'hébergement
-   * gratuit, un redémarrage efface la base. Le compte est recréé tout seul,
-   * mais les publications, elles, sont perdues — et il vaut mieux le dire que
-   * laisser croire à un fil vide.
+   * Vrai quand le serveur ne connaissait plus ce voisin.
+   *
+   * C'était courant du temps où la base vivait dans un fichier effacé à chaque
+   * réveil du serveur ; avec PostgreSQL, cela ne devrait plus arriver — mais
+   * le filet reste : le compte est recréé tout seul à partir de l'identifiant
+   * vérifié, et le dire vaut mieux que laisser croire à un fil vide.
    */
   serverReset: boolean;
   dismissServerReset: () => void;

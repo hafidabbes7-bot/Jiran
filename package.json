@@ -6,8 +6,10 @@
     "install:all": "npm install --prefix server && npm install --prefix mobile",
     "essai": "node scripts/essai.mjs",
     "test": "npm test --prefix server && npm test --prefix mobile",
-    "build": "npm ci --prefix server && npm ci --prefix mobile && npm run build:web --prefix mobile",
-    "start": "WEB_DIR=\"$PWD/mobile/dist\" npm start --prefix server"
+    "build": "npm ci --prefix server && npm ci --prefix mobile && npm run build:web --prefix mobile && npm run migrate --prefix server",
+    "start": "WEB_DIR=\"$PWD/mobile/dist\" npm start --prefix server",
+    "migrate": "npm run migrate --prefix server",
+    "cleanup": "npm run cleanup --prefix server"
   },
   "engines": {
     "node": ">=22.7"

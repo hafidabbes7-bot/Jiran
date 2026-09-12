@@ -101,7 +101,7 @@ Pour passer de l'essai au vrai :
 | Quoi | Où |
 | --- | --- |
 | Envoyer de vrais SMS | `SMS_PROVIDER=http` + les identifiants de votre agrégateur, et retirer `EXPOSE_DEV_CODE` — voir [`server/README.md`](../server/README.md) |
-| Garder les publications | formule avec disque, et `DATABASE_PATH` pointant dessus |
+| Garder les publications | c'est déjà le cas : la base PostgreSQL est chez Supabase, hors du serveur — voir [`base-de-donnees.md`](base-de-donnees.md) |
 | Notifications | identifiants FCM / APNs, `PUSH_PROVIDER=expo`, et une application installée — voir [`lancer-sur-telephone.md`](lancer-sur-telephone.md) |
 | Application installable | `npx eas-cli build --platform android --profile apk` avec `EXPO_PUBLIC_API_URL` pointant sur cette adresse |
 

@@ -139,14 +139,19 @@ Trois choix assumés dans ce lot :
  — une absence n'est visible que des voisins nommément désignés : l'annoncer au
    quartier reviendrait à donner l'adresse d'un logement vide.
 
-## Deux limites de l'hébergement gratuit, dites en face
+## Ce qui reste comme limite de l'hébergement gratuit
 
-**Les données disparaissent.** Une instance gratuite Render n'a pas de disque
-qui survit : elle s'endort après quinze minutes sans visite, et repart vide.
-Publications, messages, stories et parties sont perdus ; le compte, lui, est
-retrouvé grâce au numéro de téléphone, et l'application dit ce qui s'est passé
-au lieu d'afficher un fil vide. Pour que ça cesse, il faut un disque persistant
-(offre payante Render) ou une base PostgreSQL hébergée ailleurs.
+**Les données ne disparaissent plus.** Elles vivaient dans un fichier posé à
+côté du serveur, et ce fichier repartait vide à chaque redéploiement et à
+chaque réveil du service endormi. Elles sont maintenant dans une base
+**PostgreSQL chez Supabase**, et les photos dans son stockage : ni l'une ni les
+autres n'appartiennent plus au serveur, donc elles survivent à son redémarrage.
+Voir [docs/base-de-donnees.md](docs/base-de-donnees.md).
+
+En échange, les 500 Mo gratuits imposent une règle : une publication s'efface
+d'elle-même au bout de 10 jours si personne n'a réagi, 20, 30 ou 45 jours selon
+l'intérêt qu'elle a suscité. Les comptes, les conversations et les messages,
+eux, ne s'effacent jamais tout seuls.
 
 **La vérification est décorative tant qu'aucun canal n'envoie vraiment.** `TRIAL_MODE=true` affiche le code
 à l'écran : n'importe qui peut s'inscrire avec n'importe quel numéro ou

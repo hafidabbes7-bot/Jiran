@@ -6,6 +6,11 @@
 # lancement, il faut renseigner SMS_PROVIDER et retirer EXPOSE_DEV_CODE
 # (voir server/README.md).
 #
+# La base PostgreSQL (Supabase) et les clés de stockage ne sont pas ici : elles
+# se collent dans l'onglet Environment du service. Un mot de passe de base de
+# données n'a rien à faire dans un dépôt, même privé — voir
+# docs/base-de-donnees.md.
+#
 # Les réglages facultatifs — numéros des modérateurs, identifiants WhatsApp —
 # ne figurent pas ici : Render refuse une variable sans valeur. Ils s'ajoutent
 # dans l'onglet Environment du service, une fois celui-ci créé.
@@ -15,12 +20,33 @@ services:
     runtime: node
     plan: free
     region: frankfurt
+    # `npm run build` finit par `npm run migrate` : le schéma est posé à la
+    # construction, avant que le service ne démarre — jamais au démarrage.
     buildCommand: npm run build
     startCommand: npm start
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
         value: '22.20.0'
+
+      # Adresse de la base PostgreSQL (Supabase). À coller dans l'onglet
+      # Environment du service, jamais ici : ce fichier est dans le dépôt, et
+      # cette adresse contient le mot de passe de la base.
+      #   Supabase → Project Settings → Database → Connection string → URI
+      # `sync: false` demande la valeur à la création du service et ne
+      # l'enregistre pas dans le dépôt.
+      - key: DATABASE_URL
+        sync: false
+
+      # Stockage des photos (Supabase Storage). Même règle : la clé de service
+      # donne tous les droits, elle ne doit jamais entrer dans le dépôt.
+      #   Supabase → Project Settings → API → service_role
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: jiran-photos
 
       # Secrets tirés au hasard par l'hébergeur : ils ne passent jamais par le
       # dépôt ni par un écran.

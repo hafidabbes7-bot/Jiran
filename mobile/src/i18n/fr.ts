@@ -126,7 +126,7 @@ export const fr = {
     empty: 'Rien de neuf dans le quartier pour le moment.',
     offline: 'Serveur injoignable — tire vers le bas pour réessayer.',
     serverReset:
-      '⚠️ Le serveur a redémarré et a perdu les publications : l’hébergement gratuit efface tout à chaque mise en veille. Ton compte, lui, a été retrouvé grâce à ton numéro.',
+      '⚠️ Le serveur ne retrouvait plus ton profil : ton compte vient d’être recréé à partir de ton identifiant vérifié. Si le fil te paraît vide, tire vers le bas pour le recharger.',
     alertBannerMeta: '{time} · signalé par {author}',
     welcomeTitle: 'Souhaite la bienvenue à {name} !',
     welcomeSubtitle: 'Nouveau voisin · arrivé cette semaine',

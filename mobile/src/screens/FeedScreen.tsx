@@ -171,8 +171,8 @@ export function FeedScreen({ navigation }: Props) {
           <View>
             <SosBanner />
 
-            {/* Le fil vide après un redémarrage du serveur n'est pas une
-                panne du téléphone : le dire vaut mieux que le laisser croire. */}
+            {/* Un profil que le serveur ne reconnaît plus n'est pas une panne
+                du téléphone : le dire vaut mieux que le laisser croire. */}
             {serverReset ? (
               <Pressable accessibilityRole="button" onPress={dismissServerReset}>
                 <View style={styles.reset}>
