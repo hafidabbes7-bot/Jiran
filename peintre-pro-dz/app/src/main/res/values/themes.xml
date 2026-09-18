@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Thème de base : l'apparence réelle est gérée par Material 3 dans Compose. -->
+    <style name="Theme.PeintreProDZ" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#1B5E5A</item>
+        <item name="android:windowBackground">#FFF7F4EF</item>
+    </style>
+</resources>

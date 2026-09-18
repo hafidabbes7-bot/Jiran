@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      TRADUCTION ARABE (phase 3).
+
+      Mode d'emploi :
+      1. copier ici les entrées de res/values/strings.xml ;
+      2. garder EXACTEMENT les mêmes attributs name ;
+      3. traduire uniquement le texte entre les balises.
+
+      Toute chaîne absente de ce fichier retombe automatiquement sur le français :
+      la traduction peut donc se faire progressivement, sans rien casser.
+      Le sens de lecture RTL est déjà géré (android:supportsRtl="true"),
+      et la mise en page Compose utilise start/end, pas left/right.
+    -->
+</resources>

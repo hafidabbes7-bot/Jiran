@@ -1,0 +1,2691 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Version d'essai de PEINTRE PRO DZ : devis de peinture, surfaces, quantites de peinture et totaux, hors connexion.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#1B5E5A" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#24352F" media="(prefers-color-scheme: dark)">
+<style>
+  :root {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+</style>
+<title>Peintre Pro DZ</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  /* ------------------------------------------------------------------
+     Palette : vert atelier et ocre sur un fond plâtre, reprise du thème
+     Material 3 de l'application Android.
+
+     color-scheme est déclaré dans les trois états : c'est ce qui empêche
+     Chrome et Samsung Internet d'appliquer leur « mode sombre forcé », qui
+     assombrit le fond sans toucher au texte — d'où l'écriture noire
+     illisible. La page gère son propre thème, le navigateur n'y touche plus.
+     ------------------------------------------------------------------ */
+  :root {
+    color-scheme: light;
+
+    --platre: #F2F0E9;
+    --papier: #FFFFFF;
+    --encre: #16201F;
+    --estompe: #56635F;
+    --trait: #DCD8CD;
+    --atelier: #1B5E5A;
+    --atelier-fonce: #0E3E3B;
+    --atelier-doux: #D7E9E6;
+    --ocre: #C07617;
+    --ocre-douce: #FAEBD2;
+    --ombre: rgba(22, 32, 31, 0.10);
+
+    /* Séries des graphiques — validées (bande de clarté, chroma, écart
+       daltonien, contraste) sur la surface des cartes. */
+    --serie-encaisse: #00897B;
+    --serie-reste: #C07617;
+
+    --brouillon: #9A6A06;
+    --envoye: #1565C0;
+    --accepte: #2E7D32;
+    --refuse: #C62828;
+    --annule: #5E6B67;
+
+    --r: 16px;
+    --gouttiere: 16px;
+    --titre: 'Archivo', 'IBM Plex Sans', system-ui, sans-serif;
+    --texte: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+    --chiffres: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+
+      --platre: #101615;
+      --papier: #1B2423;
+      --encre: #EEF3F1;
+      --estompe: #A4B2AE;
+      --trait: #32403D;
+      --atelier: #6FBDB4;
+      --atelier-fonce: #9BD5CD;
+      --atelier-doux: #24352F;
+      --ocre: #F0B453;
+      --ocre-douce: #3A2E17;
+      --ombre: rgba(0, 0, 0, 0.45);
+
+      --serie-encaisse: #26A69A;
+      --serie-reste: #C08420;
+
+      --brouillon: #E0A81F;
+      --envoye: #6BA6E8;
+      --accepte: #74C47A;
+      --refuse: #EF7B76;
+      --annule: #94A19D;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --platre: #101615;
+    --papier: #1B2423;
+    --encre: #EEF3F1;
+    --estompe: #A4B2AE;
+    --trait: #32403D;
+    --atelier: #6FBDB4;
+    --atelier-fonce: #9BD5CD;
+    --atelier-doux: #24352F;
+    --ocre: #F0B453;
+    --ocre-douce: #3A2E17;
+    --ombre: rgba(0, 0, 0, 0.45);
+
+    --serie-encaisse: #26A69A;
+    --serie-reste: #C08420;
+
+    --brouillon: #E0A81F;
+    --envoye: #6BA6E8;
+    --accepte: #74C47A;
+    --refuse: #EF7B76;
+    --annule: #94A19D;
+  }
+
+  * { box-sizing: border-box; }
+
+  [hidden] { display: none !important; }
+  img, svg { max-width: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--platre);
+    color: var(--encre);
+    font-family: var(--texte);
+    font-size: 17px;
+    line-height: 1.45;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  :root[lang="ar"] body { font-family: 'IBM Plex Sans Arabic', var(--texte); }
+
+  h1, h2, h3 { font-family: var(--titre); font-weight: 700; margin: 0; text-wrap: balance; }
+
+  /* ---------------------------------------------------------- ossature */
+
+  .app { max-width: 720px; margin: 0 auto; min-height: 100%; }
+
+  .barre {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px var(--gouttiere);
+    background: var(--atelier);
+    color: #FFFFFF;
+    box-shadow: 0 2px 10px var(--ombre);
+  }
+  :root[data-theme="dark"] .barre,
+  .barre { color: #FFFFFF; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .barre { background: var(--atelier-doux); color: var(--encre); }
+  }
+  :root[data-theme="dark"] .barre { background: var(--atelier-doux); color: var(--encre); }
+
+  .barre h1 { font-size: 19px; letter-spacing: 0.01em; flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .barre button {
+    background: rgba(255,255,255,0.18);
+    color: inherit;
+    border: 0;
+    border-radius: 11px;
+    min-width: 42px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 10px;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  [dir="rtl"] #btnRetour svg { transform: scaleX(-1); }
+  .barre button:hover { background: rgba(255,255,255,0.28); }
+
+  main { padding: 16px var(--gouttiere) 64px; display: flex; flex-direction: column; gap: 14px; }
+
+  /* ------------------------------------------------------------ blocs */
+
+  .carte {
+    background: var(--papier);
+    border: 1px solid var(--trait);
+    border-radius: var(--r);
+    padding: 16px;
+  }
+  .carte > h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--atelier);
+    margin-bottom: 12px;
+    font-family: var(--texte);
+    font-weight: 600;
+  }
+
+  .grille2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grille3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 430px) { .grille3 { grid-template-columns: 1fr; } }
+
+  .tuile {
+    background: var(--papier);
+    border: 1px solid var(--trait);
+    border-radius: var(--r);
+    padding: 14px;
+  }
+  .tuile.phare { background: var(--ocre-douce); border-color: var(--ocre); }
+  .tuile .etiq { font-size: 13px; color: var(--estompe); }
+  .tuile .val { font-family: var(--titre); font-size: 24px; font-weight: 700; margin-top: 4px;
+    font-variant-numeric: tabular-nums; }
+  .tuile .val.petit { font-size: 19px; }
+
+  /* ----------------------------------------------------------- boutons */
+
+  .btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 58px;
+    padding: 12px 16px;
+    border: 0;
+    border-radius: var(--r);
+    background: var(--atelier);
+    color: #FFFFFF;
+    font: inherit;
+    font-weight: 600;
+    font-size: 17px;
+    text-align: start;
+    cursor: pointer;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .btn { color: #0E1918; }
+  }
+  :root[data-theme="dark"] .btn { color: #0E1918; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn .ico, .note .ico, .banniere .ico { display: flex; align-items: center; line-height: 1; }
+  .btn.eclair { background: var(--ocre); color: #2A1B00; min-height: 68px; font-size: 19px; }
+  .btn.second {
+    background: transparent;
+    color: var(--atelier);
+    border: 1.5px solid var(--atelier);
+    min-height: 50px;
+    font-size: 16px;
+  }
+  .btn.danger { background: transparent; color: var(--refuse); border: 1.5px solid var(--refuse); min-height: 46px; font-size: 15px; }
+  .btn.mini { width: auto; min-height: 38px; padding: 8px 12px; font-size: 14px; }
+
+  .rangeeBtn { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ------------------------------------------------------------ champs */
+
+  label.champ { display: block; margin-bottom: 12px; }
+  label.champ > span {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--estompe);
+    margin-bottom: 5px;
+  }
+  input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    font: inherit;
+    font-size: 16px;
+    color: var(--encre);
+    background: var(--platre);
+    border: 1.5px solid var(--trait);
+    border-radius: 10px;
+  }
+  :root[lang="ar"] input, :root[lang="ar"] select, :root[lang="ar"] textarea { font-family: 'IBM Plex Sans Arabic', var(--texte); }
+  input:focus, select:focus, textarea:focus, button:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid var(--ocre);
+    outline-offset: 1px;
+  }
+  input[type="number"], input.nombre { font-family: var(--chiffres); font-variant-numeric: tabular-nums; }
+  textarea { min-height: 76px; resize: vertical; }
+  .erreur input, .erreur select { border-color: var(--refuse); }
+  .msgErreur { color: var(--refuse); font-size: 13px; margin-top: 4px; }
+
+  .interrupteur { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .interrupteur span { flex: 1; }
+  .interrupteur input { width: 52px; height: 30px; accent-color: var(--atelier); }
+
+  /* ------------------------------------------------------------ listes */
+
+  .ligne {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px;
+    background: var(--papier);
+    border: 1px solid var(--trait);
+    border-radius: var(--r);
+    text-align: start;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  .ligne:hover { border-color: var(--atelier); }
+  .ligne .corps { flex: 1; min-width: 0; }
+  .ligne .nom { font-weight: 600; }
+  .ligne .detail { font-size: 14px; color: var(--estompe); }
+  .ligne .montant { font-family: var(--chiffres); font-variant-numeric: tabular-nums; font-weight: 500; white-space: nowrap; }
+  .pile { display: flex; flex-direction: column; gap: 10px; }
+
+  .vide { text-align: center; color: var(--estompe); padding: 22px 12px; font-size: 15px; }
+
+  .pastille {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #FFFFFF;
+    white-space: nowrap;
+  }
+  .p-BROUILLON { background: var(--brouillon); }
+  .p-ENVOYE { background: var(--envoye); }
+  .p-ACCEPTE { background: var(--accepte); }
+  .p-REFUSE { background: var(--refuse); }
+  .p-ANNULE { background: var(--annule); }
+
+  .puces { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .puce {
+    flex: 0 0 auto;
+    padding: 8px 13px;
+    border-radius: 999px;
+    border: 1.5px solid var(--trait);
+    background: var(--papier);
+    color: var(--encre);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .puce[aria-pressed="true"] { background: var(--atelier); border-color: var(--atelier); color: #FFFFFF; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .puce[aria-pressed="true"] { color: #0E1918; }
+  }
+  :root[data-theme="dark"] .puce[aria-pressed="true"] { color: #0E1918; }
+
+  /* ------------------------------------------------------------ totaux */
+
+  .tot { display: flex; align-items: baseline; gap: 12px; padding: 5px 0; }
+  .tot dt { flex: 1; color: var(--estompe); font-size: 15px; }
+  .tot dd { margin: 0; font-family: var(--chiffres); font-variant-numeric: tabular-nums; }
+  .tot.fort dt { color: var(--encre); font-weight: 600; font-size: 17px; }
+  .tot.fort dd { font-weight: 500; font-size: 17px; }
+  .tot.grand dt { font-family: var(--titre); font-size: 19px; color: var(--encre); }
+  .tot.grand dd { font-size: 21px; font-weight: 500; }
+  hr { border: 0; border-top: 1px solid var(--trait); margin: 10px 0; }
+
+  .note {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    background: var(--ocre-douce);
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .note .ico { flex: 0 0 auto; }
+
+  /* ------------------------------------------------------------- modal */
+
+  .voile {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 18, 17, 0.55);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 50;
+    padding: 12px;
+  }
+  @media (min-width: 560px) { .voile { align-items: center; } }
+  .modal {
+    background: var(--papier);
+    border-radius: 18px;
+    padding: 18px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+  .modal h2 { font-size: 19px; margin-bottom: 14px; }
+
+  /* ------------------------------------------------------- feuille PDF */
+
+  .feuille {
+    background: #FFFFFF;
+    color: #16201F;
+    border: 1px solid var(--trait);
+    border-radius: 10px;
+    padding: 22px;
+    font-size: 14px;
+  }
+  .feuille .enTete { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    border-bottom: 3px solid var(--atelier); padding-bottom: 12px; }
+  .feuille .marque { font-family: var(--titre); font-size: 20px; color: var(--atelier); font-weight: 700; }
+  .feuille .num { font-family: var(--titre); font-size: 18px; text-align: end; }
+  .feuille h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #5E6C6A;
+    margin: 16px 0 6px; font-family: var(--texte); font-weight: 600; }
+  .tableWrap { overflow-x: auto; }
+  .feuille table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 460px; }
+  .feuille th {
+    text-align: start;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #5E6C6A;
+    border-bottom: 1.5px solid #DFDCD2;
+    padding: 7px 6px;
+  }
+  .feuille td { padding: 7px 6px; border-bottom: 1px solid #EFEDE6; vertical-align: top; }
+  .feuille td.n { text-align: end; font-family: var(--chiffres); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .feuille .recap { margin-inline-start: auto; max-width: 320px; margin-top: 14px; }
+  .feuille .recap .tot dt { color: #5E6C6A; }
+  .feuille .recap .tot.grand dt, .feuille .recap .tot.fort dt { color: #16201F; }
+  .signature { margin-top: 26px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .signature div { flex: 1 1 200px; border-top: 1px solid #B9B5A9; padding-top: 6px; font-size: 12px; color: #5E6C6A; }
+
+  .banniere {
+    background: var(--atelier-doux);
+    border: 1px solid var(--atelier);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .banniere .corps { flex: 1; }
+
+  .pdp { font-size: 13px; color: var(--estompe); text-align: center; padding: 6px 0 0; }
+
+  /* ------------------------------------------------- tableau de bord */
+
+  .heros {
+    position: relative;
+    overflow: hidden;
+    background: var(--atelier);
+    color: #FFFFFF;
+    border-radius: 20px;
+    padding: 18px;
+  }
+  :root[data-theme="dark"] .heros { background: var(--atelier-doux); color: var(--encre); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .heros { background: var(--atelier-doux); color: var(--encre); }
+  }
+  .heros .etiq {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+  }
+  .heros .somme {
+    font-family: var(--titre);
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .heros .dessin {
+    position: absolute;
+    inset-inline-end: 10px;
+    top: 10px;
+    width: 96px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* Barre empilée encaissé / reste : 2 px de fond entre les segments. */
+  .empilee {
+    display: flex;
+    gap: 2px;
+    height: 14px;
+    margin-top: 16px;
+    border-radius: 7px;
+    overflow: hidden;
+    background: transparent;
+  }
+  .empilee span { display: block; height: 100%; }
+  .empilee .vide0 { flex: 1; background: rgba(255,255,255,0.28); }
+
+  .legende {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 12px;
+    font-size: 14px;
+  }
+  .legende div { display: flex; align-items: center; gap: 7px; }
+  .legende i {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex: 0 0 auto;
+  }
+  .legende b { font-family: var(--chiffres); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  /* Tuiles chiffrées */
+  .tuiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .tuile2 {
+    background: var(--papier);
+    border: 1px solid var(--trait);
+    border-radius: var(--r);
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .tuile2 .puceIco {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    background: var(--atelier-doux);
+    color: var(--atelier);
+  }
+  .tuile2.ocre .puceIco { background: var(--ocre-douce); color: var(--ocre); }
+  .tuile2 .corps2 { min-width: 0; display: flex; flex-direction: column; }
+  .tuile2 .val2 {
+    font-family: var(--titre);
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .tuile2 .etiq2 { font-size: 13px; color: var(--estompe); line-height: 1.25; }
+
+  /* Graphique en barres */
+  .graphe { width: 100%; height: auto; display: block; }
+  .graphe .barre { cursor: pointer; }
+  .graphe text { font-family: var(--texte); }
+  .infoGraphe {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--estompe);
+    min-height: 20px;
+  }
+  .infoGraphe b { color: var(--encre); font-family: var(--chiffres); font-weight: 500; }
+
+  /* Répartition par statut */
+  .rangStatut { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 14px; }
+  .rangStatut .nomStatut { width: 84px; flex: 0 0 auto; }
+  .rangStatut .piste { flex: 1; height: 12px; background: var(--trait); border-radius: 6px; overflow: hidden; }
+  .rangStatut .piste span { display: block; height: 100%; border-radius: 6px; }
+  .rangStatut .nb { width: 26px; text-align: end; font-family: var(--chiffres); font-variant-numeric: tabular-nums; }
+
+  /* Grille des grands boutons */
+  .actions { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 520px) { .actions { grid-template-columns: 1fr 1fr; } }
+  .actions .btn.eclair { grid-column: 1 / -1; }
+
+  .btn .puceIco {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    background: rgba(255,255,255,0.18);
+  }
+  .btn.eclair .puceIco { background: rgba(42,27,0,0.14); }
+
+  .titreSection {
+    font-family: var(--titre);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--estompe);
+    margin: 6px 0 -4px;
+  }
+
+  @media print {
+    .barre, .noPrint { display: none !important; }
+    body, .app, main { background: #FFFFFF; padding: 0; margin: 0; max-width: none; gap: 0; }
+    .feuille { border: 0; padding: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header class="barre">
+    <button id="btnRetour" type="button" hidden data-act="retour"></button>
+    <h1 id="titreBarre">PEINTRE PRO DZ</h1>
+    <button type="button" data-act="theme" id="btnTheme"></button>
+    <button type="button" data-act="langue" id="btnLangue">ع</button>
+  </header>
+  <main id="vue"></main>
+</div>
+<div id="modale"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =================================================================
+     1. Traductions — le français est la langue par défaut, l'arabe
+        bascule aussi la page en lecture de droite à gauche (RTL).
+     ================================================================= */
+
+  var T = {
+    fr: {
+      titre: "PEINTRE PRO DZ", sousTitre: "Devis et chantiers de peinture",
+      retour: "Retour", enregistrer: "Enregistrer", annuler: "Annuler", supprimer: "Supprimer",
+      modifier: "Modifier", ajouter: "Ajouter", fermer: "Fermer", ok: "OK", confirmer: "Confirmer",
+      dupliquer: "Dupliquer", reinit: "Réinitialiser", rechercher: "Rechercher",
+      statDevis: "Devis", statAcceptes: "Devis acceptés", statChantiers: "Chantiers en cours",
+      statEncaisser: "Montant à encaisser",
+      nouveauDevis: "Nouveau devis", mesDevis: "Mes devis", mesChantiers: "Mes chantiers",
+      mesClients: "Mes clients", paiements: "Paiements", parametres: "Paramètres",
+      calculRapide: "CALCUL RAPIDE", ceMois: "Ce mois", moisCrees: "Devis créés",
+      moisAcceptes: "Devis acceptés", moisChantiers: "Chantiers terminés",
+      moisMontant: "Montant des devis (non encaissé)", moisEncaisse: "Montant encaissé",
+      moisRestant: "Montant restant à encaisser",
+      clients: "Mes clients", clientNouveau: "Nouveau client", clientModifier: "Modifier le client",
+      nom: "Nom", telephone: "Téléphone", adresse: "Adresse", notes: "Notes",
+      aucunClient: "Aucun client. Appuyez sur « Ajouter un client ».",
+      chercherClient: "Rechercher un client…", ajouterClient: "Ajouter un client",
+      resteEncaisser: "Reste à encaisser", devisDuClient: "Devis du client",
+      clientAvecDevis: "Impossible de supprimer : ce client a des devis. Supprimez d'abord ses devis.",
+      nomObligatoire: "Le nom du client est obligatoire.",
+      supprimerClientT: "Supprimer ce client ?", actionDefinitive: "Cette action est définitive.",
+      devis: "Mes devis", aucunDevis: "Aucun devis pour le moment.",
+      chercherDevis: "Rechercher (numéro, client)…", tous: "Tous",
+      periode: "Période", periodeToutes: "Toutes les dates", periodeMois: "Ce mois", periodeAnnee: "Cette année",
+      supprimerDevisT: "Supprimer ce devis ?",
+      supprimerDevisM: "Le devis, ses pièces et ses lignes seront supprimés définitivement.",
+      etape1: "1. Client", etape2: "2. Chantier", etape3: "3. Pièces",
+      etape4: "4. Travaux et matériaux", etape5: "5. Total",
+      choisirClient: "Choisir un client", creerClient: "Créer un client",
+      aucunClientSel: "Aucun client sélectionné",
+      clientObligatoire: "Choisissez un client : c'est lui qui crée le devis.",
+      numero: "Numéro de devis", typeChantier: "Type de chantier",
+      adresseChantier: "Adresse du chantier", date: "Date", niveau: "Niveau de devis",
+      statut: "Statut", ajouterPiece: "Ajouter une pièce",
+      aucunePiece: "Aucune pièce. Ajoutez une pièce pour calculer les surfaces.",
+      ajouterLigne: "Ajouter une ligne",
+      aucuneLigne: "Aucune ligne. Ajoutez des travaux, matériaux ou main-d'œuvre.",
+      piece: "Pièce", pieceNouvelle: "Nouvelle pièce", nomPiece: "Nom de la pièce",
+      dimensions: "Dimensions", longueur: "Longueur (m)", largeur: "Largeur (m)", hauteur: "Hauteur (m)",
+      ouvertures: "Portes et fenêtres", portes: "Portes", fenetres: "Fenêtres", nombre: "Nombre",
+      largeurO: "Largeur (m)", hauteurO: "Hauteur (m)", surfaces: "Surfaces calculées",
+      surfaceMurs: "Surface des murs", surfaceOuvertures: "Surface des ouvertures",
+      surfaceNette: "Surface nette des murs", surfacePlafond: "Surface du plafond",
+      corriger: "Corriger les surfaces à la main", murCorrige: "Surface murs corrigée (m²)",
+      plafondCorrige: "Surface plafond corrigée (m²)",
+      dimObligatoires: "Longueur, largeur et hauteur doivent être supérieures à 0.",
+      nomPieceObligatoire: "Le nom de la pièce est obligatoire.",
+      travauxPiece: "Travaux de la pièce", ajouterTravail: "Ajouter un travail",
+      aucunTravail: "Aucun travail pour cette pièce.",
+      supprimerPieceT: "Supprimer cette pièce ?",
+      supprimerPieceM: "Les travaux liés à cette pièce seront aussi supprimés.",
+      ouverturesTrop: "Les ouvertures dépassent la surface des murs : surface nette ramenée à 0.",
+      designation: "Désignation", unite: "Unité", quantite: "Quantité",
+      prixUnitaire: "Prix unitaire", total: "Total", categorie: "Catégorie",
+      depuisTarifs: "Depuis mes tarifs", baseQuantite: "Base de quantité",
+      baseMurs: "Murs nets", basePlafond: "Plafond", baseMursPlafond: "Murs + plafond",
+      basePortes: "Portes", baseFenetres: "Fenêtres",
+      ligneAjouter: "Ajouter une ligne", ligneModifier: "Modifier la ligne",
+      designationObligatoire: "La désignation est obligatoire.",
+      valeurNegative: "La valeur ne peut pas être négative.",
+      stTravaux: "Sous-total travaux", stMateriaux: "Sous-total matériaux",
+      mainOeuvre: "Main-d'œuvre", autresFrais: "Autres frais", sousTotal: "Sous-total",
+      remise: "Remise", apresRemise: "Total après remise", appliquerTva: "Appliquer la TVA",
+      tauxTva: "Taux de TVA (%)", tva: "TVA", TOTAL: "TOTAL", acompte: "Acompte",
+      dejaPaye: "Déjà payé", resteAPayer: "Reste à payer",
+      remiseTrop: "La remise ne peut pas dépasser le sous-total.",
+      tarifs: "Mes tarifs", aucunTarif: "Aucun tarif pour ce niveau.",
+      tarifNouveau: "Nouveau tarif", tarifModifier: "Modifier le tarif", prestation: "Prestation",
+      prix: "Prix", prixExemples: "Les prix ci-dessous sont des exemples : modifiez-les selon vos tarifs réels.",
+      reinitTarifsT: "Réinitialiser les tarifs ?",
+      reinitTarifsM: "Les tarifs par défaut seront rétablis. Vos devis ne changent pas.",
+      calculTitre: "Calcul rapide", couches: "Nombre de couches", prixM2: "Prix au m² (peinture)",
+      rendement: "Rendement (m²/L)", resultat: "Résultat",
+      quantitePeinture: "Quantité de peinture estimée", potsProposes: "Conditionnements proposés",
+      prixEstime: "Prix estimé", totalEstimatif: "Total estimatif",
+      creerDevisDepuis: "Créer un devis à partir de ce calcul",
+      inclurePlafond: "Inclure le plafond",
+      avertEstimation: "Estimation indicative : le rendement réel dépend du produit et du support.",
+      paramEntreprise: "Mon entreprise", nomEntreprise: "Nom de l'entreprise", email: "Email",
+      devise: "Devise", validite: "Validité du devis (jours)",
+      conditions: "Conditions et modalités de paiement", rendementDefaut: "Rendement par défaut (m²/L)",
+      couchesDefaut: "Nombre de couches par défaut", paramEnregistres: "Paramètres enregistrés.",
+      donnees: "Mes données", exporter: "Exporter mes données", importer: "Importer mes données",
+      exporterM: "Copiez ce texte et gardez-le en lieu sûr : il contient tous vos devis.",
+      importerM: "Collez ici une sauvegarde. Vos données actuelles seront remplacées.",
+      copier: "Copier", copie: "Copié", importerAction: "Remplacer mes données",
+      importOk: "Données restaurées.", importErreur: "Sauvegarde illisible : rien n'a été modifié.",
+      effacerExemples: "Effacer les données d'exemple", toutEffacer: "Tout effacer",
+      toutEffacerT: "Effacer toutes les données ?",
+      apercu: "Aperçu du devis", imprimer: "Imprimer / PDF", partager: "Partager",
+      conditionsTitre: "Conditions", signatureClient: "Signature du client",
+      signatureEntreprise: "L'entreprise", valableJours: "Devis valable {n} jours.",
+      devisDe: "Devis de", pourClient: "Client", chantier: "Chantier",
+      convertirChantier: "Convertir en chantier", phase2: "Les chantiers et les paiements arrivent en phase 2.",
+      copieDansPresse: "Copié dans le presse-papiers.",
+      BROUILLON: "Brouillon", ENVOYE: "Envoyé", ACCEPTE: "Accepté", REFUSE: "Refusé", ANNULE: "Annulé",
+      APPARTEMENT: "Appartement", VILLA: "Villa", LOCAL: "Local commercial", BUREAU: "Bureau",
+      FACADE: "Façade", AUTRE: "Autre",
+      M2: "m²", ML: "ml", UNITE: "unité", FORFAIT: "forfait", LITRE: "litre", KG: "kg",
+      TRAVAUX: "Travaux", MATERIAUX: "Matériaux", MAIN_OEUVRE: "Main-d'œuvre", AUTRES: "Autres frais",
+      ECONOMIQUE: "Économique", STANDARD: "Standard", PREMIUM: "Premium",
+      tbMoisTitre: "Montant des devis, 6 derniers mois",
+      tbRepartition: "Vos devis par statut",
+      tbAucuneDonnee: "Pas encore de devis : créez le premier.",
+      tbToucherBarre: "Touchez une barre pour voir le mois.",
+      tbEncaisse: "Encaissé",
+      tbResteCourt: "Reste",
+      tbActions: "Que voulez-vous faire ?",
+      tbClients: "Clients",
+      themeAuto: "Thème automatique",
+      themeClair: "Thème clair",
+      themeSombre: "Thème sombre",
+      essaiTitre: "Version d'essai",
+      essaiTexte: "Cette page rejoue le devis de PEINTRE PRO DZ dans le navigateur, sans rien installer. Les données restent dans ce navigateur uniquement. L'application Android, elle, les enregistre dans une vraie base SQLite.",
+      exempleTitre: "Données d'exemple",
+      exempleTexte: "Deux clients et trois devis sont fournis pour essayer tout de suite. Effacez-les quand vous voulez."
+    },
+    ar: {
+      titre: "بينتر برو دي زد", sousTitre: "عروض الأسعار وأوراش الدهن",
+      retour: "رجوع", enregistrer: "حفظ", annuler: "إلغاء", supprimer: "حذف",
+      modifier: "تعديل", ajouter: "إضافة", fermer: "إغلاق", ok: "موافق", confirmer: "تأكيد",
+      dupliquer: "نسخ", reinit: "استعادة الافتراضي", rechercher: "بحث",
+      statDevis: "عروض الأسعار", statAcceptes: "العروض المقبولة", statChantiers: "أوراش جارية",
+      statEncaisser: "المبلغ المطلوب تحصيله",
+      nouveauDevis: "عرض سعر جديد", mesDevis: "عروض الأسعار", mesChantiers: "الأوراش",
+      mesClients: "الزبائن", paiements: "الدفعات", parametres: "الإعدادات",
+      calculRapide: "حساب سريع", ceMois: "هذا الشهر", moisCrees: "عروض أُنشئت",
+      moisAcceptes: "عروض مقبولة", moisChantiers: "أوراش مُنجزة",
+      moisMontant: "مبلغ العروض (غير محصَّل)", moisEncaisse: "المبلغ المحصَّل",
+      moisRestant: "الباقي للتحصيل",
+      clients: "الزبائن", clientNouveau: "زبون جديد", clientModifier: "تعديل الزبون",
+      nom: "الاسم", telephone: "الهاتف", adresse: "العنوان", notes: "ملاحظات",
+      aucunClient: "لا يوجد زبون. اضغط «إضافة زبون».",
+      chercherClient: "ابحث عن زبون…", ajouterClient: "إضافة زبون",
+      resteEncaisser: "الباقي للتحصيل", devisDuClient: "عروض الزبون",
+      clientAvecDevis: "لا يمكن الحذف: لهذا الزبون عروض أسعار. احذف عروضه أولاً.",
+      nomObligatoire: "اسم الزبون إجباري.",
+      supprimerClientT: "حذف هذا الزبون؟", actionDefinitive: "لا يمكن التراجع عن هذه العملية.",
+      devis: "عروض الأسعار", aucunDevis: "لا يوجد أي عرض سعر.",
+      chercherDevis: "ابحث (الرقم، الزبون)…", tous: "الكل",
+      periode: "الفترة", periodeToutes: "كل التواريخ", periodeMois: "هذا الشهر", periodeAnnee: "هذه السنة",
+      supprimerDevisT: "حذف عرض السعر؟",
+      supprimerDevisM: "سيُحذف العرض وغرفه وسطوره نهائياً.",
+      etape1: "1. الزبون", etape2: "2. الورشة", etape3: "3. الغرف",
+      etape4: "4. الأشغال والمواد", etape5: "5. المجموع",
+      choisirClient: "اختر زبوناً", creerClient: "إنشاء زبون",
+      aucunClientSel: "لم يتم اختيار زبون",
+      clientObligatoire: "اختر زبوناً: هو الذي يُنشئ عرض السعر.",
+      numero: "رقم العرض", typeChantier: "نوع الورشة",
+      adresseChantier: "عنوان الورشة", date: "التاريخ", niveau: "مستوى العرض",
+      statut: "الحالة", ajouterPiece: "إضافة غرفة",
+      aucunePiece: "لا توجد غرف. أضف غرفة لحساب المساحات.",
+      ajouterLigne: "إضافة سطر",
+      aucuneLigne: "لا توجد سطور. أضف أشغالاً أو مواد أو يداً عاملة.",
+      piece: "غرفة", pieceNouvelle: "غرفة جديدة", nomPiece: "اسم الغرفة",
+      dimensions: "الأبعاد", longueur: "الطول (م)", largeur: "العرض (م)", hauteur: "الارتفاع (م)",
+      ouvertures: "الأبواب والنوافذ", portes: "الأبواب", fenetres: "النوافذ", nombre: "العدد",
+      largeurO: "العرض (م)", hauteurO: "الارتفاع (م)", surfaces: "المساحات المحسوبة",
+      surfaceMurs: "مساحة الجدران", surfaceOuvertures: "مساحة الفتحات",
+      surfaceNette: "المساحة الصافية للجدران", surfacePlafond: "مساحة السقف",
+      corriger: "تصحيح المساحات يدوياً", murCorrige: "مساحة الجدران المصححة (م²)",
+      plafondCorrige: "مساحة السقف المصححة (م²)",
+      dimObligatoires: "الطول والعرض والارتفاع يجب أن تكون أكبر من 0.",
+      nomPieceObligatoire: "اسم الغرفة إجباري.",
+      travauxPiece: "أشغال الغرفة", ajouterTravail: "إضافة شغل",
+      aucunTravail: "لا توجد أشغال لهذه الغرفة.",
+      supprimerPieceT: "حذف هذه الغرفة؟",
+      supprimerPieceM: "ستُحذف أيضاً الأشغال المرتبطة بها.",
+      ouverturesTrop: "الفتحات تتجاوز مساحة الجدران: المساحة الصافية = 0.",
+      designation: "البيان", unite: "الوحدة", quantite: "الكمية",
+      prixUnitaire: "سعر الوحدة", total: "المجموع", categorie: "الصنف",
+      depuisTarifs: "من قائمة أسعاري", baseQuantite: "أساس الكمية",
+      baseMurs: "الجدران الصافية", basePlafond: "السقف", baseMursPlafond: "الجدران + السقف",
+      basePortes: "الأبواب", baseFenetres: "النوافذ",
+      ligneAjouter: "إضافة سطر", ligneModifier: "تعديل السطر",
+      designationObligatoire: "البيان إجباري.",
+      valeurNegative: "لا يمكن أن تكون القيمة سالبة.",
+      stTravaux: "مجموع الأشغال", stMateriaux: "مجموع المواد",
+      mainOeuvre: "اليد العاملة", autresFrais: "مصاريف أخرى", sousTotal: "المجموع الفرعي",
+      remise: "التخفيض", apresRemise: "المجموع بعد التخفيض", appliquerTva: "تطبيق الرسم (TVA)",
+      tauxTva: "نسبة الرسم (%)", tva: "الرسم", TOTAL: "المجموع الإجمالي", acompte: "التسبيق",
+      dejaPaye: "المدفوع", resteAPayer: "الباقي للدفع",
+      remiseTrop: "التخفيض لا يمكن أن يتجاوز المجموع الفرعي.",
+      tarifs: "أسعاري", aucunTarif: "لا توجد أسعار لهذا المستوى.",
+      tarifNouveau: "سعر جديد", tarifModifier: "تعديل السعر", prestation: "الخدمة",
+      prix: "السعر", prixExemples: "الأسعار أدناه أمثلة فقط: عدّلها حسب أسعارك الحقيقية.",
+      reinitTarifsT: "استعادة الأسعار الافتراضية؟",
+      reinitTarifsM: "ستُستعاد الأسعار الافتراضية. عروضك المسجلة لن تتغير.",
+      calculTitre: "حساب سريع", couches: "عدد الطبقات", prixM2: "سعر المتر المربع (دهن)",
+      rendement: "المردود (م²/ل)", resultat: "النتيجة",
+      quantitePeinture: "كمية الدهن المقدَّرة", potsProposes: "العلب المقترحة",
+      prixEstime: "السعر المقدَّر", totalEstimatif: "المجموع التقديري",
+      creerDevisDepuis: "إنشاء عرض سعر من هذا الحساب",
+      inclurePlafond: "إدراج السقف",
+      avertEstimation: "تقدير إرشادي: المردود الحقيقي يتعلق بالمنتج وبالسطح.",
+      paramEntreprise: "مؤسستي", nomEntreprise: "اسم المؤسسة", email: "البريد الإلكتروني",
+      devise: "العملة", validite: "مدة صلاحية العرض (أيام)",
+      conditions: "الشروط وكيفيات الدفع", rendementDefaut: "المردود الافتراضي (م²/ل)",
+      couchesDefaut: "عدد الطبقات الافتراضي", paramEnregistres: "تم حفظ الإعدادات.",
+      donnees: "بياناتي", exporter: "تصدير بياناتي", importer: "استيراد بياناتي",
+      exporterM: "انسخ هذا النص واحفظه في مكان آمن: يحتوي على كل عروضك.",
+      importerM: "الصق هنا نسخة احتياطية. ستُستبدل بياناتك الحالية.",
+      copier: "نسخ", copie: "تم النسخ", importerAction: "استبدال بياناتي",
+      importOk: "تمت استعادة البيانات.", importErreur: "النسخة غير صالحة: لم يتغير شيء.",
+      effacerExemples: "حذف بيانات المثال", toutEffacer: "حذف كل شيء",
+      toutEffacerT: "حذف كل البيانات؟",
+      apercu: "معاينة العرض", imprimer: "طباعة / PDF", partager: "مشاركة",
+      conditionsTitre: "الشروط", signatureClient: "إمضاء الزبون",
+      signatureEntreprise: "المؤسسة", valableJours: "العرض صالح لمدة {n} يوماً.",
+      devisDe: "عرض سعر من", pourClient: "الزبون", chantier: "الورشة",
+      convertirChantier: "تحويل إلى ورشة", phase2: "الأوراش والدفعات في المرحلة الثانية.",
+      copieDansPresse: "تم النسخ.",
+      BROUILLON: "مسودة", ENVOYE: "مُرسَل", ACCEPTE: "مقبول", REFUSE: "مرفوض", ANNULE: "ملغى",
+      APPARTEMENT: "شقة", VILLA: "فيلا", LOCAL: "محل تجاري", BUREAU: "مكتب",
+      FACADE: "واجهة", AUTRE: "أخرى",
+      M2: "م²", ML: "م.ط", UNITE: "وحدة", FORFAIT: "جزافي", LITRE: "لتر", KG: "كغ",
+      TRAVAUX: "أشغال", MATERIAUX: "مواد", MAIN_OEUVRE: "يد عاملة", AUTRES: "مصاريف أخرى",
+      ECONOMIQUE: "اقتصادي", STANDARD: "عادي", PREMIUM: "ممتاز",
+      tbMoisTitre: "مبلغ العروض، آخر 6 أشهر",
+      tbRepartition: "عروضك حسب الحالة",
+      tbAucuneDonnee: "لا يوجد أي عرض بعد: أنشئ الأول.",
+      tbToucherBarre: "المس عموداً لرؤية الشهر.",
+      tbEncaisse: "المحصَّل",
+      tbResteCourt: "الباقي",
+      tbActions: "ماذا تريد أن تفعل؟",
+      tbClients: "الزبائن",
+      themeAuto: "السمة تلقائية",
+      themeClair: "سمة فاتحة",
+      themeSombre: "سمة داكنة",
+      essaiTitre: "نسخة تجريبية",
+      essaiTexte: "هذه الصفحة تُحاكي عرض السعر في المتصفح دون أي تثبيت. البيانات تبقى في هذا المتصفح فقط. أما تطبيق أندرويد فيحفظها في قاعدة بيانات SQLite حقيقية.",
+      exempleTitre: "بيانات مثال",
+      exempleTexte: "زبونان وثلاثة عروض أسعار جاهزة للتجربة. يمكنك حذفها متى شئت."
+    }
+  };
+
+  var langue = "fr";
+  try { langue = localStorage.getItem("ppdz-langue") || "fr"; } catch (e) {}
+  if (!T[langue]) { langue = "fr"; }
+
+  function t(cle, remplacements) {
+    var texte = (T[langue] && T[langue][cle]) || T.fr[cle] || cle;
+    if (remplacements) {
+      Object.keys(remplacements).forEach(function (k) {
+        texte = texte.replace("{" + k + "}", remplacements[k]);
+      });
+    }
+    return texte;
+  }
+
+  /* =================================================================
+     2. Calculs — formules identiques à celles du code Kotlin
+        (SurfaceCalculator, PaintCalculator, TotalsCalculator).
+     ================================================================= */
+
+  function surfaces(p) {
+    var L = Math.max(0, n(p.longueur)), l = Math.max(0, n(p.largeur)), h = Math.max(0, n(p.hauteur));
+    var murs = 2 * (L + l) * h;
+    var aPortes = Math.max(0, p.portes | 0) * Math.max(0, n(p.portesL)) * Math.max(0, n(p.portesH));
+    var aFenetres = Math.max(0, p.fenetres | 0) * Math.max(0, n(p.fenetresL)) * Math.max(0, n(p.fenetresH));
+    var ouv = aPortes + aFenetres;
+    var netCalcule = Math.max(0, murs - ouv);
+    var murManuel = (p.murManuel === null || p.murManuel === undefined || p.murManuel === "") ? null : Math.max(0, n(p.murManuel));
+    var plafondManuel = (p.plafondManuel === null || p.plafondManuel === undefined || p.plafondManuel === "") ? null : Math.max(0, n(p.plafondManuel));
+    return {
+      murs: murs,
+      portes: aPortes,
+      fenetres: aFenetres,
+      ouvertures: ouv,
+      net: murManuel === null ? netCalcule : murManuel,
+      plafond: plafondManuel === null ? L * l : plafondManuel,
+      manuelMur: murManuel !== null,
+      manuelPlafond: plafondManuel !== null,
+      depassement: murManuel === null && ouv > murs && murs > 0
+    };
+  }
+
+  var POTS = [20, 10, 5, 2.5, 1];
+
+  function litres(surface, couches, rendement) {
+    if (surface <= 0 || couches <= 0 || rendement <= 0) { return 0; }
+    return surface * couches / rendement;
+  }
+
+  /* Du plus grand pot au plus petit, puis on complète avec le plus petit
+     pot capable de couvrir le reste : on ne descend jamais sous le besoin. */
+  function conditionnement(besoin) {
+    if (besoin <= 0) { return []; }
+    var reste = besoin, compte = {};
+    POTS.forEach(function (taille) {
+      if (reste < taille) { return; }
+      var nb = Math.floor(reste / taille);
+      if (nb > 0) { compte[taille] = (compte[taille] || 0) + nb; reste -= nb * taille; }
+    });
+    if (reste > 0.001) {
+      var complement = POTS.filter(function (x) { return x >= reste; }).pop() || POTS[POTS.length - 1];
+      compte[complement] = (compte[complement] || 0) + 1;
+    }
+    return Object.keys(compte)
+      .map(function (k) { return { taille: parseFloat(k), nb: compte[k] }; })
+      .sort(function (a, b) { return b.taille - a.taille; });
+  }
+
+  function totaux(d) {
+    var somme = function (cat) {
+      return (d.lignes || []).filter(function (x) { return x.categorie === cat; })
+        .reduce(function (acc, x) { return acc + n(x.qte) * n(x.pu); }, 0);
+    };
+    var travaux = somme("TRAVAUX"), materiaux = somme("MATERIAUX");
+    var mo = somme("MAIN_OEUVRE"), autres = somme("AUTRES");
+    var st = travaux + materiaux + mo + autres;
+    var remise = Math.min(Math.max(0, n(d.remise)), Math.max(0, st));
+    var apres = Math.max(0, st - remise);
+    var taux = d.tvaActive ? Math.max(0, n(d.tvaTaux)) : 0;
+    var tva = apres * taux / 100;
+    var total = apres + tva;
+    var acompte = Math.max(0, n(d.acompte));
+    var paye = (d.paiements || []).reduce(function (a, p) { return a + n(p.montant); }, 0);
+    return {
+      travaux: travaux, materiaux: materiaux, mo: mo, autres: autres, sousTotal: st,
+      remise: remise, apresRemise: apres, tva: tva, total: total,
+      acompte: acompte, paye: paye, reste: Math.max(0, total - acompte - paye)
+    };
+  }
+
+  /* =================================================================
+     3. Formats — la virgule est acceptée à la saisie.
+     ================================================================= */
+
+  function n(v) {
+    if (typeof v === "number") { return isFinite(v) ? v : 0; }
+    if (v === null || v === undefined) { return 0; }
+    var x = parseFloat(String(v).replace(/\s| | /g, "").replace(",", "."));
+    return isFinite(x) ? x : 0;
+  }
+
+  var nfMontant = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+  var nfDecimal = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
+
+  function argent(v) { return nfMontant.format(arrondi(v)) + " " + E.params.devise; }
+  function dec(v) { return nfDecimal.format(arrondi(v)); }
+  function m2(v) { return dec(v) + " " + t("M2"); }
+  function lit(v) { return dec(v) + " " + (langue === "ar" ? "ل" : "L"); }
+  function arrondi(v) { return Math.round((n(v) + Number.EPSILON) * 100) / 100; }
+  function saisie(v) { return n(v) === 0 ? "" : String(n(v)).replace(".", ","); }
+
+  function dateCourte(ts) {
+    var d = new Date(ts);
+    var p = function (x) { return x < 10 ? "0" + x : String(x); };
+    return p(d.getDate()) + "/" + p(d.getMonth() + 1) + "/" + d.getFullYear();
+  }
+  function pourInput(ts) {
+    var d = new Date(ts);
+    var p = function (x) { return x < 10 ? "0" + x : String(x); };
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+  }
+  function debutMois() { var d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); }
+  function debutAnnee() { var d = new Date(); return new Date(d.getFullYear(), 0, 1).getTime(); }
+
+  function esc(s) {
+    return String(s === null || s === undefined ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function id() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  /* =================================================================
+     4. Données — enregistrées dans ce navigateur (localStorage).
+        Dans l'application Android, c'est Room/SQLite qui tient ce rôle.
+     ================================================================= */
+
+  var CLE = "ppdz-essai-v1";
+
+  var TARIFS_BASE = [
+    ["Nettoyage", "M2", 80, "TRAVAUX"],
+    ["Rebouchage", "M2", 120, "TRAVAUX"],
+    ["Enduit", "M2", 250, "TRAVAUX"],
+    ["Ponçage", "M2", 150, "TRAVAUX"],
+    ["Sous-couche", "M2", 180, "TRAVAUX"],
+    ["Peinture 1 couche", "M2", 300, "TRAVAUX"],
+    ["Peinture 2 couches", "M2", 450, "TRAVAUX"],
+    ["Peinture 3 couches", "M2", 600, "TRAVAUX"],
+    ["Plafond", "M2", 400, "TRAVAUX"],
+    ["Façade", "M2", 500, "TRAVAUX"],
+    ["Porte (peinture)", "UNITE", 1500, "TRAVAUX"],
+    ["Fenêtre (peinture)", "UNITE", 1200, "TRAVAUX"],
+    ["Main-d'œuvre au m²", "M2", 450, "MAIN_OEUVRE"],
+    ["Main-d'œuvre au forfait", "FORFAIT", 15000, "MAIN_OEUVRE"],
+    ["Peinture (pot)", "LITRE", 600, "MATERIAUX"],
+    ["Sous-couche (pot)", "LITRE", 450, "MATERIAUX"],
+    ["Enduit (sac)", "KG", 90, "MATERIAUX"],
+    ["Diluant", "LITRE", 350, "MATERIAUX"],
+    ["Rouleau", "UNITE", 800, "MATERIAUX"],
+    ["Pinceau", "UNITE", 400, "MATERIAUX"],
+    ["Papier abrasif", "UNITE", 100, "MATERIAUX"],
+    ["Ruban adhésif", "UNITE", 250, "MATERIAUX"],
+    ["Bâche de protection", "UNITE", 500, "MATERIAUX"]
+  ];
+
+  function tarifsParDefaut() {
+    var coef = { ECONOMIQUE: 0.8, STANDARD: 1, PREMIUM: 1.3 };
+    var out = [];
+    ["ECONOMIQUE", "STANDARD", "PREMIUM"].forEach(function (niveau) {
+      TARIFS_BASE.forEach(function (x) {
+        out.push({
+          id: id(), label: x[0], unite: x[1],
+          prix: Math.round(x[2] * coef[niveau]),
+          categorie: x[3], niveau: niveau
+        });
+      });
+    });
+    return out;
+  }
+
+  function piece(nom) {
+    return {
+      id: id(), nom: nom || "", longueur: 0, largeur: 0, hauteur: 2.8,
+      portes: 0, portesL: 0.8, portesH: 2.1,
+      fenetres: 0, fenetresL: 1.2, fenetresH: 1.2,
+      murManuel: null, plafondManuel: null
+    };
+  }
+
+  function donneesExemple() {
+    var c1 = { id: id(), nom: "Mohamed Belkacem", tel: "0550 12 34 56", adresse: "Cité 500 logements, Bt C, Blida", notes: "" };
+    var c2 = { id: id(), nom: "Ali Cherif", tel: "0661 98 76 54", adresse: "Rue Didouche Mourad, Alger", notes: "Chantier accessible le matin." };
+
+    var salon = piece("Salon");
+    salon.longueur = 5; salon.largeur = 4; salon.hauteur = 2.8; salon.portes = 1; salon.fenetres = 2;
+    var chambre = piece("Chambre 1");
+    chambre.longueur = 4; chambre.largeur = 3.5; chambre.hauteur = 2.8; chambre.portes = 1; chambre.fenetres = 1;
+
+    var sSalon = surfaces(salon), sChambre = surfaces(chambre);
+
+    var d1 = {
+      id: id(), numero: "DEV-" + new Date().getFullYear() + "-0001", clientId: c1.id,
+      typeChantier: "APPARTEMENT", adresse: "Cité 500 logements, Bt C, Blida",
+      date: Date.now() - 86400000 * 65, notes: "", niveau: "STANDARD", statut: "ACCEPTE",
+      remise: 0, tvaActive: false, tvaTaux: 19, acompte: 40000, validite: 30,
+      pieces: [salon, chambre],
+      lignes: [
+        { id: id(), pieceId: salon.id, categorie: "TRAVAUX", designation: "Enduit", unite: "M2", qte: arrondi(sSalon.net), pu: 250 },
+        { id: id(), pieceId: salon.id, categorie: "TRAVAUX", designation: "Peinture 2 couches", unite: "M2", qte: arrondi(sSalon.net), pu: 450 },
+        { id: id(), pieceId: salon.id, categorie: "TRAVAUX", designation: "Plafond", unite: "M2", qte: arrondi(sSalon.plafond), pu: 400 },
+        { id: id(), pieceId: chambre.id, categorie: "TRAVAUX", designation: "Peinture 2 couches", unite: "M2", qte: arrondi(sChambre.net), pu: 450 },
+        { id: id(), pieceId: null, categorie: "MATERIAUX", designation: "Peinture (pot)", unite: "LITRE", qte: 30, pu: 600 },
+        { id: id(), pieceId: null, categorie: "MAIN_OEUVRE", designation: "Main-d'œuvre au forfait", unite: "FORFAIT", qte: 1, pu: 25000 }
+      ],
+      paiements: [{ id: id(), montant: 30000, date: Date.now() - 86400000 * 40, mode: "ESPECES", note: "" }]
+    };
+
+    var bureau = piece("Bureau");
+    bureau.longueur = 6; bureau.largeur = 4.5; bureau.hauteur = 3; bureau.portes = 2; bureau.fenetres = 3;
+    var sBureau = surfaces(bureau);
+
+    var d2 = {
+      id: id(), numero: "DEV-" + new Date().getFullYear() + "-0003", clientId: c2.id,
+      typeChantier: "BUREAU", adresse: "Rue Didouche Mourad, Alger",
+      date: Date.now() - 86400000 * 2, notes: "", niveau: "PREMIUM", statut: "ENVOYE",
+      remise: 5000, tvaActive: false, tvaTaux: 19, acompte: 0, validite: 30,
+      pieces: [bureau],
+      lignes: [
+        { id: id(), pieceId: bureau.id, categorie: "TRAVAUX", designation: "Sous-couche", unite: "M2", qte: arrondi(sBureau.net), pu: 234 },
+        { id: id(), pieceId: bureau.id, categorie: "TRAVAUX", designation: "Peinture 2 couches", unite: "M2", qte: arrondi(sBureau.net), pu: 585 },
+        { id: id(), pieceId: null, categorie: "MAIN_OEUVRE", designation: "Main-d'œuvre au m²", unite: "M2", qte: arrondi(sBureau.net), pu: 585 }
+      ],
+      paiements: []
+    };
+
+    var chambre2 = piece("Chambre 2");
+    chambre2.longueur = 3.5; chambre2.largeur = 3; chambre2.hauteur = 2.8;
+    chambre2.portes = 1; chambre2.fenetres = 1;
+    var sChambre2 = surfaces(chambre2);
+
+    var d3 = {
+      id: id(), numero: "DEV-" + new Date().getFullYear() + "-0002", clientId: c1.id,
+      typeChantier: "APPARTEMENT", adresse: "Cité 500 logements, Bt C, Blida",
+      date: Date.now() - 86400000 * 34, notes: "", niveau: "ECONOMIQUE", statut: "BROUILLON",
+      remise: 0, tvaActive: false, tvaTaux: 19, acompte: 0, validite: 30,
+      pieces: [chambre2],
+      lignes: [
+        { id: id(), pieceId: chambre2.id, categorie: "TRAVAUX", designation: "Rebouchage", unite: "M2", qte: arrondi(sChambre2.net), pu: 96 },
+        { id: id(), pieceId: chambre2.id, categorie: "TRAVAUX", designation: "Peinture 2 couches", unite: "M2", qte: arrondi(sChambre2.net), pu: 360 }
+      ],
+      paiements: []
+    };
+
+    return {
+      version: 1,
+      exemple: true,
+      clients: [c1, c2],
+      devis: [d1, d3, d2],
+      tarifs: tarifsParDefaut(),
+      params: {
+        entreprise: "", tel: "", adresse: "", email: "", devise: "DA",
+        tvaActive: false, tvaTaux: 19, rendement: 10, couches: 2, validite: 30,
+        conditions: "Devis valable 30 jours.\nAcompte de 40 % à la commande, solde à la fin des travaux.\nLes surfaces et quantités de peinture sont des estimations.\nLe support doit être accessible et dégagé avant le début du chantier.",
+        prefixe: "DEV"
+      }
+    };
+  }
+
+  var E;
+  try {
+    var brut = localStorage.getItem(CLE);
+    E = brut ? JSON.parse(brut) : donneesExemple();
+  } catch (e) { E = donneesExemple(); }
+  if (!E || !E.clients) { E = donneesExemple(); }
+
+  function sauver() {
+    try { localStorage.setItem(CLE, JSON.stringify(E)); } catch (e) {}
+  }
+
+  function prochainNumero() {
+    var an = new Date().getFullYear();
+    var tete = (E.params.prefixe || "DEV") + "-" + an + "-";
+    var max = 0;
+    E.devis.forEach(function (d) {
+      if (d.numero && d.numero.indexOf(tete) === 0) {
+        var s = parseInt(d.numero.slice(tete.length), 10);
+        if (!isNaN(s) && s > max) { max = s; }
+      }
+    });
+    return tete + String(max + 1).padStart(4, "0");
+  }
+
+  function client(cid) { return E.clients.filter(function (c) { return c.id === cid; })[0] || null; }
+  function devis(did) { return E.devis.filter(function (d) { return d.id === did; })[0] || null; }
+
+  /* =================================================================
+     5. Navigation
+     ================================================================= */
+
+  var vue = { nom: "accueil", ctx: {} };
+  var pile = [];
+
+  function aller(nom, ctx) {
+    pile.push({ nom: vue.nom, ctx: vue.ctx });
+    vue = { nom: nom, ctx: ctx || {} };
+    dessiner();
+    window.scrollTo(0, 0);
+  }
+  function retour() {
+    var p = pile.pop();
+    vue = p || { nom: "accueil", ctx: {} };
+    dessiner();
+    window.scrollTo(0, 0);
+  }
+
+  var VUES = {};
+
+  function dessiner() {
+    var rendu = VUES[vue.nom] ? VUES[vue.nom](vue.ctx) : VUES.accueil({});
+    document.getElementById("titreBarre").textContent = rendu.titre;
+    document.getElementById("btnRetour").hidden = pile.length === 0;
+    document.getElementById("vue").innerHTML = rendu.html;
+    if (rendu.apres) { rendu.apres(); }
+  }
+
+  /* Trois états : automatique (réglage du téléphone), clair, sombre. Le choix
+     est mémorisé, et il prime sur le mode sombre forcé du navigateur. */
+  var theme = "auto";
+  try { theme = localStorage.getItem("ppdz-theme") || "auto"; } catch (e) {}
+  if (["auto", "clair", "sombre"].indexOf(theme) < 0) { theme = "auto"; }
+
+  function appliquerTheme() {
+    var racine = document.documentElement;
+    if (theme === "clair") { racine.setAttribute("data-theme", "light"); }
+    else if (theme === "sombre") { racine.setAttribute("data-theme", "dark"); }
+    else { racine.removeAttribute("data-theme"); }
+
+    var bouton = document.getElementById("btnTheme");
+    var nom = theme === "clair" ? "soleil" : (theme === "sombre" ? "lune" : "auto");
+    var cle = theme === "clair" ? "themeClair" : (theme === "sombre" ? "themeSombre" : "themeAuto");
+    bouton.innerHTML = svgIco(nom, 20);
+    bouton.setAttribute("aria-label", t(cle));
+    bouton.setAttribute("title", t(cle));
+    try { localStorage.setItem("ppdz-theme", theme); } catch (e) {}
+  }
+
+  function appliquerLangue() {
+    document.documentElement.lang = langue;
+    document.documentElement.dir = langue === "ar" ? "rtl" : "ltr";
+    document.getElementById("btnLangue").textContent = langue === "ar" ? "FR" : "ع";
+    var retourBtn = document.getElementById("btnRetour");
+    retourBtn.innerHTML = svgIco("fleche", 22);
+    retourBtn.setAttribute("aria-label", t("retour"));
+    try { localStorage.setItem("ppdz-langue", langue); } catch (e) {}
+  }
+
+  /* =================================================================
+     Icônes : un seul jeu de dessins au trait, tracés à la couleur du
+     texte courant — donc lisibles dans les deux thèmes, sans image.
+     ================================================================= */
+
+  var ICONES = {
+    eclair: ["M13 2 4 14h7l-1 8 9-12h-7z"],
+    devis: ["M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z", "M14 3v5h5", "M9 13h6", "M9 17h4"],
+    dossier: ["M3 8a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"],
+    chantier: ["M4 16a8 8 0 0 1 16 0", "M2 18h20v2H2z", "M10 16V7a2 2 0 0 1 4 0v9"],
+    clients: ["M16 20v-1.5a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4V20", "M9.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7", "M21 20v-1.5a4 4 0 0 0-3-3.9"],
+    paiement: ["M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z", "M3 11h18", "M7 15h3"],
+    reglages: ["M4 7h16", "M4 12h16", "M4 17h16", "M9 5v4", "M16 10v4", "M12 15v4"],
+    plus: ["M12 5v14", "M5 12h14"],
+    poubelle: ["M4 7h16", "M10 11v6", "M14 11v6", "M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12", "M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"],
+    crayon: ["M4 20h4l10-10a2.8 2.8 0 0 0-4-4L4 16z", "M13.5 6.5l4 4"],
+    copier: ["M8 8h11v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z", "M16 5V4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h1"],
+    pdf: ["M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z", "M14 3v5h5", "M8 16h8"],
+    partager: ["M18 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", "M6 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", "M18 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", "M8.2 11 15.8 7", "M8.2 13l7.6 4"],
+    imprimer: ["M7 9V3h10v6", "M7 19H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2", "M7 15h10v6H7z"],
+    tarif: ["M3 11V5a2 2 0 0 1 2-2h6l9 9-8 8-9-9z", "M8 8h.01"],
+    sauver: ["M5 3h11l3 3v15H5z", "M8 3v6h8", "M8 14h8v7H8z"],
+    export: ["M12 3v12", "M8 7l4-4 4 4", "M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"],
+    import: ["M12 15V3", "M8 11l4 4 4-4", "M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"],
+    reinit: ["M20 12a8 8 0 1 1-2.4-5.7", "M20 4v5h-5"],
+    recherche: ["M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14", "M20 20l-4-4"],
+    soleil: ["M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8", "M12 2v2", "M12 20v2", "M2 12h2", "M20 12h2", "M4.9 4.9l1.4 1.4", "M17.7 17.7l1.4 1.4", "M19.1 4.9l-1.4 1.4", "M6.3 17.7l-1.4 1.4"],
+    lune: ["M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"],
+    auto: ["M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z", "M12 3v18"],
+    alerte: ["M12 4 2 20h20z", "M12 11v4", "M12 18h.01"],
+    info: ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18", "M12 11v5", "M12 8h.01"],
+    idee: ["M9 18h6", "M10 21h4", "M12 3a6 6 0 0 1 4 10.5V16H8v-2.5A6 6 0 0 1 12 3z"],
+    epingle: ["M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z", "M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"],
+    fleche: ["M15 6l-6 6 6 6"]
+  };
+
+  function svgIco(nom, taille) {
+    var chemins = ICONES[nom];
+    if (!chemins) { return ""; }
+    var t = taille || 22;
+    return '<svg viewBox="0 0 24 24" width="' + t + '" height="' + t + '" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ' +
+      'aria-hidden="true" focusable="false">' +
+      chemins.map(function (d) { return '<path d="' + d + '"/>'; }).join("") +
+      "</svg>";
+  }
+
+  /** Petit dessin d'atelier : mur peint, bande d'ocre et rouleau. */
+  function dessinAtelier() {
+    return '<svg class="dessin" viewBox="0 0 120 80" aria-hidden="true" focusable="false">' +
+      '<rect x="4" y="10" width="72" height="58" rx="5" fill="currentColor" opacity="0.28"/>' +
+      '<rect x="4" y="34" width="72" height="13" rx="3" fill="currentColor" opacity="0.55"/>' +
+      '<rect x="78" y="32" width="30" height="13" rx="4" fill="currentColor" opacity="0.9"/>' +
+      '<path d="M108 38.5h6v24h-7" fill="none" stroke="currentColor" stroke-width="3.5" ' +
+      'stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>' +
+      '<circle cx="24" cy="62" r="3" fill="currentColor" opacity="0.55"/>' +
+      '<circle cx="40" cy="66" r="2" fill="currentColor" opacity="0.4"/>' +
+      "</svg>";
+  }
+
+  /* =================================================================
+     6. Briques d'affichage
+     ================================================================= */
+
+  function tuile(etiq, val, phare, petit) {
+    return '<div class="tuile' + (phare ? " phare" : "") + '">' +
+      '<div class="etiq">' + esc(etiq) + '</div>' +
+      '<div class="val' + (petit ? " petit" : "") + '">' + esc(val) + '</div></div>';
+  }
+
+  function tot(etiq, val, classe) {
+    return '<dl class="tot ' + (classe || "") + '"><dt>' + esc(etiq) + '</dt><dd>' + esc(val) + '</dd></dl>';
+  }
+
+  function champ(etiq, html) {
+    return '<label class="champ"><span>' + esc(etiq) + '</span>' + html + '</label>';
+  }
+
+  function texte(etiq, valeur, acte, attrs) {
+    return champ(etiq, '<input type="text" data-champ="' + acte + '" value="' + esc(valeur) + '" ' + (attrs || "") + '>');
+  }
+
+  function nombre(etiq, valeur, acte, attrs) {
+    return champ(etiq, '<input type="text" inputmode="decimal" class="nombre" data-champ="' + acte + '" value="' + esc(valeur) + '" ' + (attrs || "") + '>');
+  }
+
+  function entier(etiq, valeur, acte) {
+    return champ(etiq, '<input type="text" inputmode="numeric" class="nombre" data-champ="' + acte + '" value="' + esc(valeur) + '">');
+  }
+
+  function liste(etiq, acte, options, choisi) {
+    var o = options.map(function (x) {
+      return '<option value="' + esc(x.v) + '"' + (x.v === choisi ? " selected" : "") + '>' + esc(x.l) + '</option>';
+    }).join("");
+    return champ(etiq, '<select data-champ="' + acte + '">' + o + '</select>');
+  }
+
+  function optsEnum(cles) {
+    return cles.map(function (c) { return { v: c, l: t(c) }; });
+  }
+
+  var UNITES = ["M2", "ML", "UNITE", "FORFAIT", "LITRE", "KG"];
+  var CATEGORIES = ["TRAVAUX", "MATERIAUX", "MAIN_OEUVRE", "AUTRES"];
+  var STATUTS = ["BROUILLON", "ENVOYE", "ACCEPTE", "REFUSE", "ANNULE"];
+  var TYPES = ["APPARTEMENT", "VILLA", "LOCAL", "BUREAU", "FACADE", "AUTRE"];
+  var NIVEAUX = ["ECONOMIQUE", "STANDARD", "PREMIUM"];
+
+  /* Les anciens émojis des appels existants sont rendus par le jeu d'icônes. */
+  var EMOJI_ICO = {
+    "💾": "sauver", "＋": "plus", "🗑": "poubelle", "✎": "crayon", "⧉": "copier",
+    "📄": "pdf", "↗": "partager", "🖨": "imprimer", "🏷": "tarif", "⬆": "export",
+    "⬇": "import", "↺": "reinit", "🧾": "devis", "👷": "chantier", "⚡": "eclair",
+    "⚙️": "reglages", "👤": "clients", "💰": "paiement", "📁": "dossier"
+  };
+
+  function bouton(texteBouton, acte, classe, ico, extra) {
+    var dessin = ico ? (EMOJI_ICO[ico] ? svgIco(EMOJI_ICO[ico], 20) : esc(ico)) : "";
+    return '<button type="button" class="btn ' + (classe || "") + '" data-act="' + acte + '"' + (extra || "") + '>' +
+      (dessin ? '<span class="ico" aria-hidden="true">' + dessin + "</span>" : "") +
+      "<span>" + esc(texteBouton) + "</span></button>";
+  }
+
+  function vide(msg) { return '<p class="vide">' + esc(msg) + "</p>"; }
+
+  /* =================================================================
+     7. Écrans
+     ================================================================= */
+
+  var NOMS_MOIS = {
+    fr: ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."],
+    ar: ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"]
+  };
+
+  /** Montant des devis créés sur chacun des six derniers mois. */
+  function sixDerniersMois() {
+    var aujourdhui = new Date();
+    var mois = [];
+    for (var i = 5; i >= 0; i--) {
+      var d = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth() - i, 1);
+      mois.push({
+        debut: d.getTime(),
+        fin: new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime(),
+        label: (NOMS_MOIS[langue] || NOMS_MOIS.fr)[d.getMonth()],
+        valeur: 0
+      });
+    }
+    E.devis.forEach(function (d) {
+      var montant = totaux(d).total;
+      for (var i = 0; i < mois.length; i++) {
+        if (d.date >= mois[i].debut && d.date < mois[i].fin) { mois[i].valeur += montant; break; }
+      }
+    });
+    return mois;
+  }
+
+  /**
+   * Barres verticales : une seule série, donc pas de légende — le titre
+   * de la carte dit ce qui est mesuré. Seule la plus haute barre porte son
+   * montant ; les autres se lisent en touchant la barre.
+   */
+  function graphiqueMois(mois) {
+    var max = 0;
+    mois.forEach(function (m) { if (m.valeur > max) { max = m.valeur; } });
+    if (max <= 0) {
+      return '<p class="vide">' + esc(t("tbAucuneDonnee")) + "</p>";
+    }
+
+    var L = 320, H = 168, hautPad = 22, basPad = 30;
+    var pas = L / mois.length;
+    var largeurBarre = pas - 14;
+    var hauteurUtile = H - hautPad - basPad;
+    var indexMax = 0;
+    mois.forEach(function (m, i) { if (m.valeur >= mois[indexMax].valeur) { indexMax = i; } });
+
+    var corps = mois.map(function (m, i) {
+      var h = m.valeur > 0 ? Math.max(3, (m.valeur / max) * hauteurUtile) : 0;
+      var x = i * pas + 7;
+      var y = hautPad + (hauteurUtile - h);
+      var barre = h > 0
+        ? '<rect class="barre" x="' + x + '" y="' + y + '" width="' + largeurBarre + '" height="' + h +
+          '" rx="4" fill="var(--serie-encaisse)" data-act="barreMois" data-id="' + i + '"><title>' +
+          esc(m.label + " : " + argent(m.valeur)) + "</title></rect>"
+        : "";
+      var etiquette = i === indexMax
+        ? '<text x="' + (x + largeurBarre / 2) + '" y="' + (y - 7) + '" text-anchor="middle" ' +
+          'font-size="11" fill="var(--encre)">' + esc(nfMontant.format(Math.round(m.valeur))) + "</text>"
+        : "";
+      return barre + etiquette +
+        '<text x="' + (x + largeurBarre / 2) + '" y="' + (H - 10) +
+        '" text-anchor="middle" font-size="11" fill="var(--estompe)">' + esc(m.label) + "</text>";
+    }).join("");
+
+    return '<svg class="graphe" viewBox="0 0 ' + L + " " + H + '" role="img" ' +
+      'aria-label="' + esc(t("tbMoisTitre")) + '">' +
+      '<line x1="0" y1="' + (H - basPad) + '" x2="' + L + '" y2="' + (H - basPad) +
+      '" stroke="var(--trait)" stroke-width="1"/>' + corps + "</svg>" +
+      '<p class="infoGraphe" id="infoGraphe">' + esc(t("tbToucherBarre")) + "</p>";
+  }
+
+  /** Part encaissée et part restant à encaisser, sur une seule barre. */
+  function barreEncaissement(encaisse, reste) {
+    var total = encaisse + reste;
+    var partA = total > 0 ? Math.round((encaisse / total) * 100) : 0;
+    var partB = total > 0 ? 100 - partA : 0;
+    var segments = total > 0
+      ? '<span style="width:' + partA + '%;background:var(--serie-encaisse)"></span>' +
+        '<span style="width:' + partB + '%;background:var(--serie-reste)"></span>'
+      : '<span class="vide0"></span>';
+    return '<div class="empilee">' + segments + "</div>" +
+      '<div class="legende">' +
+      '<div><i style="background:var(--serie-encaisse)"></i>' + esc(t("tbEncaisse")) +
+      " <b>" + esc(argent(encaisse)) + "</b></div>" +
+      '<div><i style="background:var(--serie-reste)"></i>' + esc(t("tbResteCourt")) +
+      " <b>" + esc(argent(reste)) + "</b></div>" +
+      "</div>";
+  }
+
+  /** Répartition des devis par statut : la couleur ne porte jamais seule. */
+  function repartitionStatuts() {
+    var compte = {};
+    STATUTS.forEach(function (s) { compte[s] = 0; });
+    E.devis.forEach(function (d) { compte[d.statut] = (compte[d.statut] || 0) + 1; });
+    var max = 0;
+    STATUTS.forEach(function (s) { if (compte[s] > max) { max = compte[s]; } });
+    if (max === 0) { return '<p class="vide">' + esc(t("tbAucuneDonnee")) + "</p>"; }
+
+    return STATUTS.map(function (s) {
+      var part = Math.round((compte[s] / max) * 100);
+      return '<div class="rangStatut">' +
+        '<span class="nomStatut">' + esc(t(s)) + "</span>" +
+        '<span class="piste"><span style="width:' + part + '%;background:var(--' +
+        s.toLowerCase() + ')"></span></span>' +
+        '<span class="nb">' + compte[s] + "</span></div>";
+    }).join("");
+  }
+
+  function boutonAction(texteBouton, acte, nomIco, classe) {
+    return '<button type="button" class="btn ' + (classe || "") + '" data-act="' + acte + '">' +
+      '<span class="puceIco">' + svgIco(nomIco, 20) + "</span>" +
+      "<span>" + esc(texteBouton) + "</span></button>";
+  }
+
+  function tuileChiffre(nomIco, valeur, etiq, ocre) {
+    return '<div class="tuile2' + (ocre ? " ocre" : "") + '">' +
+      '<span class="puceIco">' + svgIco(nomIco, 20) + "</span>" +
+      '<span class="corps2"><span class="val2">' + esc(valeur) + "</span>" +
+      '<span class="etiq2">' + esc(etiq) + "</span></span></div>";
+  }
+
+  VUES.accueil = function () {
+    var acceptes = E.devis.filter(function (d) { return d.statut === "ACCEPTE"; });
+    var aEncaisser = acceptes.reduce(function (a, d) { return a + totaux(d).reste; }, 0);
+    var encaisse = acceptes.reduce(function (a, d) {
+      var x = totaux(d);
+      return a + x.acompte + x.paye;
+    }, 0);
+    var mois = debutMois();
+    var duMois = E.devis.filter(function (d) { return d.date >= mois; });
+
+    var html =
+      (E.exemple ? '<div class="banniere"><span class="ico">' + svgIco("epingle", 20) +
+        '</span><div class="corps"><strong>' + esc(t("exempleTitre")) + "</strong><br>" +
+        esc(t("exempleTexte")) + '<div class="rangeeBtn" style="margin-top:10px">' +
+        bouton(t("effacerExemples"), "effacerExemples", "danger mini") + "</div></div></div>" : "") +
+
+      '<section class="heros">' + dessinAtelier() +
+      '<div class="etiq">' + esc(t("statEncaisser")) + "</div>" +
+      '<div class="somme">' + esc(argent(aEncaisser)) + "</div>" +
+      barreEncaissement(encaisse, aEncaisser) +
+      "</section>" +
+
+      '<div class="tuiles">' +
+      tuileChiffre("devis", String(E.devis.length), t("statDevis")) +
+      tuileChiffre("dossier", String(acceptes.length), t("statAcceptes")) +
+      tuileChiffre("chantier", "0", t("statChantiers")) +
+      tuileChiffre("clients", String(E.clients.length), t("tbClients"), true) +
+      "</div>" +
+
+      '<div class="carte"><h2>' + esc(t("tbMoisTitre")) + "</h2>" +
+      graphiqueMois(sixDerniersMois()) + "</div>" +
+
+      '<div class="carte"><h2>' + esc(t("tbRepartition")) + "</h2>" +
+      repartitionStatuts() + "</div>" +
+
+      '<p class="titreSection">' + esc(t("tbActions")) + "</p>" +
+      '<div class="actions">' +
+      boutonAction(t("calculRapide"), "calcul", "eclair", "eclair") +
+      boutonAction(t("nouveauDevis"), "nouveauDevis", "devis") +
+      boutonAction(t("mesDevis"), "devis", "dossier") +
+      boutonAction(t("mesChantiers"), "phase2", "chantier") +
+      boutonAction(t("mesClients"), "clients", "clients") +
+      boutonAction(t("paiements"), "phase2", "paiement") +
+      boutonAction(t("parametres"), "parametres", "reglages") +
+      "</div>" +
+
+      '<div class="carte"><h2>' + esc(t("ceMois")) + "</h2>" +
+      tot(t("moisCrees"), String(duMois.length)) +
+      tot(t("moisAcceptes"), String(duMois.filter(function (d) { return d.statut === "ACCEPTE"; }).length)) +
+      tot(t("moisMontant"), argent(duMois.reduce(function (a, d) { return a + totaux(d).total; }, 0))) +
+      tot(t("moisRestant"), argent(aEncaisser), "fort") +
+      "</div>" +
+
+      '<div class="banniere noPrint"><span class="ico">' + svgIco("info", 20) +
+      '</span><div class="corps"><strong>' + esc(t("essaiTitre")) + "</strong><br>" +
+      esc(t("essaiTexte")) + "</div></div>";
+
+    return { titre: t("titre"), html: html };
+  };
+
+  /* ------------------------------------------------------------ clients */
+
+  VUES.clients = function (ctx) {
+    var q = (ctx.q || "").trim().toLowerCase();
+    var liste0 = E.clients.filter(function (c) {
+      return !q || (c.nom + " " + c.tel + " " + c.adresse).toLowerCase().indexOf(q) >= 0;
+    }).sort(function (a, b) { return a.nom.localeCompare(b.nom); });
+
+    var html =
+      champ(t("chercherClient"), '<input type="text" id="qClients" value="' + esc(ctx.q || "") + '" data-champ="rechercheClient">') +
+      bouton(t("ajouterClient"), "clientNouveau", "second", "＋") +
+      '<div class="pile">' +
+      (liste0.length ? liste0.map(function (c) {
+        var reste = E.devis.filter(function (d) { return d.clientId === c.id && d.statut === "ACCEPTE"; })
+          .reduce(function (a, d) { return a + totaux(d).reste; }, 0);
+        return '<button type="button" class="ligne" data-act="client" data-id="' + c.id + '">' +
+          '<span class="corps"><span class="nom">' + esc(c.nom) + "</span>" +
+          '<span class="detail">' + esc(c.tel || "—") + "</span></span>" +
+          '<span class="montant">' + esc(argent(reste)) + "</span></button>";
+      }).join("") : vide(t("aucunClient"))) +
+      "</div>";
+
+    return { titre: t("clients"), html: html };
+  };
+
+  VUES.client = function (ctx) {
+    var c = client(ctx.id);
+    if (!c) { return VUES.clients({}); }
+    var ses = E.devis.filter(function (d) { return d.clientId === c.id; });
+    var reste = ses.filter(function (d) { return d.statut === "ACCEPTE"; })
+      .reduce(function (a, d) { return a + totaux(d).reste; }, 0);
+
+    var html =
+      '<div class="carte">' +
+      tot(t("telephone"), c.tel || "—") +
+      tot(t("adresse"), c.adresse || "—") +
+      tot(t("notes"), c.notes || "—") +
+      "<hr>" +
+      tot(t("resteEncaisser"), argent(reste), "fort") +
+      "</div>" +
+      '<div class="rangeeBtn">' +
+      bouton(t("modifier"), "clientModifier", "second mini", "✎", ' data-id="' + c.id + '"') +
+      bouton(t("supprimer"), "clientSupprimer", "danger mini", "🗑", ' data-id="' + c.id + '"') +
+      "</div>" +
+      '<div class="carte"><h2>' + esc(t("devisDuClient")) + "</h2>" +
+      '<div class="pile">' +
+      (ses.length ? ses.map(ligneDevis).join("") : vide(t("aucunDevis"))) +
+      "</div></div>";
+
+    return { titre: c.nom, html: html };
+  };
+
+  VUES.clientForm = function (ctx) {
+    var c = ctx.id ? client(ctx.id) : { id: null, nom: "", tel: "", adresse: "", notes: "" };
+    if (!c) { return VUES.clients({}); }
+    var html =
+      '<div class="carte" id="formClient">' +
+      texte(t("nom"), c.nom, "cNom") +
+      texte(t("telephone"), c.tel, "cTel", 'inputmode="tel"') +
+      champ(t("adresse"), '<textarea data-champ="cAdresse">' + esc(c.adresse) + "</textarea>") +
+      champ(t("notes"), '<textarea data-champ="cNotes">' + esc(c.notes) + "</textarea>") +
+      '<p class="msgErreur" id="errClient" hidden>' + esc(t("nomObligatoire")) + "</p>" +
+      "</div>" +
+      bouton(t("enregistrer"), "clientEnregistrer", "", "💾", ' data-id="' + (c.id || "") + '"');
+    return { titre: c.id ? t("clientModifier") : t("clientNouveau"), html: html };
+  };
+
+  /* -------------------------------------------------------------- devis */
+
+  function ligneDevis(d) {
+    var c = client(d.clientId);
+    return '<button type="button" class="ligne" data-act="devis" data-id="' + d.id + '">' +
+      '<span class="corps"><span class="nom">' + esc(d.numero) + "</span>" +
+      '<span class="detail">' + esc(c ? c.nom : "—") + " · " + esc(dateCourte(d.date)) + "</span>" +
+      '<span class="montant">' + esc(argent(totaux(d).total)) + "</span></span>" +
+      '<span class="pastille p-' + d.statut + '">' + esc(t(d.statut)) + "</span></button>";
+  }
+
+  VUES.devis = function (ctx) {
+    var q = (ctx.q || "").trim().toLowerCase();
+    var statut = ctx.statut || null;
+    var periode = ctx.periode || "TOUTES";
+    var depuis = periode === "MOIS" ? debutMois() : (periode === "ANNEE" ? debutAnnee() : -Infinity);
+
+    var l = E.devis.filter(function (d) {
+      var c = client(d.clientId);
+      var texteRecherche = (d.numero + " " + (c ? c.nom : "") + " " + (d.adresse || "")).toLowerCase();
+      return (!statut || d.statut === statut) && d.date >= depuis && (!q || texteRecherche.indexOf(q) >= 0);
+    }).sort(function (a, b) { return b.date - a.date; });
+
+    var puces = '<div class="puces">' +
+      '<button type="button" class="puce" data-act="filtreStatut" data-id="" aria-pressed="' + (!statut) + '">' + esc(t("tous")) + "</button>" +
+      STATUTS.map(function (s) {
+        return '<button type="button" class="puce" data-act="filtreStatut" data-id="' + s + '" aria-pressed="' + (statut === s) + '">' + esc(t(s)) + "</button>";
+      }).join("") + "</div>";
+
+    var html =
+      champ(t("chercherDevis"), '<input type="text" id="qDevis" value="' + esc(ctx.q || "") + '" data-champ="rechercheDevis">') +
+      puces +
+      liste(t("periode"), "filtrePeriode", [
+        { v: "TOUTES", l: t("periodeToutes") },
+        { v: "MOIS", l: t("periodeMois") },
+        { v: "ANNEE", l: t("periodeAnnee") }
+      ], periode) +
+      bouton(t("nouveauDevis"), "nouveauDevis", "second", "＋") +
+      '<div class="pile">' +
+      (l.length ? l.map(ligneDevis).join("") : vide(t("aucunDevis"))) +
+      "</div>";
+
+    return { titre: t("devis"), html: html };
+  };
+
+  VUES.devisForm = function (ctx) {
+    var d = devis(ctx.id);
+    if (!d) { return VUES.devis({}); }
+    var c = client(d.clientId);
+
+    var pieces = (d.pieces || []).map(function (p) {
+      var s = surfaces(p);
+      return '<button type="button" class="ligne" data-act="piece" data-id="' + p.id + '">' +
+        '<span class="corps"><span class="nom">' + esc(p.nom) + "</span>" +
+        '<span class="detail">' + esc(dec(p.longueur) + " × " + dec(p.largeur) + " × " + dec(p.hauteur)) + "</span>" +
+        '<span class="detail">' + esc(t("surfaceNette") + " : " + m2(s.net) + " · " + t("surfacePlafond") + " : " + m2(s.plafond)) +
+        "</span></span><span aria-hidden=\"true\">›</span></button>";
+    }).join("");
+
+    var lignes = (d.lignes || []).map(function (li) {
+      var p = (d.pieces || []).filter(function (x) { return x.id === li.pieceId; })[0];
+      return '<button type="button" class="ligne" data-act="ligne" data-id="' + li.id + '">' +
+        '<span class="corps"><span class="nom">' + esc(li.designation) + "</span>" +
+        '<span class="detail">' + esc(dec(li.qte) + " " + t(li.unite) + " × " + argent(li.pu)) +
+        (p ? " · " + esc(p.nom) : "") + "</span>" +
+        '<span class="detail">' + esc(t(li.categorie)) + "</span></span>" +
+        '<span class="montant">' + esc(argent(n(li.qte) * n(li.pu))) + "</span></button>";
+    }).join("");
+
+    var html =
+      '<div class="carte"><h2>' + esc(t("etape1")) + "</h2>" +
+      liste(t("choisirClient"), "dClient",
+        [{ v: "", l: t("aucunClientSel") }].concat(E.clients.map(function (x) { return { v: x.id, l: x.nom }; })),
+        d.clientId || "") +
+      (c && c.tel ? '<p class="detail" style="color:var(--estompe);font-size:14px;margin:0 0 10px">' + esc(c.tel) + "</p>" : "") +
+      bouton(t("creerClient"), "clientNouveau", "second mini", "＋") +
+      "</div>" +
+
+      '<div class="carte"><h2>' + esc(t("etape2")) + "</h2>" +
+      tot(t("numero"), d.numero, "fort") +
+      champ(t("date"), '<input type="date" data-champ="dDate" value="' + pourInput(d.date) + '">') +
+      liste(t("typeChantier"), "dType", optsEnum(TYPES), d.typeChantier) +
+      champ(t("adresseChantier"), '<textarea data-champ="dAdresse">' + esc(d.adresse || "") + "</textarea>") +
+      liste(t("niveau"), "dNiveau", optsEnum(NIVEAUX), d.niveau) +
+      liste(t("statut"), "dStatut", optsEnum(STATUTS), d.statut) +
+      champ(t("notes"), '<textarea data-champ="dNotes">' + esc(d.notes || "") + "</textarea>") +
+      "</div>" +
+
+      '<div class="carte"><h2>' + esc(t("etape3")) + "</h2>" +
+      '<div class="pile">' + (pieces || vide(t("aucunePiece"))) + "</div>" +
+      '<div style="margin-top:10px">' + bouton(t("ajouterPiece"), "pieceNouvelle", "second", "＋") + "</div>" +
+      "</div>" +
+
+      '<div class="carte"><h2>' + esc(t("etape4")) + "</h2>" +
+      '<div class="pile">' + (lignes || vide(t("aucuneLigne"))) + "</div>" +
+      '<div style="margin-top:10px">' + bouton(t("ajouterLigne"), "ligneNouvelle", "second", "＋") + "</div>" +
+      "</div>" +
+
+      '<div class="carte" id="blocTotaux">' + htmlTotaux(d) + "</div>" +
+
+      '<div class="rangeeBtn">' +
+      bouton(t("apercu"), "apercu", "", "📄", ' data-id="' + d.id + '"') +
+      "</div>" +
+      '<div class="rangeeBtn">' +
+      bouton(t("dupliquer"), "devisDupliquer", "second mini", "⧉", ' data-id="' + d.id + '"') +
+      bouton(t("supprimer"), "devisSupprimer", "danger mini", "🗑", ' data-id="' + d.id + '"') +
+      "</div>" +
+      (d.statut === "ACCEPTE" ? bouton(t("convertirChantier"), "phase2", "second", "👷") : "");
+
+    return { titre: d.numero, html: html };
+  };
+
+  function htmlTotaux(d) {
+    var x = totaux(d);
+    return '<h2>' + esc(t("etape5")) + "</h2>" +
+      tot(t("stTravaux"), argent(x.travaux)) +
+      tot(t("stMateriaux"), argent(x.materiaux)) +
+      tot(t("mainOeuvre"), argent(x.mo)) +
+      tot(t("autresFrais"), argent(x.autres)) +
+      "<hr>" +
+      tot(t("sousTotal"), argent(x.sousTotal), "fort") +
+      nombre(t("remise"), saisie(d.remise), "dRemise") +
+      (n(d.remise) > x.sousTotal ? '<p class="msgErreur">' + esc(t("remiseTrop")) + "</p>" : "") +
+      tot(t("apresRemise"), argent(x.apresRemise)) +
+      '<div class="interrupteur"><span>' + esc(t("appliquerTva")) + "</span>" +
+      '<input type="checkbox" data-champ="dTva"' + (d.tvaActive ? " checked" : "") + "></div>" +
+      (d.tvaActive ? nombre(t("tauxTva"), saisie(d.tvaTaux), "dTvaTaux") + tot(t("tva"), argent(x.tva)) : "") +
+      "<hr>" +
+      tot(t("TOTAL"), argent(x.total), "grand") +
+      nombre(t("acompte"), saisie(d.acompte), "dAcompte") +
+      tot(t("dejaPaye"), argent(x.paye)) +
+      tot(t("resteAPayer"), argent(x.reste), "fort");
+  }
+
+  /* Redessine un bloc en rendant au champ actif EXACTEMENT ce que la personne
+     a tapé : sans cela, taper « 0, » repasserait par le formatage et viderait
+     le champ au milieu de la saisie. */
+  function redessinerBloc(idBloc, html) {
+    var bloc = document.getElementById(idBloc);
+    if (!bloc) { return; }
+    var actif = document.activeElement;
+    var champActif = actif && actif.dataset ? actif.dataset.champ : null;
+    var brut = champActif ? actif.value : null;
+    var pos = champActif ? actif.selectionStart : null;
+    bloc.innerHTML = html;
+    if (!champActif) { return; }
+    var suivant = bloc.querySelector('[data-champ="' + champActif + '"]');
+    if (!suivant) { return; }
+    if (brut !== null && suivant.value !== brut) { suivant.value = brut; }
+    suivant.focus();
+    try { suivant.setSelectionRange(pos, pos); } catch (e) {}
+  }
+
+  function majTotaux() {
+    var d = devis(vue.ctx.id);
+    if (d) { redessinerBloc("blocTotaux", htmlTotaux(d)); }
+  }
+
+  /* ------------------------------------------------------------- pièce */
+
+  VUES.pieceForm = function (ctx) {
+    var d = devis(ctx.devisId);
+    if (!d) { return VUES.devis({}); }
+    var p = (d.pieces || []).filter(function (x) { return x.id === ctx.id; })[0];
+    var nouvelle = !p;
+    if (!p) { p = piece(t("piece") + " " + ((d.pieces || []).length + 1)); }
+    ctx.brouillon = p;
+
+    var travaux = (d.lignes || []).filter(function (li) { return li.pieceId === p.id; });
+
+    var html =
+      '<div class="carte"><h2>' + esc(t("dimensions")) + "</h2>" +
+      texte(t("nomPiece"), p.nom, "pNom") +
+      '<div class="grille3">' +
+      nombre(t("longueur"), saisie(p.longueur), "pLongueur") +
+      nombre(t("largeur"), saisie(p.largeur), "pLargeur") +
+      nombre(t("hauteur"), saisie(p.hauteur), "pHauteur") +
+      "</div>" +
+      '<p class="msgErreur" id="errPiece" hidden></p>' +
+      "</div>" +
+
+      '<div class="carte"><h2>' + esc(t("ouvertures")) + "</h2>" +
+      '<p style="margin:0 0 6px;font-weight:600">' + esc(t("portes")) + "</p>" +
+      '<div class="grille3">' +
+      entier(t("nombre"), String(p.portes || 0), "pPortes") +
+      nombre(t("largeurO"), saisie(p.portesL), "pPortesL") +
+      nombre(t("hauteurO"), saisie(p.portesH), "pPortesH") +
+      "</div>" +
+      '<p style="margin:10px 0 6px;font-weight:600">' + esc(t("fenetres")) + "</p>" +
+      '<div class="grille3">' +
+      entier(t("nombre"), String(p.fenetres || 0), "pFenetres") +
+      nombre(t("largeurO"), saisie(p.fenetresL), "pFenetresL") +
+      nombre(t("hauteurO"), saisie(p.fenetresH), "pFenetresH") +
+      "</div></div>" +
+
+      '<div class="carte" id="blocSurfaces">' + htmlSurfaces(p) + "</div>" +
+
+      (nouvelle ? "" :
+        '<div class="carte"><h2>' + esc(t("travauxPiece")) + "</h2>" +
+        '<div class="pile">' +
+        (travaux.length ? travaux.map(function (li) {
+          return '<button type="button" class="ligne" data-act="ligne" data-id="' + li.id + '">' +
+            '<span class="corps"><span class="nom">' + esc(li.designation) + "</span>" +
+            '<span class="detail">' + esc(dec(li.qte) + " " + t(li.unite) + " × " + argent(li.pu)) + "</span></span>" +
+            '<span class="montant">' + esc(argent(n(li.qte) * n(li.pu))) + "</span></button>";
+        }).join("") : vide(t("aucunTravail"))) +
+        "</div>" +
+        '<div style="margin-top:10px">' + bouton(t("ajouterTravail"), "travailNouveau", "second", "＋") + "</div>" +
+        "</div>") +
+
+      bouton(t("enregistrer"), "pieceEnregistrer", "", "💾") +
+      (nouvelle ? "" : bouton(t("supprimer"), "pieceSupprimer", "danger", "🗑", ' data-id="' + p.id + '"'));
+
+    return { titre: nouvelle ? t("pieceNouvelle") : p.nom, html: html };
+  };
+
+  function htmlSurfaces(p) {
+    var s = surfaces(p);
+    var manuel = s.manuelMur || s.manuelPlafond;
+    return '<h2>' + esc(t("surfaces")) + "</h2>" +
+      tot(t("surfaceMurs"), m2(s.murs)) +
+      tot(t("surfaceOuvertures"), m2(s.ouvertures)) +
+      "<hr>" +
+      tot(t("surfaceNette"), m2(s.net), "fort") +
+      tot(t("surfacePlafond"), m2(s.plafond), "fort") +
+      (s.depassement ? '<div class="note"><span class="ico">' + svgIco("alerte", 20) + '</span><span>' + esc(t("ouverturesTrop")) + "</span></div>" : "") +
+      '<div class="interrupteur" style="margin-top:12px"><span>' + esc(t("corriger")) + "</span>" +
+      '<input type="checkbox" data-champ="pManuel"' + (manuel ? " checked" : "") + "></div>" +
+      (manuel ?
+        nombre(t("murCorrige"), s.manuelMur ? saisie(p.murManuel) : dec(s.net), "pMurManuel") +
+        nombre(t("plafondCorrige"), s.manuelPlafond ? saisie(p.plafondManuel) : dec(s.plafond), "pPlafondManuel") : "");
+  }
+
+  function majSurfaces() {
+    if (vue.ctx.brouillon) {
+      redessinerBloc("blocSurfaces", htmlSurfaces(vue.ctx.brouillon));
+    }
+  }
+
+  /* ------------------------------------------------------------ tarifs */
+
+  VUES.tarifs = function (ctx) {
+    var niveau = ctx.niveau || "STANDARD";
+    var l = E.tarifs.filter(function (x) { return x.niveau === niveau; });
+    var html =
+      '<div class="note"><span class="ico">' + svgIco("idee", 20) + '</span><span>' + esc(t("prixExemples")) + "</span></div>" +
+      '<div class="puces">' + NIVEAUX.map(function (nv) {
+        return '<button type="button" class="puce" data-act="filtreNiveau" data-id="' + nv + '" aria-pressed="' + (niveau === nv) + '">' + esc(t(nv)) + "</button>";
+      }).join("") + "</div>" +
+      '<div class="rangeeBtn">' +
+      bouton(t("tarifNouveau"), "tarifNouveau", "second mini", "＋", ' data-id="' + niveau + '"') +
+      bouton(t("reinit"), "tarifsReinit", "danger mini", "↺") +
+      "</div>" +
+      '<div class="pile">' +
+      (l.length ? l.map(function (x) {
+        return '<button type="button" class="ligne" data-act="tarif" data-id="' + x.id + '">' +
+          '<span class="corps"><span class="nom">' + esc(x.label) + "</span>" +
+          '<span class="detail">' + esc(t(x.categorie) + " · " + t(x.unite)) + "</span></span>" +
+          '<span class="montant">' + esc(argent(x.prix)) + "</span></button>";
+      }).join("") : vide(t("aucunTarif"))) +
+      "</div>";
+    return { titre: t("tarifs"), html: html };
+  };
+
+  /* ------------------------------------------------------ calcul rapide */
+
+  VUES.calcul = function (ctx) {
+    var f = ctx.f || (ctx.f = {
+      longueur: "5", largeur: "4", hauteur: "2,80", portes: "1", fenetres: "2",
+      couches: String(E.params.couches || 2), prix: "450",
+      rendement: saisie(E.params.rendement || 10) || "10", plafond: false
+    });
+
+    var html =
+      '<div class="carte"><h2>' + esc(t("dimensions")) + "</h2>" +
+      '<div class="grille3">' +
+      nombre(t("longueur"), f.longueur, "qLongueur") +
+      nombre(t("largeur"), f.largeur, "qLargeur") +
+      nombre(t("hauteur"), f.hauteur, "qHauteur") +
+      "</div>" +
+      '<div class="grille2">' +
+      entier(t("portes"), f.portes, "qPortes") +
+      entier(t("fenetres"), f.fenetres, "qFenetres") +
+      "</div>" +
+      '<div class="grille2">' +
+      entier(t("couches"), f.couches, "qCouches") +
+      nombre(t("rendement"), f.rendement, "qRendement") +
+      "</div>" +
+      nombre(t("prixM2"), f.prix, "qPrix") +
+      '<div class="interrupteur"><span>' + esc(t("inclurePlafond")) + "</span>" +
+      '<input type="checkbox" data-champ="qPlafond"' + (f.plafond ? " checked" : "") + "></div>" +
+      "</div>" +
+      '<div class="carte" id="blocCalcul">' + htmlCalcul(f) + "</div>" +
+      '<div class="note"><span class="ico">' + svgIco("alerte", 20) + '</span><span>' + esc(t("avertEstimation")) + "</span></div>" +
+      bouton(t("creerDevisDepuis"), "calculVersDevis", "", "🧾");
+
+    return { titre: t("calculTitre"), html: html };
+  };
+
+  function objetPieceCalcul(f) {
+    var p = piece("");
+    p.longueur = n(f.longueur); p.largeur = n(f.largeur); p.hauteur = n(f.hauteur);
+    p.portes = parseInt(f.portes, 10) || 0;
+    p.fenetres = parseInt(f.fenetres, 10) || 0;
+    return p;
+  }
+
+  function htmlCalcul(f) {
+    var s = surfaces(objetPieceCalcul(f));
+    var aire = f.plafond ? s.net + s.plafond : s.net;
+    var couches = parseInt(f.couches, 10) || 0;
+    var L = litres(aire, couches, n(f.rendement));
+    var pots = conditionnement(L);
+    var prix = aire * n(f.prix);
+    return '<h2>' + esc(t("resultat")) + "</h2>" +
+      tot(t("surfaceMurs"), m2(s.murs)) +
+      tot(t("surfaceOuvertures"), m2(s.ouvertures)) +
+      tot(t("surfaceNette"), m2(s.net), "fort") +
+      tot(t("surfacePlafond"), m2(s.plafond)) +
+      "<hr>" +
+      tot(t("quantitePeinture"), lit(L), "fort") +
+      (pots.length ? tot(t("potsProposes"), pots.map(function (x) { return x.nb + " × " + dec(x.taille) + " L"; }).join(" + ")) : "") +
+      tot(t("prixEstime"), argent(prix)) +
+      "<hr>" +
+      tot(t("totalEstimatif"), argent(prix), "grand");
+  }
+
+  /* -------------------------------------------------------- paramètres */
+
+  VUES.parametres = function () {
+    var p = E.params;
+    var html =
+      '<div class="carte"><h2>' + esc(t("paramEntreprise")) + "</h2>" +
+      texte(t("nomEntreprise"), p.entreprise, "sEntreprise") +
+      texte(t("telephone"), p.tel, "sTel", 'inputmode="tel"') +
+      champ(t("adresse"), '<textarea data-champ="sAdresse">' + esc(p.adresse) + "</textarea>") +
+      texte(t("email"), p.email, "sEmail") +
+      "</div>" +
+      '<div class="carte"><h2>' + esc(t("parametres")) + "</h2>" +
+      texte(t("devise"), p.devise, "sDevise") +
+      '<div class="interrupteur"><span>' + esc(t("appliquerTva")) + "</span>" +
+      '<input type="checkbox" data-champ="sTva"' + (p.tvaActive ? " checked" : "") + "></div>" +
+      nombre(t("tauxTva"), saisie(p.tvaTaux), "sTvaTaux") +
+      entier(t("validite"), String(p.validite), "sValidite") +
+      nombre(t("rendementDefaut"), saisie(p.rendement), "sRendement") +
+      entier(t("couchesDefaut"), String(p.couches), "sCouches") +
+      champ(t("conditions"), '<textarea data-champ="sConditions" style="min-height:120px">' + esc(p.conditions) + "</textarea>") +
+      "</div>" +
+      bouton(t("tarifs"), "tarifs", "second", "🏷") +
+      '<div class="carte"><h2>' + esc(t("donnees")) + "</h2>" +
+      '<div class="rangeeBtn">' +
+      bouton(t("exporter"), "exporter", "second mini", "⬆") +
+      bouton(t("importer"), "importer", "second mini", "⬇") +
+      "</div>" +
+      '<div style="margin-top:10px">' + bouton(t("toutEffacer"), "toutEffacer", "danger mini", "🗑") + "</div>" +
+      "</div>";
+    return { titre: t("parametres"), html: html };
+  };
+
+  /* ------------------------------------------------------------ aperçu */
+
+  VUES.apercu = function (ctx) {
+    var d = devis(ctx.id);
+    if (!d) { return VUES.devis({}); }
+    var c = client(d.clientId);
+    var x = totaux(d);
+    var p = E.params;
+
+    var rangs = (d.lignes || []).map(function (li) {
+      var pi = (d.pieces || []).filter(function (y) { return y.id === li.pieceId; })[0];
+      return "<tr><td>" + esc(li.designation) + (pi ? ' <span style="color:#5E6C6A">(' + esc(pi.nom) + ")</span>" : "") +
+        '</td><td class="n">' + esc(dec(li.qte)) + "</td><td>" + esc(t(li.unite)) +
+        '</td><td class="n">' + esc(nfMontant.format(arrondi(li.pu))) +
+        '</td><td class="n">' + esc(nfMontant.format(arrondi(n(li.qte) * n(li.pu)))) + "</td></tr>";
+    }).join("");
+
+    var html =
+      '<div class="rangeeBtn noPrint">' +
+      bouton(t("imprimer"), "imprimer", "second mini", "🖨") +
+      bouton(t("partager"), "partager", "second mini", "↗", ' data-id="' + d.id + '"') +
+      "</div>" +
+      '<div class="feuille">' +
+      '<div class="enTete"><div>' +
+      '<div class="marque">' + esc(p.entreprise || "PEINTRE PRO DZ") + "</div>" +
+      (p.tel ? "<div>" + esc(p.tel) + "</div>" : "") +
+      (p.adresse ? "<div>" + esc(p.adresse) + "</div>" : "") +
+      (p.email ? "<div>" + esc(p.email) + "</div>" : "") +
+      '</div><div class="num">' + esc(d.numero) + "<div style=\"font-size:13px;font-family:var(--texte)\">" +
+      esc(dateCourte(d.date)) + "</div></div></div>" +
+
+      "<h3>" + esc(t("pourClient")) + "</h3>" +
+      "<div>" + esc(c ? c.nom : "—") + (c && c.tel ? " · " + esc(c.tel) : "") + "</div>" +
+      "<h3>" + esc(t("chantier")) + "</h3>" +
+      "<div>" + esc(t(d.typeChantier)) + (d.adresse ? " — " + esc(d.adresse) : "") + "</div>" +
+
+      '<div class="tableWrap"><table><thead><tr>' +
+      "<th>" + esc(t("designation")) + '</th><th class="n">' + esc(t("quantite")) +
+      "</th><th>" + esc(t("unite")) + '</th><th class="n">' + esc(t("prixUnitaire")) +
+      '</th><th class="n">' + esc(t("total")) + "</th>" +
+      "</tr></thead><tbody>" + (rangs || '<tr><td colspan="5">—</td></tr>') + "</tbody></table></div>" +
+
+      '<div class="recap">' +
+      tot(t("sousTotal"), argent(x.sousTotal)) +
+      (x.remise > 0 ? tot(t("remise"), "− " + argent(x.remise)) : "") +
+      (d.tvaActive ? tot(t("tva") + " " + dec(d.tvaTaux) + " %", argent(x.tva)) : "") +
+      tot(t("TOTAL"), argent(x.total), "grand") +
+      (x.acompte > 0 ? tot(t("acompte"), argent(x.acompte)) : "") +
+      (x.paye > 0 ? tot(t("dejaPaye"), argent(x.paye)) : "") +
+      tot(t("resteAPayer"), argent(x.reste), "fort") +
+      "</div>" +
+
+      "<h3>" + esc(t("conditionsTitre")) + "</h3>" +
+      '<div style="white-space:pre-line">' + esc(p.conditions || "") + "</div>" +
+      "<div>" + esc(t("valableJours", { n: d.validite || p.validite || 30 })) + "</div>" +
+
+      '<div class="signature"><div>' + esc(t("signatureClient")) + "</div><div>" + esc(t("signatureEntreprise")) + "</div></div>" +
+      "</div>" +
+      '<p class="pdp noPrint">' + esc(t("avertEstimation")) + "</p>";
+
+    return { titre: t("apercu"), html: html };
+  };
+
+  /* =================================================================
+     8. Fenêtres modales
+     ================================================================= */
+
+  function fermerModale() { document.getElementById("modale").innerHTML = ""; }
+
+  function ouvrirModale(html) {
+    document.getElementById("modale").innerHTML =
+      '<div class="voile" data-act="voile"><div class="modal" role="dialog" aria-modal="true">' + html + "</div></div>";
+  }
+
+  function confirmer(titre, message, onOui) {
+    attenteConfirmation = onOui;
+    ouvrirModale(
+      "<h2>" + esc(titre) + "</h2><p>" + esc(message) + "</p>" +
+      '<div class="rangeeBtn" style="margin-top:16px">' +
+      bouton(t("confirmer"), "confirmerOui", "danger mini") +
+      bouton(t("annuler"), "fermerModale", "second mini") +
+      "</div>"
+    );
+  }
+  var attenteConfirmation = null;
+
+  function info(message) {
+    ouvrirModale("<p>" + esc(message) + "</p>" +
+      '<div class="rangeeBtn" style="margin-top:16px">' + bouton(t("ok"), "fermerModale", "second mini") + "</div>");
+  }
+
+  var ligneEnCours = null;
+
+  function modaleLigne(devisId, ligneId, pieceId) {
+    var d = devis(devisId);
+    if (!d) { return; }
+    var existante = (d.lignes || []).filter(function (x) { return x.id === ligneId; })[0];
+    var p = (d.pieces || []).filter(function (x) { return x.id === (existante ? existante.pieceId : pieceId); })[0];
+    var s = p ? surfaces(p) : null;
+
+    ligneEnCours = existante
+      ? { id: existante.id, devisId: devisId, pieceId: existante.pieceId, categorie: existante.categorie,
+          designation: existante.designation, unite: existante.unite, qte: saisie(existante.qte), pu: saisie(existante.pu) }
+      : { id: null, devisId: devisId, pieceId: pieceId || null, categorie: "TRAVAUX",
+          designation: "", unite: "M2", qte: s ? dec(s.net) : "", pu: "" };
+
+    var tarifs = E.tarifs.filter(function (x) { return x.niveau === d.niveau; });
+    var bases = s ? [
+      { l: t("baseMurs"), v: dec(s.net) },
+      { l: t("basePlafond"), v: dec(s.plafond) },
+      { l: t("baseMursPlafond"), v: dec(s.net + s.plafond) },
+      { l: t("basePortes"), v: String(p.portes || 0) },
+      { l: t("baseFenetres"), v: String(p.fenetres || 0) }
+    ] : [];
+
+    ouvrirModale(
+      "<h2>" + esc(existante ? t("ligneModifier") : t("ligneAjouter")) + "</h2>" +
+      liste(t("depuisTarifs"), "lTarif",
+        [{ v: "", l: "—" }].concat(tarifs.map(function (x) {
+          return { v: x.id, l: x.label + " — " + nfMontant.format(x.prix) + " " + E.params.devise };
+        })), "") +
+      texte(t("designation"), ligneEnCours.designation, "lDesignation") +
+      liste(t("categorie"), "lCategorie", optsEnum(CATEGORIES), ligneEnCours.categorie) +
+      liste(t("unite"), "lUnite", optsEnum(UNITES), ligneEnCours.unite) +
+      (bases.length ?
+        '<p style="font-size:13px;color:var(--estompe);margin:0 0 6px">' + esc(t("baseQuantite")) + "</p>" +
+        '<div class="puces" style="margin-bottom:12px">' + bases.map(function (b) {
+          return '<button type="button" class="puce" data-act="base" data-id="' + esc(b.v) + '">' + esc(b.l) + "</button>";
+        }).join("") + "</div>" : "") +
+      nombre(t("quantite"), ligneEnCours.qte, "lQte") +
+      nombre(t("prixUnitaire"), ligneEnCours.pu, "lPu") +
+      '<div id="totalLigne">' + tot(t("total"), argent(n(ligneEnCours.qte) * n(ligneEnCours.pu)), "fort") + "</div>" +
+      '<p class="msgErreur" id="errLigne" hidden>' + esc(t("designationObligatoire")) + "</p>" +
+      '<div class="rangeeBtn" style="margin-top:12px">' +
+      bouton(t("enregistrer"), "ligneEnregistrer", "mini") +
+      bouton(t("annuler"), "fermerModale", "second mini") +
+      (existante ? bouton(t("supprimer"), "ligneSupprimer", "danger mini", "", ' data-id="' + existante.id + '"') : "") +
+      "</div>"
+    );
+  }
+
+  var tarifEnCours = null;
+
+  function modaleTarif(tarifId, niveau) {
+    var x = E.tarifs.filter(function (y) { return y.id === tarifId; })[0];
+    tarifEnCours = x
+      ? { id: x.id, label: x.label, prix: saisie(x.prix), unite: x.unite, categorie: x.categorie, niveau: x.niveau }
+      : { id: null, label: "", prix: "", unite: "M2", categorie: "TRAVAUX", niveau: niveau || "STANDARD" };
+
+    ouvrirModale(
+      "<h2>" + esc(x ? t("tarifModifier") : t("tarifNouveau")) + "</h2>" +
+      texte(t("prestation"), tarifEnCours.label, "tLabel") +
+      nombre(t("prix") + " (" + E.params.devise + ")", tarifEnCours.prix, "tPrix") +
+      liste(t("unite"), "tUnite", optsEnum(UNITES), tarifEnCours.unite) +
+      liste(t("categorie"), "tCategorie", optsEnum(CATEGORIES), tarifEnCours.categorie) +
+      liste(t("niveau"), "tNiveau", optsEnum(NIVEAUX), tarifEnCours.niveau) +
+      '<p class="msgErreur" id="errTarif" hidden>' + esc(t("designationObligatoire")) + "</p>" +
+      '<div class="rangeeBtn" style="margin-top:12px">' +
+      bouton(t("enregistrer"), "tarifEnregistrer", "mini") +
+      bouton(t("annuler"), "fermerModale", "second mini") +
+      (x ? bouton(t("supprimer"), "tarifSupprimer", "danger mini", "", ' data-id="' + x.id + '"') : "") +
+      "</div>"
+    );
+  }
+
+  /* =================================================================
+     9. Actions
+     ================================================================= */
+
+  var A = {};
+
+  A.retour = retour;
+
+  A.langue = function () {
+    langue = langue === "fr" ? "ar" : "fr";
+    appliquerLangue();
+    appliquerTheme();
+    dessiner();
+  };
+
+  A.theme = function () {
+    theme = theme === "auto" ? "clair" : (theme === "clair" ? "sombre" : "auto");
+    appliquerTheme();
+  };
+
+  /** Lecture d'une barre du graphique, au toucher comme au survol. */
+  A.barreMois = function (index) {
+    var mois = sixDerniersMois()[parseInt(index, 10)];
+    var info = document.getElementById("infoGraphe");
+    if (mois && info) {
+      info.innerHTML = esc(mois.label) + " : <b>" + esc(argent(mois.valeur)) + "</b>";
+    }
+  };
+
+  A.clients = function () { aller("clients", {}); };
+  A.devis = function (id) { id ? aller("devisForm", { id: id }) : aller("devis", {}); };
+  A.client = function (id) { aller("client", { id: id }); };
+  A.tarifs = function () { aller("tarifs", {}); };
+  A.calcul = function () { aller("calcul", {}); };
+  A.parametres = function () { aller("parametres", {}); };
+  A.phase2 = function () { info(t("phase2")); };
+  A.fermerModale = fermerModale;
+  A.voile = function (id, el, ev) { if (ev.target.classList.contains("voile")) { fermerModale(); } };
+
+  A.confirmerOui = function () {
+    var f = attenteConfirmation;
+    attenteConfirmation = null;
+    fermerModale();
+    if (f) { f(); }
+  };
+
+  A.effacerExemples = function () {
+    confirmer(t("toutEffacerT"), t("actionDefinitive"), function () {
+      E.clients = []; E.devis = []; E.exemple = false;
+      sauver(); dessiner();
+    });
+  };
+
+  A.toutEffacer = function () {
+    confirmer(t("toutEffacerT"), t("actionDefinitive"), function () {
+      E = donneesExemple();
+      E.clients = []; E.devis = []; E.exemple = false;
+      sauver();
+      pile = [];
+      vue = { nom: "accueil", ctx: {} };
+      dessiner();
+    });
+  };
+
+  /* --------------------------------------------------------- clients */
+
+  A.clientNouveau = function () { aller("clientForm", {}); };
+  A.clientModifier = function (id) { aller("clientForm", { id: id }); };
+
+  A.clientEnregistrer = function (id) {
+    var nom = valeur("cNom");
+    if (!nom.trim()) {
+      var err = document.getElementById("errClient");
+      if (err) { err.hidden = false; }
+      return;
+    }
+    var c = id ? client(id) : null;
+    if (c) {
+      c.nom = nom.trim(); c.tel = valeur("cTel").trim();
+      c.adresse = valeur("cAdresse").trim(); c.notes = valeur("cNotes").trim();
+    } else {
+      c = { id: id2(), nom: nom.trim(), tel: valeur("cTel").trim(), adresse: valeur("cAdresse").trim(), notes: valeur("cNotes").trim() };
+      E.clients.push(c);
+    }
+    sauver();
+    retour();
+  };
+
+  function id2() { return id(); }
+
+  A.clientSupprimer = function (cid) {
+    if (E.devis.some(function (d) { return d.clientId === cid; })) {
+      info(t("clientAvecDevis"));
+      return;
+    }
+    confirmer(t("supprimerClientT"), t("actionDefinitive"), function () {
+      E.clients = E.clients.filter(function (c) { return c.id !== cid; });
+      sauver();
+      retour();
+    });
+  };
+
+  /* ----------------------------------------------------------- devis */
+
+  A.nouveauDevis = function () {
+    var d = {
+      id: id(), numero: prochainNumero(), clientId: E.clients.length === 1 ? E.clients[0].id : null,
+      typeChantier: "APPARTEMENT", adresse: "", date: Date.now(), notes: "",
+      niveau: "STANDARD", statut: "BROUILLON", remise: 0,
+      tvaActive: !!E.params.tvaActive, tvaTaux: E.params.tvaTaux, acompte: 0,
+      validite: E.params.validite, pieces: [], lignes: [], paiements: []
+    };
+    E.devis.push(d);
+    sauver();
+    aller("devisForm", { id: d.id });
+  };
+
+  A.devisSupprimer = function (did) {
+    confirmer(t("supprimerDevisT"), t("supprimerDevisM"), function () {
+      E.devis = E.devis.filter(function (d) { return d.id !== did; });
+      sauver();
+      pile = [];
+      vue = { nom: "devis", ctx: {} };
+      dessiner();
+    });
+  };
+
+  A.devisDupliquer = function (did) {
+    var src = devis(did);
+    if (!src) { return; }
+    var copie = JSON.parse(JSON.stringify(src));
+    copie.id = id();
+    copie.numero = prochainNumero();
+    copie.statut = "BROUILLON";
+    copie.acompte = 0;
+    copie.paiements = [];
+    copie.date = Date.now();
+    var map = {};
+    copie.pieces.forEach(function (p) { var ancien = p.id; p.id = id(); map[ancien] = p.id; });
+    copie.lignes.forEach(function (l) { l.id = id(); l.pieceId = l.pieceId ? (map[l.pieceId] || null) : null; });
+    E.devis.push(copie);
+    sauver();
+    aller("devisForm", { id: copie.id });
+  };
+
+  A.filtreStatut = function (s) {
+    vue.ctx.statut = s || null;
+    dessiner();
+  };
+  A.apercu = function (did) { aller("apercu", { id: did }); };
+
+  A.imprimer = function () { try { window.print(); } catch (e) { info(t("phase2")); } };
+
+  A.partager = function (did) {
+    var d = devis(did);
+    if (!d) { return; }
+    var c = client(d.clientId);
+    var x = totaux(d);
+    var texteDevis = (E.params.entreprise || "PEINTRE PRO DZ") + "\n" +
+      d.numero + " — " + dateCourte(d.date) + "\n" +
+      (c ? t("pourClient") + " : " + c.nom + "\n" : "") +
+      t("TOTAL") + " : " + argent(x.total) + "\n" +
+      (x.acompte ? t("acompte") + " : " + argent(x.acompte) + "\n" : "") +
+      t("resteAPayer") + " : " + argent(x.reste);
+
+    if (navigator.share) {
+      navigator.share({ title: d.numero, text: texteDevis }).catch(function () {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(texteDevis).then(function () { info(t("copieDansPresse")); },
+        function () { info(texteDevis); });
+    } else {
+      info(texteDevis);
+    }
+  };
+
+  /* ---------------------------------------------------------- pièces */
+
+  A.pieceNouvelle = function () { aller("pieceForm", { devisId: vue.ctx.id }); };
+  A.piece = function (pid) { aller("pieceForm", { devisId: vue.ctx.id, id: pid }); };
+
+  A.pieceEnregistrer = function () {
+    if (!enregistrerPiece()) { return; }
+    retour();
+  };
+
+  function enregistrerPiece() {
+    var d = devis(vue.ctx.devisId);
+    var p = vue.ctx.brouillon;
+    if (!d || !p) { return false; }
+    var err = document.getElementById("errPiece");
+    var s = surfaces(p);
+    if (!String(p.nom).trim()) {
+      if (err) { err.textContent = t("nomPieceObligatoire"); err.hidden = false; }
+      return false;
+    }
+    if (!s.manuelMur && (n(p.longueur) <= 0 || n(p.largeur) <= 0 || n(p.hauteur) <= 0)) {
+      if (err) { err.textContent = t("dimObligatoires"); err.hidden = false; }
+      return false;
+    }
+    if (err) { err.hidden = true; }
+    var existante = (d.pieces || []).filter(function (x) { return x.id === p.id; })[0];
+    if (!existante) { d.pieces.push(p); vue.ctx.id = p.id; }
+    sauver();
+    return true;
+  }
+
+  A.pieceSupprimer = function (pid) {
+    confirmer(t("supprimerPieceT"), t("supprimerPieceM"), function () {
+      var d = devis(vue.ctx.devisId);
+      if (!d) { return; }
+      d.pieces = d.pieces.filter(function (p) { return p.id !== pid; });
+      d.lignes = d.lignes.filter(function (l) { return l.pieceId !== pid; });
+      sauver();
+      retour();
+    });
+  };
+
+  A.travailNouveau = function () {
+    if (!enregistrerPiece()) { return; }
+    modaleLigne(vue.ctx.devisId, null, vue.ctx.brouillon.id);
+  };
+
+  /* ---------------------------------------------------------- lignes */
+
+  A.ligneNouvelle = function () { modaleLigne(vue.ctx.id, null, null); };
+
+  A.ligne = function (lid) {
+    var did = vue.nom === "pieceForm" ? vue.ctx.devisId : vue.ctx.id;
+    modaleLigne(did, lid, null);
+  };
+
+  A.base = function (valeurBase) {
+    var champQte = document.querySelector('[data-champ="lQte"]');
+    if (champQte) {
+      champQte.value = valeurBase;
+      ligneEnCours.qte = valeurBase;
+      majTotalLigne();
+    }
+  };
+
+  A.ligneEnregistrer = function () {
+    var d = devis(ligneEnCours.devisId);
+    if (!d) { return; }
+    if (!String(ligneEnCours.designation).trim()) {
+      var err = document.getElementById("errLigne");
+      if (err) { err.hidden = false; }
+      return;
+    }
+    var donnee = {
+      categorie: ligneEnCours.categorie,
+      designation: String(ligneEnCours.designation).trim(),
+      unite: ligneEnCours.unite,
+      qte: Math.max(0, n(ligneEnCours.qte)),
+      pu: Math.max(0, n(ligneEnCours.pu))
+    };
+    if (ligneEnCours.id) {
+      var l = d.lignes.filter(function (x) { return x.id === ligneEnCours.id; })[0];
+      if (l) { Object.keys(donnee).forEach(function (k) { l[k] = donnee[k]; }); }
+    } else {
+      donnee.id = id();
+      donnee.pieceId = ligneEnCours.pieceId || null;
+      d.lignes.push(donnee);
+    }
+    sauver();
+    fermerModale();
+    dessiner();
+  };
+
+  A.ligneSupprimer = function (lid) {
+    var d = devis(ligneEnCours.devisId);
+    if (!d) { return; }
+    d.lignes = d.lignes.filter(function (x) { return x.id !== lid; });
+    sauver();
+    fermerModale();
+    dessiner();
+  };
+
+  function majTotalLigne() {
+    var bloc = document.getElementById("totalLigne");
+    if (bloc) {
+      bloc.innerHTML = tot(t("total"), argent(n(ligneEnCours.qte) * n(ligneEnCours.pu)), "fort");
+    }
+  }
+
+  /* ---------------------------------------------------------- tarifs */
+
+  A.filtreNiveau = function (nv) { vue.ctx.niveau = nv; dessiner(); };
+  A.tarifNouveau = function (nv) { modaleTarif(null, nv); };
+  A.tarif = function (tid) { modaleTarif(tid, null); };
+
+  A.tarifEnregistrer = function () {
+    if (!String(tarifEnCours.label).trim()) {
+      var err = document.getElementById("errTarif");
+      if (err) { err.hidden = false; }
+      return;
+    }
+    if (tarifEnCours.id) {
+      var x = E.tarifs.filter(function (y) { return y.id === tarifEnCours.id; })[0];
+      if (x) {
+        x.label = String(tarifEnCours.label).trim();
+        x.prix = Math.max(0, n(tarifEnCours.prix));
+        x.unite = tarifEnCours.unite;
+        x.categorie = tarifEnCours.categorie;
+        x.niveau = tarifEnCours.niveau;
+      }
+    } else {
+      E.tarifs.push({
+        id: id(), label: String(tarifEnCours.label).trim(), prix: Math.max(0, n(tarifEnCours.prix)),
+        unite: tarifEnCours.unite, categorie: tarifEnCours.categorie, niveau: tarifEnCours.niveau
+      });
+    }
+    sauver();
+    fermerModale();
+    dessiner();
+  };
+
+  A.tarifSupprimer = function (tid) {
+    E.tarifs = E.tarifs.filter(function (x) { return x.id !== tid; });
+    sauver();
+    fermerModale();
+    dessiner();
+  };
+
+  A.tarifsReinit = function () {
+    confirmer(t("reinitTarifsT"), t("reinitTarifsM"), function () {
+      E.tarifs = tarifsParDefaut();
+      sauver();
+      dessiner();
+    });
+  };
+
+  /* ---------------------------------------------------- calcul rapide */
+
+  A.calculVersDevis = function () {
+    var f = vue.ctx.f;
+    var p = objetPieceCalcul(f);
+    p.nom = t("piece") + " 1";
+    var s = surfaces(p);
+    var aire = f.plafond ? s.net + s.plafond : s.net;
+    var couches = parseInt(f.couches, 10) || 2;
+
+    var d = {
+      id: id(), numero: prochainNumero(), clientId: E.clients.length === 1 ? E.clients[0].id : null,
+      typeChantier: "APPARTEMENT", adresse: "", date: Date.now(), notes: "",
+      niveau: "STANDARD", statut: "BROUILLON", remise: 0,
+      tvaActive: !!E.params.tvaActive, tvaTaux: E.params.tvaTaux, acompte: 0,
+      validite: E.params.validite,
+      pieces: [p],
+      lignes: [{
+        id: id(), pieceId: p.id, categorie: "TRAVAUX",
+        designation: (langue === "ar" ? "دهن " + couches + " طبقة" : "Peinture " + couches + " couche(s)"),
+        unite: "M2", qte: arrondi(aire), pu: n(f.prix)
+      }],
+      paiements: []
+    };
+    E.devis.push(d);
+    sauver();
+    aller("devisForm", { id: d.id });
+  };
+
+  /* ------------------------------------------------------ export JSON */
+
+  A.exporter = function () {
+    var json = JSON.stringify(E, null, 2);
+    ouvrirModale(
+      "<h2>" + esc(t("exporter")) + "</h2><p>" + esc(t("exporterM")) + "</p>" +
+      '<textarea id="zoneExport" style="min-height:180px;font-family:var(--chiffres);font-size:12px" readonly>' +
+      esc(json) + "</textarea>" +
+      '<div class="rangeeBtn" style="margin-top:12px">' +
+      bouton(t("copier"), "copierExport", "mini") +
+      bouton(t("fermer"), "fermerModale", "second mini") +
+      "</div>"
+    );
+  };
+
+  A.copierExport = function () {
+    var zone = document.getElementById("zoneExport");
+    if (!zone) { return; }
+    zone.select();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(zone.value).then(function () { info(t("copie")); }, function () {});
+    } else {
+      try { document.execCommand("copy"); info(t("copie")); } catch (e) {}
+    }
+  };
+
+  A.importer = function () {
+    ouvrirModale(
+      "<h2>" + esc(t("importer")) + "</h2><p>" + esc(t("importerM")) + "</p>" +
+      '<textarea id="zoneImport" style="min-height:180px;font-family:var(--chiffres);font-size:12px"></textarea>' +
+      '<div class="rangeeBtn" style="margin-top:12px">' +
+      bouton(t("importerAction"), "importerValider", "danger mini") +
+      bouton(t("annuler"), "fermerModale", "second mini") +
+      "</div>"
+    );
+  };
+
+  A.importerValider = function () {
+    var zone = document.getElementById("zoneImport");
+    if (!zone) { return; }
+    try {
+      var obj = JSON.parse(zone.value);
+      if (!obj || !Array.isArray(obj.clients) || !Array.isArray(obj.devis) || !obj.params) {
+        throw new Error("format");
+      }
+      E = obj;
+      if (!Array.isArray(E.tarifs) || !E.tarifs.length) { E.tarifs = tarifsParDefaut(); }
+      sauver();
+      fermerModale();
+      pile = [];
+      vue = { nom: "accueil", ctx: {} };
+      dessiner();
+      info(t("importOk"));
+    } catch (e) {
+      info(t("importErreur"));
+    }
+  };
+
+  /* =================================================================
+     10. Saisie — un seul écouteur pour tous les champs
+     ================================================================= */
+
+  function valeur(nomChamp) {
+    var el = document.querySelector('[data-champ="' + nomChamp + '"]');
+    return el ? el.value : "";
+  }
+
+  var CHAMPS = {
+    rechercheClient: function (v) { vue.ctx.q = v; redessinerListe("qClients"); },
+    rechercheDevis: function (v) { vue.ctx.q = v; redessinerListe("qDevis"); },
+    filtrePeriode: function (v) { vue.ctx.periode = v; dessiner(); },
+
+    dClient: function (v) { majDevis(function (d) { d.clientId = v || null; }); dessiner(); },
+    dDate: function (v) { majDevis(function (d) { var x = new Date(v); if (!isNaN(x.getTime())) { d.date = x.getTime(); } }); },
+    dType: function (v) { majDevis(function (d) { d.typeChantier = v; }); },
+    dAdresse: function (v) { majDevis(function (d) { d.adresse = v; }); },
+    dNiveau: function (v) { majDevis(function (d) { d.niveau = v; }); },
+    dStatut: function (v) { majDevis(function (d) { d.statut = v; }); },
+    dNotes: function (v) { majDevis(function (d) { d.notes = v; }); },
+    dRemise: function (v) { majDevis(function (d) { d.remise = Math.max(0, n(v)); }); majTotaux(); },
+    dAcompte: function (v) { majDevis(function (d) { d.acompte = Math.max(0, n(v)); }); majTotaux(); },
+    dTva: function (v, el) { majDevis(function (d) { d.tvaActive = el.checked; }); majTotaux(); },
+    dTvaTaux: function (v) { majDevis(function (d) { d.tvaTaux = Math.max(0, n(v)); }); majTotaux(); },
+
+    pNom: function (v) { vue.ctx.brouillon.nom = v; },
+    pLongueur: function (v) { vue.ctx.brouillon.longueur = n(v); majSurfaces(); },
+    pLargeur: function (v) { vue.ctx.brouillon.largeur = n(v); majSurfaces(); },
+    pHauteur: function (v) { vue.ctx.brouillon.hauteur = n(v); majSurfaces(); },
+    pPortes: function (v) { vue.ctx.brouillon.portes = parseInt(v, 10) || 0; majSurfaces(); },
+    pPortesL: function (v) { vue.ctx.brouillon.portesL = n(v); majSurfaces(); },
+    pPortesH: function (v) { vue.ctx.brouillon.portesH = n(v); majSurfaces(); },
+    pFenetres: function (v) { vue.ctx.brouillon.fenetres = parseInt(v, 10) || 0; majSurfaces(); },
+    pFenetresL: function (v) { vue.ctx.brouillon.fenetresL = n(v); majSurfaces(); },
+    pFenetresH: function (v) { vue.ctx.brouillon.fenetresH = n(v); majSurfaces(); },
+    pManuel: function (v, el) {
+      var p = vue.ctx.brouillon, s = surfaces(p);
+      if (el.checked) { p.murManuel = arrondi(s.net); p.plafondManuel = arrondi(s.plafond); }
+      else { p.murManuel = null; p.plafondManuel = null; }
+      majSurfaces();
+    },
+    pMurManuel: function (v) { vue.ctx.brouillon.murManuel = Math.max(0, n(v)); },
+    pPlafondManuel: function (v) { vue.ctx.brouillon.plafondManuel = Math.max(0, n(v)); },
+
+    qLongueur: function (v) { vue.ctx.f.longueur = v; majCalcul(); },
+    qLargeur: function (v) { vue.ctx.f.largeur = v; majCalcul(); },
+    qHauteur: function (v) { vue.ctx.f.hauteur = v; majCalcul(); },
+    qPortes: function (v) { vue.ctx.f.portes = v; majCalcul(); },
+    qFenetres: function (v) { vue.ctx.f.fenetres = v; majCalcul(); },
+    qCouches: function (v) { vue.ctx.f.couches = v; majCalcul(); },
+    qRendement: function (v) { vue.ctx.f.rendement = v; majCalcul(); },
+    qPrix: function (v) { vue.ctx.f.prix = v; majCalcul(); },
+    qPlafond: function (v, el) { vue.ctx.f.plafond = el.checked; majCalcul(); },
+
+    lTarif: function (v) {
+      var x = E.tarifs.filter(function (y) { return y.id === v; })[0];
+      if (!x) { return; }
+      ligneEnCours.designation = x.label;
+      ligneEnCours.unite = x.unite;
+      ligneEnCours.categorie = x.categorie;
+      ligneEnCours.pu = saisie(x.prix);
+      ecrire("lDesignation", x.label);
+      ecrire("lUnite", x.unite);
+      ecrire("lCategorie", x.categorie);
+      ecrire("lPu", saisie(x.prix));
+      majTotalLigne();
+    },
+    lDesignation: function (v) { ligneEnCours.designation = v; },
+    lCategorie: function (v) { ligneEnCours.categorie = v; },
+    lUnite: function (v) { ligneEnCours.unite = v; },
+    lQte: function (v) { ligneEnCours.qte = v; majTotalLigne(); },
+    lPu: function (v) { ligneEnCours.pu = v; majTotalLigne(); },
+
+    tLabel: function (v) { tarifEnCours.label = v; },
+    tPrix: function (v) { tarifEnCours.prix = v; },
+    tUnite: function (v) { tarifEnCours.unite = v; },
+    tCategorie: function (v) { tarifEnCours.categorie = v; },
+    tNiveau: function (v) { tarifEnCours.niveau = v; },
+
+    sEntreprise: function (v) { E.params.entreprise = v; sauver(); },
+    sTel: function (v) { E.params.tel = v; sauver(); },
+    sAdresse: function (v) { E.params.adresse = v; sauver(); },
+    sEmail: function (v) { E.params.email = v; sauver(); },
+    sDevise: function (v) { E.params.devise = v.trim() || "DA"; sauver(); },
+    sTva: function (v, el) { E.params.tvaActive = el.checked; sauver(); },
+    sTvaTaux: function (v) { E.params.tvaTaux = Math.max(0, n(v)); sauver(); },
+    sValidite: function (v) { E.params.validite = Math.max(0, parseInt(v, 10) || 0); sauver(); },
+    sRendement: function (v) { E.params.rendement = Math.max(0.1, n(v)); sauver(); },
+    sCouches: function (v) { E.params.couches = Math.min(5, Math.max(1, parseInt(v, 10) || 1)); sauver(); },
+    sConditions: function (v) { E.params.conditions = v; sauver(); }
+  };
+
+  function ecrire(nomChamp, v) {
+    var el = document.querySelector('[data-champ="' + nomChamp + '"]');
+    if (el) { el.value = v; }
+  }
+
+  function majDevis(f) {
+    var d = devis(vue.ctx.id);
+    if (d) { f(d); sauver(); }
+  }
+
+  function majCalcul() {
+    var bloc = document.getElementById("blocCalcul");
+    if (bloc) { bloc.innerHTML = htmlCalcul(vue.ctx.f); }
+  }
+
+  /* Redessine la liste sans perdre le curseur du champ de recherche. */
+  function redessinerListe(idChamp) {
+    var actif = document.getElementById(idChamp);
+    var pos = actif ? actif.selectionStart : null;
+    dessiner();
+    var suivant = document.getElementById(idChamp);
+    if (suivant) {
+      suivant.focus();
+      try { suivant.setSelectionRange(pos, pos); } catch (e) {}
+    }
+  }
+
+  /* =================================================================
+     11. Écouteurs
+     ================================================================= */
+
+  document.addEventListener("click", function (ev) {
+    var el = ev.target.closest("[data-act]");
+    if (!el) { return; }
+    var acte = el.getAttribute("data-act");
+    if (acte === "voile" && !ev.target.classList.contains("voile")) { return; }
+    if (A[acte]) {
+      ev.preventDefault();
+      A[acte](el.getAttribute("data-id"), el, ev);
+    }
+  });
+
+  function surSaisie(ev) {
+    var el = ev.target.closest("[data-champ]");
+    if (!el) { return; }
+    var nomChamp = el.getAttribute("data-champ");
+    if (CHAMPS[nomChamp]) { CHAMPS[nomChamp](el.value, el); }
+  }
+  document.addEventListener("input", surSaisie);
+  document.addEventListener("change", function (ev) {
+    var el = ev.target.closest("[data-champ]");
+    if (el && (el.tagName === "SELECT" || el.type === "checkbox" || el.type === "date")) { surSaisie(ev); }
+  });
+
+  document.addEventListener("pointerover", function (ev) {
+    if (!ev.target || !ev.target.closest) { return; }
+    var barre = ev.target.closest('[data-act="barreMois"]');
+    if (barre) { A.barreMois(barre.getAttribute("data-id")); }
+  });
+
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") { fermerModale(); }
+  });
+
+  appliquerTheme();
+  appliquerLangue();
+  dessiner();
+})();
+</script>
+</body>
+</html>
