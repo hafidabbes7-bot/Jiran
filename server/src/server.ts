@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import compression from 'compression';
 import express, { type Request, type Response } from 'express';
 import { z } from 'zod';
 
@@ -75,7 +76,26 @@ function serveWebApp(app: express.Express, webDir: string): void {
     return;
   }
 
-  app.use(express.static(dossier));
+  /**
+   * Les fichiers construits portent une empreinte dans leur nom
+   * (`index-9e7522c3….js`) : leur contenu ne peut pas changer sans que le nom
+   * change. Le navigateur peut donc les garder un an, et une deuxième
+   * ouverture de Jiran ne redemande plus rien.
+   *
+   * `index.html`, lui, porte le nom du prochain fichier : il doit être
+   * revalidé à chaque fois, sinon une mise à jour n'arriverait jamais.
+   */
+  app.use(
+    express.static(dossier, {
+      setHeaders: (response, chemin) => {
+        const immuable = /\/_expo\/static\/.+-[0-9a-f]{16,}\.\w+$/.test(chemin.replace(/\\/g, '/'));
+        response.setHeader(
+          'Cache-Control',
+          immuable ? 'public, max-age=31536000, immutable' : 'no-cache'
+        );
+      },
+    })
+  );
   app.get(/.*/, (request: Request, response: Response, next) => {
     // Une requête d'API qui n'a trouvé personne doit rester une erreur d'API,
     // pas renvoyer silencieusement la page d'accueil.
@@ -83,6 +103,7 @@ function serveWebApp(app: express.Express, webDir: string): void {
       next();
       return;
     }
+    response.setHeader('Cache-Control', 'no-cache');
     response.sendFile(accueil);
   });
 
@@ -174,6 +195,18 @@ export async function createServer(options?: {
 
   const app = express();
   app.disable('x-powered-by');
+
+  /**
+   * Compression des réponses.
+   *
+   * L'application pèse 1,5 Mo de JavaScript, et partait telle quelle : huit
+   * secondes d'attente sur une 3G avant le premier écran. Compressée, elle
+   * tombe à 350 Ko. C'est, de loin, ce qui coûtait le plus cher à un voisin
+   * qui ouvre Jiran sur son forfait.
+   *
+   * Vaut aussi pour le fil et les messages, qui sont du JSON très répétitif.
+   */
+  app.use(compression());
   // Derrière un reverse proxy, sans quoi toutes les requêtes partagent une IP.
   app.set('trust proxy', true);
   // Le corps brut est conservé : la signature des webhooks Meta porte sur les
