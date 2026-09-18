@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#07080d" />
+    <meta name="description" content="Shadow Loop — un jeu de puzzle où votre passé rejoue vos gestes." />
+    <title>Shadow Loop</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2307080d'/%3E%3Ccircle cx='13' cy='16' r='6' fill='%2322d3ee'/%3E%3Ccircle cx='21' cy='16' r='6' fill='%238b5cf6' opacity='.55'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <!-- ------------------------------------------------------- Accueil -->
+    <section class="ecran" id="ecran-accueil">
+      <div class="centre">
+        <h1 class="logo">SHADOW<span>LOOP</span></h1>
+        <p class="slogan">« Ton passé est ton adversaire. »</p>
+        <div class="pile">
+          <button class="bouton majeur" id="btn-jouer">JOUER</button>
+          <button class="bouton" id="btn-niveaux">NIVEAUX</button>
+          <button class="bouton" id="btn-parametres">PARAMÈTRES</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------- Niveaux -->
+    <section class="ecran" id="ecran-niveaux" hidden>
+      <header class="barre">
+        <button class="bouton retour" data-retour>RETOUR</button>
+        <h2>NIVEAUX</h2>
+      </header>
+      <div class="liste" id="liste-niveaux"></div>
+    </section>
+
+    <!-- ---------------------------------------------------- Paramètres -->
+    <section class="ecran" id="ecran-parametres" hidden>
+      <header class="barre">
+        <button class="bouton retour" data-retour>RETOUR</button>
+        <h2>PARAMÈTRES</h2>
+      </header>
+      <div class="liste">
+        <button class="reglage" id="reglage-son"><span>Sons</span><b></b></button>
+        <button class="reglage" id="reglage-vibration"><span>Vibration</span><b></b></button>
+        <button class="reglage" id="reglage-cote"><span>Joystick</span><b></b></button>
+        <button class="reglage" id="reglage-tactile"><span>Commandes tactiles</span><b></b></button>
+        <button class="reglage danger" id="reglage-effacer"><span>Effacer la progression</span><b>⟲</b></button>
+        <p class="note">La progression est conservée dans ce navigateur, même après fermeture.</p>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------------------------- Jeu -->
+    <section class="ecran" id="ecran-jeu" hidden>
+      <header class="hud">
+        <div class="hud-bloc">
+          <small>NIVEAU</small>
+          <strong id="hud-niveau">1</strong>
+        </div>
+        <div class="hud-bloc">
+          <small>CYCLE</small>
+          <strong id="hud-cycle">1/6</strong>
+        </div>
+        <div class="hud-bloc chrono">
+          <small>CYCLE DANS</small>
+          <strong id="hud-chrono">20,0</strong>
+        </div>
+        <button class="bouton icone" id="btn-pause" aria-label="Pause">❚❚</button>
+      </header>
+
+      <div class="jauge"><i id="jauge-remplissage"></i></div>
+
+      <div class="scene" id="scene">
+        <canvas id="toile"></canvas>
+        <div class="joystick" id="joystick" hidden>
+          <div class="joystick-tete" id="joystick-tete"></div>
+        </div>
+        <button class="action" id="btn-action">ACTION</button>
+      </div>
+
+      <p class="aide" id="hud-aide"></p>
+    </section>
+
+    <!-- ------------------------------------------------------- Voiles -->
+    <div class="voile" id="voile-pause" hidden>
+      <div class="panneau">
+        <h2>PAUSE</h2>
+        <button class="bouton majeur" id="btn-reprendre">REPRENDRE</button>
+        <button class="bouton" id="btn-recommencer-pause">RECOMMENCER</button>
+        <button class="bouton" id="btn-menu-pause">MENU</button>
+      </div>
+    </div>
+
+    <div class="voile" id="voile-victoire" hidden>
+      <div class="panneau">
+        <h2 class="gagne">NIVEAU TERMINÉ</h2>
+        <dl class="bilan">
+          <div><dt>TEMPS</dt><dd id="bilan-temps">—</dd></div>
+          <div><dt>CYCLES</dt><dd id="bilan-cycles">—</dd></div>
+          <div><dt>SCORE</dt><dd id="bilan-score">—</dd></div>
+        </dl>
+        <p class="record" id="bilan-record" hidden>NOUVEAU RECORD</p>
+        <button class="bouton majeur" id="btn-suivant">NIVEAU SUIVANT</button>
+        <button class="bouton" id="btn-rejouer">REJOUER</button>
+        <button class="bouton" id="btn-menu-victoire">MENU</button>
+      </div>
+    </div>
+
+    <div class="voile" id="voile-defaite" hidden>
+      <div class="panneau">
+        <h2 class="perdu">NIVEAU ÉCHOUÉ</h2>
+        <p class="explication" id="defaite-texte">Les cycles sont épuisés.</p>
+        <button class="bouton majeur" id="btn-recommencer">RECOMMENCER</button>
+        <button class="bouton" id="btn-menu-defaite">MENU</button>
+      </div>
+    </div>
+
+    <script src="./niveaux.js"></script>
+    <script src="./moteur.js"></script>
+    <script src="./game.js"></script>
+  </body>
+</html>

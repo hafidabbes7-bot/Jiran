@@ -1,0 +1,12 @@
+{
+  "name": "shadow-loop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shadow Loop — jeu de puzzle où vos cycles précédents rejouent vos gestes. Aucune dépendance.",
+  "scripts": {
+    "verifier": "node tests/verifier.mjs",
+    "servir": "node outils/serveur.mjs",
+    "construire": "node outils/construire-autonome.mjs"
+  },
+  "engines": { "node": ">=18" }
+}
