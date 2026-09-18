@@ -1,0 +1,50 @@
+# Publie la page d'essai de PEINTRE PRO DZ sur GitHub Pages, à une adresse
+# publique que n'importe qui peut ouvrir dans n'importe quel navigateur,
+# sans compte et sans installation.
+#
+# Se lance à la main : onglet Actions → « Publier la page d'essai » → Run workflow.
+# Adresse obtenue : https://hafidabbes7-bot.github.io/Jiran/
+name: Publier la page d'essai
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    name: Mettre la page en ligne
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Préparer GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          # Active GitHub Pages au premier lancement, sans passer par les réglages.
+          enablement: true
+
+      - name: Ne garder que la page
+        run: |
+          mkdir -p _site
+          cp peintre-pro-dz/essai/index.html _site/index.html
+
+      - name: Téléverser la page
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Mettre en ligne
+        id: deploiement
+        uses: actions/deploy-pages@v4

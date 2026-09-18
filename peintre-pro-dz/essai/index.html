@@ -1,3 +1,20 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Version d'essai de PEINTRE PRO DZ : devis de peinture, surfaces, quantites de peinture et totaux, hors connexion.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#1B5E5A" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#24352F" media="(prefers-color-scheme: dark)">
+<style>
+  :root {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+</style>
 <title>Peintre Pro DZ</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -576,6 +593,8 @@
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 
+</head>
+<body>
 <div class="app">
   <header class="barre">
     <button id="btnRetour" type="button" hidden data-act="retour"></button>
@@ -2668,3 +2687,5 @@
   dessiner();
 })();
 </script>
+</body>
+</html>
