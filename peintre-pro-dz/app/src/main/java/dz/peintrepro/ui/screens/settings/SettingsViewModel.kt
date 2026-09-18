@@ -27,6 +27,7 @@ data class SettingsForm(
     val coverage: String = "10",
     val coats: String = "2",
     val conditions: String = "",
+    val logoUri: String? = null,
     val saved: Boolean = false
 )
 
@@ -49,13 +50,26 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
                 validityDays = settings.defaultValidityDays.toString(),
                 coverage = Formats.input(settings.defaultCoverage),
                 coats = settings.defaultCoats.toString(),
-                conditions = settings.conditions
+                conditions = settings.conditions,
+                logoUri = settings.logoUri
             )
         }
     }
 
     fun update(transform: (SettingsForm) -> SettingsForm) {
         _form.value = transform(_form.value).copy(saved = false)
+    }
+
+    /**
+     * Le logo est enregistré tout de suite : l'autorisation d'accès à l'image
+     * vient d'être accordée, il ne faut pas risquer de la perdre.
+     */
+    fun setLogo(uri: String?) {
+        viewModelScope.launch {
+            val courant = container.settingsRepository.get()
+            container.settingsRepository.save(courant.copy(logoUri = uri))
+            _form.value = _form.value.copy(logoUri = uri, saved = false)
+        }
     }
 
     fun save() {

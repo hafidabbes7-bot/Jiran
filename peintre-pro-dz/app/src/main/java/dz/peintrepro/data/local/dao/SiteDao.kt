@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import dz.peintrepro.data.local.entity.SiteEntity
+import dz.peintrepro.data.local.relation.SiteListRow
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -28,6 +29,26 @@ interface SiteDao {
 
     @Query("SELECT COUNT(*) FROM sites WHERE status = :status AND IFNULL(endDateMillis, createdAt) >= :from")
     fun observeCountByStatusSince(status: String, from: Long): Flow<Int>
+
+    @Query(
+        """
+        SELECT s.id AS id, s.clientId AS clientId, c.name AS clientName,
+               s.quoteId AS quoteId, q.number AS quoteNumber, s.address AS address,
+               s.startDateMillis AS startDateMillis, s.endDateMillis AS endDateMillis,
+               s.status AS status, s.progress AS progress
+        FROM sites s
+        INNER JOIN clients c ON c.id = s.clientId
+        LEFT JOIN quotes q ON q.id = s.quoteId
+        ORDER BY s.createdAt DESC, s.id DESC
+        """
+    )
+    fun observeAllRows(): Flow<List<SiteListRow>>
+
+    @Query("SELECT * FROM sites WHERE id = :id")
+    suspend fun getById(id: Long): SiteEntity?
+
+    @Query("DELETE FROM sites WHERE id = :id")
+    suspend fun deleteById(id: Long)
 
     @Insert
     suspend fun insert(site: SiteEntity): Long

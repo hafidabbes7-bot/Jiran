@@ -49,6 +49,8 @@ class QuoteRepository(
 
     suspend fun getRooms(quoteId: Long): List<RoomItemEntity> = roomItemDao.getByQuote(quoteId)
 
+    suspend fun getLines(quoteId: Long): List<QuoteLineEntity> = quoteLineDao.getByQuote(quoteId)
+
     fun observeLines(quoteId: Long): Flow<List<QuoteLineEntity>> = quoteLineDao.observeByQuote(quoteId)
 
     fun observeLinesForRoom(roomId: Long): Flow<List<QuoteLineEntity>> =

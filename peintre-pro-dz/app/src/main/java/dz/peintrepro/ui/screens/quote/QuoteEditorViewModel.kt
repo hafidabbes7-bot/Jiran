@@ -14,6 +14,8 @@ import dz.peintrepro.data.local.entity.QuoteEntity
 import dz.peintrepro.data.local.entity.QuoteLineEntity
 import dz.peintrepro.data.local.entity.RoomItemEntity
 import dz.peintrepro.data.local.entity.TariffEntity
+import dz.peintrepro.R
+import dz.peintrepro.data.repository.ConversionChantier
 import dz.peintrepro.data.repository.QuoteRepository
 import dz.peintrepro.di.AppContainer
 import dz.peintrepro.di.QuickCalcHandoff
@@ -24,6 +26,7 @@ import dz.peintrepro.domain.model.QuoteLevel
 import dz.peintrepro.domain.model.QuoteStatus
 import dz.peintrepro.domain.model.SiteType
 import dz.peintrepro.domain.model.UnitType
+import dz.peintrepro.pdf.QuotePdfData
 import dz.peintrepro.ui.navigation.Routes
 import dz.peintrepro.data.local.entity.toDimensions
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -191,7 +194,7 @@ class QuoteEditorViewModel(
     fun addLine(line: QuoteLineEntity) {
         val id = _quoteId.value
         if (id == Routes.NEW_ID) {
-            _message.value = dz.peintrepro.R.string.quote_error_client
+            _message.value = R.string.quote_error_client
             return
         }
         viewModelScope.launch { repository.addLine(line.copy(quoteId = id)) }
@@ -207,6 +210,62 @@ class QuoteEditorViewModel(
 
     fun deleteRoom(room: RoomItemEntity) {
         viewModelScope.launch { repository.deleteRoom(room) }
+    }
+
+    /** Chantier ouvert après une conversion réussie (null : rien à ouvrir). */
+    private val _chantierOuvert = MutableStateFlow<Long?>(null)
+    val chantierOuvert: StateFlow<Long?> = _chantierOuvert.asStateFlow()
+
+    /**
+     * Rassemble tout ce qu'il faut pour imprimer le devis. Les données sont
+     * relues en base pour être sûr d'imprimer l'état enregistré, pas un écran
+     * à moitié saisi.
+     */
+    suspend fun donneesPdf(): QuotePdfData? {
+        val id = _quoteId.value
+        if (id == Routes.NEW_ID) return null
+        val quote = repository.getQuote(id) ?: return null
+        val lignes = repository.getLines(id)
+        if (lignes.isEmpty()) return null
+        val pieces = repository.getRooms(id)
+        val paye = container.paymentRepository.sumForQuote(id)
+        return QuotePdfData(
+            quote = quote,
+            client = container.clientRepository.getById(quote.clientId),
+            lines = lignes.sortedWith(compareBy({ it.position }, { it.id })),
+            roomNames = pieces.associate { it.id to it.name },
+            settings = container.settingsRepository.get(),
+            totals = QuoteRepository.computeTotals(quote, lignes, paye)
+        )
+    }
+
+    /** Convertit le devis accepté en chantier (un seul chantier par devis). */
+    fun convertirEnChantier() {
+        val id = _quoteId.value
+        if (id == Routes.NEW_ID) {
+            _message.value = R.string.quote_error_client
+            return
+        }
+        viewModelScope.launch {
+            when (val resultat = container.siteRepository.convertirDepuisDevis(id)) {
+                is ConversionChantier.Cree -> {
+                    _message.value = R.string.site_created
+                    _chantierOuvert.value = resultat.siteId
+                }
+                is ConversionChantier.DejaExistant -> {
+                    _message.value = R.string.site_exists
+                    _chantierOuvert.value = resultat.siteId
+                }
+                ConversionChantier.DevisNonAccepte ->
+                    _message.value = R.string.site_quote_only_accepted
+                ConversionChantier.Introuvable ->
+                    _message.value = R.string.quote_error_client
+            }
+        }
+    }
+
+    fun chantierAffiche() {
+        _chantierOuvert.value = null
     }
 
     fun showMessage(resId: Int) {

@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import dz.peintrepro.data.local.entity.PaymentEntity
+import dz.peintrepro.data.local.relation.PaymentListRow
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -43,6 +44,36 @@ interface PaymentDao {
 
     @Query("SELECT IFNULL(SUM(amount), 0) FROM payments WHERE dateMillis >= :from")
     fun observeSumSince(from: Long): Flow<Double>
+
+    @Query(
+        """
+        SELECT p.id AS id, p.quoteId AS quoteId, q.number AS quoteNumber,
+               c.name AS clientName, p.amount AS amount, p.dateMillis AS dateMillis,
+               p.method AS method, p.note AS note
+        FROM payments p
+        INNER JOIN quotes q ON q.id = p.quoteId
+        INNER JOIN clients c ON c.id = q.clientId
+        ORDER BY p.dateMillis DESC, p.id DESC
+        """
+    )
+    fun observeAllRows(): Flow<List<PaymentListRow>>
+
+    @Query(
+        """
+        SELECT p.id AS id, p.quoteId AS quoteId, q.number AS quoteNumber,
+               c.name AS clientName, p.amount AS amount, p.dateMillis AS dateMillis,
+               p.method AS method, p.note AS note
+        FROM payments p
+        INNER JOIN quotes q ON q.id = p.quoteId
+        INNER JOIN clients c ON c.id = q.clientId
+        WHERE p.quoteId = :quoteId
+        ORDER BY p.dateMillis DESC, p.id DESC
+        """
+    )
+    fun observeRowsForQuote(quoteId: Long): Flow<List<PaymentListRow>>
+
+    @Query("SELECT * FROM payments WHERE id = :id")
+    suspend fun getById(id: Long): PaymentEntity?
 
     @Insert
     suspend fun insert(payment: PaymentEntity): Long

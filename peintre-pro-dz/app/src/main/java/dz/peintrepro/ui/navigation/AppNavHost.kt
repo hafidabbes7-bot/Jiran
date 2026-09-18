@@ -7,17 +7,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import dz.peintrepro.R
 import dz.peintrepro.ui.screens.clients.ClientDetailScreen
 import dz.peintrepro.ui.screens.clients.ClientEditScreen
 import dz.peintrepro.ui.screens.clients.ClientListScreen
-import dz.peintrepro.ui.screens.common.ComingSoonScreen
 import dz.peintrepro.ui.screens.home.HomeScreen
+import dz.peintrepro.ui.screens.payments.PaymentsScreen
 import dz.peintrepro.ui.screens.quickcalc.QuickCalcScreen
 import dz.peintrepro.ui.screens.quote.QuoteEditorScreen
 import dz.peintrepro.ui.screens.quotes.QuoteListScreen
 import dz.peintrepro.ui.screens.room.RoomEditorScreen
 import dz.peintrepro.ui.screens.settings.SettingsScreen
+import dz.peintrepro.ui.screens.sites.SiteDetailScreen
+import dz.peintrepro.ui.screens.sites.SiteListScreen
 import dz.peintrepro.ui.screens.tariffs.TariffsScreen
 
 @Composable
@@ -31,7 +32,7 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                 onQuotes = { navController.navigate(Routes.QUOTES) },
                 onSites = { navController.navigate(Routes.SITES) },
                 onClients = { navController.navigate(Routes.CLIENTS) },
-                onPayments = { navController.navigate(Routes.PAYMENTS) },
+                onPayments = { navController.navigate(Routes.payments()) },
                 onSettings = { navController.navigate(Routes.SETTINGS) },
                 onQuickCalc = { navController.navigate(Routes.QUICK_CALC) }
             )
@@ -80,7 +81,9 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                 onOpenRoom = { quoteId, roomId ->
                     navController.navigate(Routes.roomEditor(quoteId, roomId))
                 },
-                onCreateClient = { navController.navigate(Routes.clientEdit()) }
+                onCreateClient = { navController.navigate(Routes.clientEdit()) },
+                onOpenPayments = { quoteId -> navController.navigate(Routes.payments(quoteId)) },
+                onOpenSite = { siteId -> navController.navigate(Routes.siteDetail(siteId)) }
             )
         }
 
@@ -113,18 +116,30 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
         }
 
         composable(Routes.SITES) {
-            ComingSoonScreen(
-                titleRes = R.string.home_sites,
-                messageRes = R.string.soon_sites,
-                onBack = { navController.popBackStack() }
+            SiteListScreen(
+                onBack = { navController.popBackStack() },
+                onOpenSite = { siteId -> navController.navigate(Routes.siteDetail(siteId)) }
             )
         }
 
-        composable(Routes.PAYMENTS) {
-            ComingSoonScreen(
-                titleRes = R.string.home_payments,
-                messageRes = R.string.soon_payments,
-                onBack = { navController.popBackStack() }
+        composable(
+            route = Routes.SITE_DETAIL,
+            arguments = listOf(navArgument(Routes.ARG_SITE_ID) { type = NavType.LongType })
+        ) {
+            SiteDetailScreen(
+                onBack = { navController.popBackStack() },
+                onOpenQuote = { quoteId -> navController.navigate(Routes.quoteEditor(quoteId)) },
+                onOpenPayments = { quoteId -> navController.navigate(Routes.payments(quoteId)) }
+            )
+        }
+
+        composable(
+            route = Routes.PAYMENTS,
+            arguments = listOf(navArgument(Routes.ARG_QUOTE_ID) { type = NavType.LongType })
+        ) {
+            PaymentsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenQuote = { quoteId -> navController.navigate(Routes.quoteEditor(quoteId)) }
             )
         }
     }

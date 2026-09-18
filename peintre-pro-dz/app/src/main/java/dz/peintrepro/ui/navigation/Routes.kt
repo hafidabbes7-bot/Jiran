@@ -6,6 +6,7 @@ object Routes {
     const val ARG_CLIENT_ID = "clientId"
     const val ARG_QUOTE_ID = "quoteId"
     const val ARG_ROOM_ID = "roomId"
+    const val ARG_SITE_ID = "siteId"
 
     /** Valeur utilisée pour « nouvel élément » (identifiant encore inexistant). */
     const val NEW_ID = 0L
@@ -21,10 +22,15 @@ object Routes {
     const val QUICK_CALC = "quick_calc"
     const val SETTINGS = "settings"
     const val SITES = "sites"
-    const val PAYMENTS = "payments"
+    const val SITE_DETAIL = "site_detail/{$ARG_SITE_ID}"
+    const val PAYMENTS = "payments/{$ARG_QUOTE_ID}"
 
     fun clientEdit(clientId: Long = NEW_ID) = "client_edit/$clientId"
     fun clientDetail(clientId: Long) = "client_detail/$clientId"
     fun quoteEditor(quoteId: Long = NEW_ID) = "quote_editor/$quoteId"
     fun roomEditor(quoteId: Long, roomId: Long = NEW_ID) = "room_editor/$quoteId/$roomId"
+    fun siteDetail(siteId: Long) = "site_detail/$siteId"
+
+    /** Sans identifiant de devis, l'écran affiche tous les paiements. */
+    fun payments(quoteId: Long = NEW_ID) = "payments/$quoteId"
 }

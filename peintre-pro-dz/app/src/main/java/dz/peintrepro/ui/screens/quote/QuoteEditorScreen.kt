@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Construction
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.HorizontalDivider
@@ -31,6 +33,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +52,9 @@ import dz.peintrepro.domain.model.QuoteLevel
 import dz.peintrepro.domain.model.QuoteStatus
 import dz.peintrepro.domain.model.SiteType
 import dz.peintrepro.domain.model.UnitType
+import dz.peintrepro.pdf.PdfSharing
+import dz.peintrepro.pdf.ResultatPdf
+import dz.peintrepro.pdf.genererPdf
 import dz.peintrepro.ui.components.AppTextField
 import dz.peintrepro.ui.components.AppTopBar
 import dz.peintrepro.ui.components.ConfirmDialog
@@ -61,12 +67,15 @@ import dz.peintrepro.ui.components.LineEditorDialog
 import dz.peintrepro.ui.components.QuantitySuggestion
 import dz.peintrepro.ui.components.SecondaryButton
 import dz.peintrepro.ui.components.SectionCard
+import kotlinx.coroutines.launch
 
 @Composable
 fun QuoteEditorScreen(
     onBack: () -> Unit,
     onOpenRoom: (Long, Long) -> Unit,
     onCreateClient: () -> Unit,
+    onOpenPayments: (Long) -> Unit,
+    onOpenSite: (Long) -> Unit,
     viewModel: QuoteEditorViewModel = viewModel(factory = QuoteEditorViewModel.Factory)
 ) {
     val context = LocalContext.current
@@ -84,6 +93,51 @@ fun QuoteEditorScreen(
     val message by viewModel.message.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val portee = rememberCoroutineScope()
+    val chantierOuvert by viewModel.chantierOuvert.collectAsStateWithLifecycle()
+    val titrePartage = stringResource(R.string.share_quote)
+
+    LaunchedEffect(chantierOuvert) {
+        val siteId = chantierOuvert
+        if (siteId != null) {
+            viewModel.chantierAffiche()
+            onOpenSite(siteId)
+        }
+    }
+
+    // Génère le PDF puis l'ouvre ou le partage, selon le bouton pressé.
+    fun produirePdf(partager: Boolean) {
+        if (lines.isEmpty()) {
+            viewModel.showMessage(R.string.pdf_no_lines)
+            return
+        }
+        portee.launch {
+            val donnees = viewModel.donneesPdf()
+            if (donnees == null) {
+                viewModel.showMessage(R.string.pdf_no_lines)
+                return@launch
+            }
+            when (val resultat = genererPdf(context, donnees)) {
+                is ResultatPdf.Ok -> {
+                    val sujet = listOfNotNull(
+                        donnees.quote.number,
+                        donnees.client?.name
+                    ).joinToString(" — ")
+                    val ouvert = if (partager) {
+                        PdfSharing.partager(context, resultat.fichier, sujet, titrePartage)
+                    } else {
+                        PdfSharing.ouvrir(context, resultat.fichier)
+                    }
+                    if (!ouvert) {
+                        viewModel.showMessage(
+                            if (partager) R.string.share_none else R.string.pdf_no_viewer
+                        )
+                    }
+                }
+                ResultatPdf.Echec -> viewModel.showMessage(R.string.pdf_error)
+            }
+        }
+    }
 
     var editedLine by remember { mutableStateOf<QuoteLineEntity?>(null) }
     var newLine by remember { mutableStateOf(false) }
@@ -515,23 +569,35 @@ fun QuoteEditorScreen(
                 }
             }
 
-            // ------------------------------------- Actions à venir (phase 2)
+            // ------------------------------------------------ 6. Actions
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     SecondaryButton(
                         text = stringResource(R.string.quote_pdf),
                         icon = Icons.Default.PictureAsPdf,
-                        onClick = { viewModel.showMessage(R.string.quote_coming_phase2) }
+                        onClick = { produirePdf(partager = false) }
                     )
                     SecondaryButton(
                         text = stringResource(R.string.quote_share),
                         icon = Icons.Default.Share,
-                        onClick = { viewModel.showMessage(R.string.quote_coming_phase2) }
+                        onClick = { produirePdf(partager = true) }
+                    )
+                    SecondaryButton(
+                        text = stringResource(R.string.quote_payments),
+                        icon = Icons.Default.Payments,
+                        onClick = {
+                            if (quoteId == 0L) {
+                                viewModel.showMessage(R.string.quote_error_client)
+                            } else {
+                                onOpenPayments(quoteId)
+                            }
+                        }
                     )
                     if (QuoteStatus.from(quote?.status) == QuoteStatus.ACCEPTED) {
                         SecondaryButton(
                             text = stringResource(R.string.quote_convert_site),
-                            onClick = { viewModel.showMessage(R.string.quote_coming_phase2) }
+                            icon = Icons.Default.Construction,
+                            onClick = viewModel::convertirEnChantier
                         )
                     }
                 }

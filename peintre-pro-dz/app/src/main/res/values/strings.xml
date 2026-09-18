@@ -108,7 +108,6 @@
     <string name="quote_convert_site">Convertir en chantier</string>
     <string name="quote_pdf">Générer le PDF</string>
     <string name="quote_share">Partager</string>
-    <string name="quote_coming_phase2">Disponible en phase 2</string>
 
     <!-- Pièces -->
     <string name="room_new_title">Nouvelle pièce</string>
@@ -225,12 +224,6 @@
     <string name="settings_tariffs">Mes tarifs</string>
     <string name="settings_backup_hint">La sauvegarde et l\'export JSON arrivent en phase 3. Vos données sont déjà enregistrées sur le téléphone.</string>
     <string name="settings_saved">Paramètres enregistrés.</string>
-    <string name="settings_logo_hint">Le logo sera ajouté avec le PDF (phase 2).</string>
-
-    <!-- Écrans à venir -->
-    <string name="soon_title">Bientôt disponible</string>
-    <string name="soon_sites">Les chantiers arrivent en phase 2 : conversion d\'un devis accepté, avancement et photos.</string>
-    <string name="soon_payments">Les paiements arrivent en phase 2 : acompte, encaissements et reste à payer.</string>
 
     <!-- Statuts de devis -->
     <string name="status_draft">Brouillon</string>
@@ -289,4 +282,71 @@
     <string name="required_field">Champ obligatoire</string>
     <string name="error_number_invalid">Valeur invalide.</string>
     <string name="error_negative">La valeur ne peut pas être négative.</string>
+
+    <!-- PDF et partage -->
+    <string name="pdf_quote">DEVIS</string>
+    <string name="pdf_client">Client</string>
+    <string name="pdf_site">Chantier</string>
+    <string name="pdf_conditions">Conditions</string>
+    <string name="pdf_duration">Délai estimatif</string>
+    <string name="pdf_observations">Observations</string>
+    <string name="pdf_validity">Devis valable %1$d jours à compter de la date ci-dessus.</string>
+    <string name="pdf_signature_client">Signature du client (précédée de « bon pour accord »)</string>
+    <string name="pdf_signature_company">L\'entreprise</string>
+    <string name="pdf_page">Page %1$d / %2$d</string>
+    <string name="pdf_estimate_note">Les surfaces et les quantités de peinture sont des estimations.</string>
+    <string name="pdf_error">Impossible de créer le PDF.</string>
+    <string name="pdf_no_lines">Ajoutez au moins une ligne avant de générer le PDF.</string>
+    <string name="pdf_no_viewer">Aucune application ne peut ouvrir ce PDF.</string>
+    <string name="share_quote">Partager le devis</string>
+    <string name="share_none">Aucune application de partage disponible.</string>
+
+    <!-- Chantiers -->
+    <string name="sites_title">Mes chantiers</string>
+    <string name="sites_empty">Aucun chantier. Convertissez un devis accepté en chantier.</string>
+    <string name="site_detail_title">Chantier</string>
+    <string name="site_client">Client</string>
+    <string name="site_quote">Devis associé</string>
+    <string name="site_address">Adresse du chantier</string>
+    <string name="site_start_date">Date de début</string>
+    <string name="site_end_date">Date prévue de fin</string>
+    <string name="site_status">Statut du chantier</string>
+    <string name="site_progress">Avancement</string>
+    <string name="site_notes">Notes du chantier</string>
+    <string name="site_delete_title">Supprimer ce chantier ?</string>
+    <string name="site_delete_message">Le devis et les paiements ne sont pas supprimés.</string>
+    <string name="site_created">Chantier créé.</string>
+    <string name="site_exists">Ce devis a déjà un chantier.</string>
+    <string name="site_quote_only_accepted">Acceptez le devis avant de le convertir en chantier.</string>
+    <string name="site_saved">Chantier enregistré.</string>
+
+    <!-- Paiements -->
+    <string name="payments_title">Paiements</string>
+    <string name="payments_empty">Aucun paiement enregistré.</string>
+    <string name="payments_quote_title">Paiements du devis</string>
+    <string name="payment_new">Nouveau paiement</string>
+    <string name="payment_edit">Modifier le paiement</string>
+    <string name="payment_amount">Montant</string>
+    <string name="payment_date">Date du paiement</string>
+    <string name="payment_method">Mode de paiement</string>
+    <string name="payment_note">Note</string>
+    <string name="payment_quote">Devis</string>
+    <string name="payment_delete_title">Supprimer ce paiement ?</string>
+    <string name="payment_delete_message">Le reste à payer sera recalculé.</string>
+    <string name="payment_error_amount">Le montant doit être supérieur à 0.</string>
+    <string name="payment_error_quote">Choisissez le devis concerné.</string>
+    <string name="payment_exceeds_title">Montant supérieur au reste</string>
+    <string name="payment_exceeds_message">Il reste %1$s à payer. Voulez-vous quand même enregistrer %2$s ?</string>
+    <string name="payments_collected">Total encaissé</string>
+    <string name="payments_remaining">Reste à encaisser</string>
+    <string name="payments_none_for_quote">Aucun paiement pour ce devis.</string>
+    <string name="quote_payments">Paiements et acompte</string>
+
+    <!-- Logo -->
+    <string name="settings_logo">Logo de l\'entreprise</string>
+    <string name="settings_logo_choose">Choisir un logo</string>
+    <string name="settings_logo_remove">Retirer le logo</string>
+    <string name="settings_logo_none">Aucun logo (le nom de l\'entreprise sera utilisé)</string>
+    <string name="settings_logo_error">Image illisible. Choisissez une autre image.</string>
 </resources>
+

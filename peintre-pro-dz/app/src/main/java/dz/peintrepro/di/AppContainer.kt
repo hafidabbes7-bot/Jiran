@@ -22,7 +22,7 @@ class AppContainer(context: Context) {
     val clientRepository = ClientRepository(database.clientDao())
     val tariffRepository = TariffRepository(database.tariffDao())
     val paymentRepository = PaymentRepository(database.paymentDao())
-    val siteRepository = SiteRepository(database.siteDao())
+    val siteRepository = SiteRepository(database.siteDao(), database.quoteDao())
 
     val quoteRepository = QuoteRepository(
         quoteDao = database.quoteDao(),

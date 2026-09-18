@@ -1,14 +1,22 @@
 package dz.peintrepro.ui.screens.settings
 
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PriceChange
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.MaterialTheme
@@ -20,9 +28,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,6 +51,8 @@ import dz.peintrepro.ui.components.InfoBanner
 import dz.peintrepro.ui.components.IntField
 import dz.peintrepro.ui.components.SecondaryButton
 import dz.peintrepro.ui.components.SectionCard
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun SettingsScreen(
@@ -48,6 +63,46 @@ fun SettingsScreen(
     val form by viewModel.form.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+
+    var erreurLogo by remember { mutableStateOf(false) }
+
+    // Le logo est choisi dans les fichiers du téléphone ; l'autorisation de
+    // lecture est rendue permanente pour que le PDF puisse le relire plus tard.
+    val selecteurLogo = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            val accorde = runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }.isSuccess
+            if (accorde) viewModel.setLogo(uri.toString()) else erreurLogo = true
+        }
+    }
+
+    val apercuLogo by produceState<ImageBitmap?>(initialValue = null, key1 = form.logoUri) {
+        val uri = form.logoUri
+        value = if (uri.isNullOrBlank()) {
+            null
+        } else {
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openInputStream(Uri.parse(uri))?.use { flux ->
+                        BitmapFactory.decodeStream(flux)?.asImageBitmap()
+                    }
+                }.getOrNull()
+            }
+        }
+    }
+
+    LaunchedEffect(erreurLogo) {
+        if (erreurLogo) {
+            snackbarHostState.showSnackbar(context.getString(R.string.settings_logo_error))
+            erreurLogo = false
+        }
+    }
 
     LaunchedEffect(form.saved) {
         if (form.saved) {
@@ -93,7 +148,35 @@ fun SettingsScreen(
                         onValueChange = { value -> viewModel.update { it.copy(email = value) } },
                         keyboardType = KeyboardType.Email
                     )
-                    InfoBanner(text = stringResource(R.string.settings_logo_hint))
+                    Text(
+                        text = stringResource(R.string.settings_logo),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    val bitmapLogo = apercuLogo
+                    if (bitmapLogo != null) {
+                        Image(
+                            bitmap = bitmapLogo,
+                            contentDescription = stringResource(R.string.settings_logo),
+                            modifier = Modifier.height(64.dp)
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.settings_logo_none),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    SecondaryButton(
+                        text = stringResource(R.string.settings_logo_choose),
+                        icon = Icons.Default.Image,
+                        onClick = { selecteurLogo.launch(arrayOf("image/*")) }
+                    )
+                    if (form.logoUri != null) {
+                        SecondaryButton(
+                            text = stringResource(R.string.settings_logo_remove),
+                            onClick = { viewModel.setLogo(null) }
+                        )
+                    }
                 }
             }
 

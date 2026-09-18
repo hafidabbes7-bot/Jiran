@@ -1,4 +1,4 @@
-# PEINTRE PRO DZ — Phase 1
+# PEINTRE PRO DZ — Phases 1 et 2
 
 Application Android (Kotlin + Jetpack Compose + Room) pour les peintres et petites
 entreprises de peinture en Algérie. **100 % hors connexion, sans compte utilisateur.**
@@ -8,7 +8,7 @@ survivent à la fermeture de l'application et au redémarrage du téléphone.
 
 ---
 
-## 1. Ce qui fonctionne en phase 1
+## 1. Ce qui fonctionne aujourd'hui
 
 | Domaine | Détail |
 |---|---|
@@ -23,11 +23,20 @@ survivent à la fermeture de l'application et au redémarrage du téléphone.
 | Paramètres | Entreprise, devise, TVA, validité, rendement et couches par défaut, conditions |
 | Persistance | Room / SQLite, schémas exportés dans `app/schemas`, **aucune migration destructive** |
 
-Prévu en phase 2 : PDF, partage, paiements, chantiers.
-Prévu en phase 3 : photos, export / import JSON, statistiques, arabe.
-Les écrans « Mes chantiers » et « Paiements » existent déjà dans la navigation et
-annoncent clairement la phase 2 (les tables `sites`, `payments` et `site_photos`
-sont **déjà créées en base**, donc la phase 2 n'imposera aucune migration risquée).
+Ajouté en **phase 2** :
+
+| Domaine | Détail |
+|---|---|
+| Devis PDF | Document A4 généré avec `android.graphics.pdf` : en-tête entreprise et logo, numéro et date, client, chantier, tableau désignation / quantité / unité / prix unitaire / total, sous-total, remise, TVA, TOTAL, acompte, reste à payer, conditions, emplacement de signature, pagination sur plusieurs pages |
+| Partage | Partage système Android (WhatsApp, email, Bluetooth, Drive…) via un `FileProvider`, et ouverture du PDF dans le lecteur du téléphone |
+| Paiements | Encaissements par devis ou vue globale : montant, date, mode (espèces, virement, chèque, autre), note ; total encaissé et reste à encaisser recalculés en direct |
+| Chantiers | Conversion d'un devis **accepté** en chantier (un seul par devis), liste filtrable par statut, fiche avec statut, avancement 0→100 %, dates de début et de fin, notes |
+| Logo | Choix du logo depuis les fichiers du téléphone, autorisation de lecture rendue permanente, logo imprimé sur le PDF |
+
+La phase 2 n'a demandé **aucune migration de base** : les tables `sites`,
+`payments` et `site_photos` avaient été créées dès la V1.
+
+Prévu en phase 3 : photos de chantier, export / import JSON, statistiques, arabe.
 
 ---
 
@@ -115,6 +124,12 @@ Ces prix sont **des exemples** : ils se modifient dans `Paramètres > Mes tarifs
    le devis `DEV-…-0001` est créé, avec la pièce et la ligne de peinture.
 3. Ajouter une pièce, ajouter des travaux depuis les tarifs, voir le total se mettre à jour.
 4. Fermer complètement l'application, la rouvrir : **tout est toujours là**.
+5. Dans le devis : `Générer le PDF` (il s'ouvre dans le lecteur du téléphone),
+   puis `Partager` (WhatsApp, email…).
+6. Passer le devis en `Accepté` → `Convertir en chantier` : le chantier s'ouvre,
+   réglez l'avancement, il apparaît sur le tableau de bord.
+7. `Paiements et acompte` : saisir un encaissement ; au-delà du reste à payer,
+   l'application demande confirmation au lieu de refuser.
 
 ---
 
@@ -134,3 +149,8 @@ Ces prix sont **des exemples** : ils se modifient dans `Paramètres > Mes tarifs
   plafonnée au sous-total, surface nette jamais négative.
 - **Estimation de peinture** : toujours présentée comme une estimation, le rendement
   étant modifiable par l'utilisateur.
+- **PDF sans librairie externe** : `android.graphics.pdf.PdfDocument` suffit et ne
+  dépend d'aucun service en ligne. Le fichier est écrit dans le cache, puis exposé
+  par le `FileProvider` (`res/xml/file_paths.xml`) — jamais par un chemin brut.
+- **Un devis accepté ne donne qu'un seul chantier** : reconvertir un devis rouvre
+  le chantier existant au lieu d'en créer un second.
