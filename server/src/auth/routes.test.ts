@@ -105,6 +105,8 @@ describe('comptes par e-mail, de bout en bout', () => {
       phone: email,
       identifier: email,
       identifierKind: 'email',
+      // Aucun profil : la session est vérifiée, le quartier reste à choisir.
+      profile: null,
     });
   });
 

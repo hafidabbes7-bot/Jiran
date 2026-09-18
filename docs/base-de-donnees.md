@@ -131,7 +131,9 @@ Elle ne contient ni `DROP DATABASE`, ni `DROP SCHEMA`, ni aucune remise à zéro
 
 | Table | Ce qu'elle garde |
 | --- | --- |
-| `members` | le compte, rattaché à un identifiant vérifié (numéro **ou** e-mail) |
+| `members` | le profil dans le quartier, rattaché à un identifiant vérifié (numéro **ou** e-mail) |
+| `credentials` | les mots de passe (hachés par scrypt) des comptes créés par adresse e-mail |
+| `email_tokens` | les liens de confirmation et de réinitialisation — seule l'empreinte est gardée |
 | `posts`, `comments`, `likes` | le fil du quartier |
 | `photos` | le chemin et l'adresse de la photo chez Supabase — jamais le fichier lui-même quand le stockage est configuré |
 | `reports`, `moderation_decisions` | les signalements et les décisions des modérateurs |

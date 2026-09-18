@@ -132,6 +132,8 @@ describe('API de vérification', () => {
       phone: '0555123456',
       identifier: '0555123456',
       identifierKind: 'phone',
+      // Aucun profil : la session est vérifiée, le quartier reste à choisir.
+      profile: null,
     });
   });
 

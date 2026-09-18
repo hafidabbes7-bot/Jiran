@@ -55,6 +55,12 @@ services:
       - key: SUPABASE_BUCKET
         value: jiran-photos
 
+      # Adresse publique, pour fabriquer les liens de confirmation envoyés par
+      # e-mail. Laissée vide, le serveur la déduit de la requête reçue — juste
+      # dans presque tous les cas. À renseigner avec un domaine à soi.
+      - key: PUBLIC_URL
+        sync: false
+
       # Secrets tirés au hasard par l'hébergeur : ils ne passent jamais par le
       # dépôt ni par un écran.
       - key: OTP_SECRET

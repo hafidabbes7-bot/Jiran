@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { useI18n } from '../i18n/I18nProvider';
 import { colors, fontSizes, radii, spacing } from '../theme/theme';
@@ -8,13 +8,32 @@ export function Field({
   label,
   error,
   hint,
+  action,
   ...inputProps
-}: TextInputProps & { label: string; error?: string; hint?: string }) {
+}: TextInputProps & {
+  label: string;
+  error?: string;
+  hint?: string;
+  /**
+   * Bouton de texte posé au bout de l'étiquette — « Afficher » sur un mot de
+   * passe, par exemple. Il vit là plutôt que dans le champ : superposé au
+   * texte saisi, il masquerait les derniers caractères, précisément ceux que
+   * l'on veut relire.
+   */
+  action?: { label: string; onPress: () => void };
+}) {
   const { rtl } = useI18n();
 
   return (
     <View style={styles.wrapper}>
-      <Text style={[styles.label, rtl.text]}>{label}</Text>
+      <View style={[styles.labelRow, rtl.row]}>
+        <Text style={[styles.label, rtl.text]}>{label}</Text>
+        {action ? (
+          <Pressable accessibilityRole="button" accessibilityLabel={action.label} onPress={action.onPress} hitSlop={8}>
+            <Text style={styles.action}>{action.label}</Text>
+          </Pressable>
+        ) : null}
+      </View>
       <TextInput
         placeholderTextColor={colors.muted}
         {...inputProps}
@@ -28,10 +47,17 @@ export function Field({
 
 const styles = StyleSheet.create({
   wrapper: { marginBottom: spacing.md },
+  labelRow: { alignItems: 'center', justifyContent: 'space-between' },
   label: {
     fontSize: fontSizes.small,
     fontWeight: '600',
     color: colors.muted,
+    marginBottom: spacing.xs,
+  },
+  action: {
+    fontSize: fontSizes.small,
+    fontWeight: '700',
+    color: colors.brand,
     marginBottom: spacing.xs,
   },
   input: {

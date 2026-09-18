@@ -73,7 +73,22 @@ export function OnboardingFlow({
   const localizedName = useLocalizedName();
 
   const [step, setStep] = useState<Step>(1);
-  const [accountPane, setAccountPane] = useState<'phone' | 'code' | 'link'>('phone');
+  const [accountPane, setAccountPane] = useState<
+    'phone' | 'code' | 'link' | 'confirm' | 'login'
+  >('phone');
+  /**
+   * Deux façons d'avoir un compte, et elles ne s'excluent pas : un code à
+   * usage unique ne demande rien à retenir, un mot de passe permet de revenir
+   * depuis n'importe quel téléphone sans attendre de message.
+   */
+  const [method, setMethod] = useState<'code' | 'password'>('code');
+  const [password, setPassword] = useState('');
+  const [passwordShown, setPasswordShown] = useState(false);
+  const [accountError, setAccountError] = useState('');
+  const [accountNotice, setAccountNotice] = useState('');
+  const [busy, setBusy] = useState(false);
+  /** Vrai quand le serveur n'a pas pu envoyer le lien — il faut le dire. */
+  const [linkUnsent, setLinkUnsent] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
@@ -185,6 +200,136 @@ export function OnboardingFlow({
     // ne pas avoir à le recopier depuis la console.
     setCode(challenge.devCode ?? '');
     setAccountPane('code');
+  };
+
+  /** Traduit un refus du serveur en phrase lisible. */
+  const messageDeRefus = (raison: string): string => {
+    switch (raison) {
+      case 'mot_de_passe_trop_court':
+        return s.onboarding.passwordTooShort;
+      case 'mot_de_passe_trop_courant':
+        return s.onboarding.passwordTooCommon;
+      case 'mot_de_passe_trop_long':
+        return s.onboarding.passwordTooLong;
+      case 'adresse_invalide':
+        return s.onboarding.emailError;
+      case 'identifiants_refuses':
+        return s.onboarding.loginRefused;
+      case 'adresse_non_confirmee':
+        return s.onboarding.loginUnconfirmed;
+      case 'compte_bloque':
+        return s.onboarding.loginLocked;
+      case 'rate_limited':
+        return s.onboarding.codeTooManyAttempts;
+      default:
+        return s.onboarding.networkError;
+    }
+  };
+
+  /** Inscription par adresse et mot de passe : un lien part, puis on attend. */
+  const submitRegistration = async () => {
+    const nextErrors: typeof errors = {};
+    if (!firstName.trim()) nextErrors.firstName = s.onboarding.firstNameError;
+    if (!isValidEmail(phone)) nextErrors.phone = s.onboarding.emailError;
+    setErrors(nextErrors);
+    setAccountError('');
+    if (Object.keys(nextErrors).length > 0) return;
+
+    // Le serveur tranche pour de bon ; ce contrôle-ci évite un aller-retour
+    // pour une faute que l'on voit d'ici.
+    if (password.length < 8) {
+      setAccountError(s.onboarding.passwordTooShort);
+      return;
+    }
+
+    setBusy(true);
+    const résultat = await auth.register(phone, password);
+    setBusy(false);
+
+    if (!résultat.ok) {
+      setAccountError(messageDeRefus(résultat.reason));
+      return;
+    }
+
+    setLinkUnsent(!résultat.emailSent);
+    setAccountNotice('');
+    setAccountPane('confirm');
+  };
+
+  const submitLogin = async () => {
+    setAccountError('');
+    if (!isValidEmail(phone)) {
+      setAccountError(s.onboarding.emailError);
+      return;
+    }
+
+    setBusy(true);
+    const résultat = await auth.login(phone, password);
+    setBusy(false);
+
+    if (!résultat.ok) {
+      setAccountError(messageDeRefus(résultat.reason));
+      return;
+    }
+
+    // Un voisin qui se reconnecte depuis un autre téléphone a déjà un profil :
+    // lui redemander son prénom, son quartier et de relire les règles serait
+    // lui faire refaire ce qu'il a déjà fait. On l'y ramène directement.
+    const profil = await auth.existingProfile(résultat.token);
+    if (profil) {
+      await onDone({
+        firstName: profil.firstName,
+        identifier: résultat.identifier,
+        identifierKind: 'email',
+        phoneVerifiedAt: new Date().toISOString(),
+        token: résultat.token,
+        neighborhoodId: profil.neighborhoodId,
+        ...(profil.building ? { building: profil.building } : {}),
+        language,
+        locationVerified: true,
+        rulesAcceptedAt: profil.joinedAt,
+        joinedAt: profil.joinedAt,
+        isModerator: profil.isModerator,
+      });
+      return;
+    }
+
+    // Compte confirmé mais profil jamais rempli : il reste le quartier à
+    // choisir et les règles à lire.
+    setVerified(résultat);
+    setStep(3);
+  };
+
+  const resendConfirmation = async () => {
+    setBusy(true);
+    const résultat = await auth.resendConfirmation(phone);
+    setBusy(false);
+    setLinkUnsent(!résultat.emailSent);
+    setAccountNotice(résultat.emailSent ? s.onboarding.confirmResent : '');
+  };
+
+  const forgotPassword = async () => {
+    setAccountError('');
+    if (!isValidEmail(phone)) {
+      setAccountError(s.onboarding.emailError);
+      return;
+    }
+    setBusy(true);
+    await auth.forgotPassword(phone);
+    setBusy(false);
+    // Réponse identique que l'adresse existe ou non : le serveur ne le dit
+    // pas, l'application ne peut donc pas le montrer.
+    setAccountNotice(s.onboarding.forgotSent);
+  };
+
+  /** Bascule création ↔ connexion, en nettoyant ce qui n'a plus de sens. */
+  const basculerVers = (pane: 'phone' | 'login') => {
+    setAccountError('');
+    setAccountNotice('');
+    setErrors({});
+    setPassword('');
+    setAccountPane(pane);
+    if (pane === 'login') setMethod('password');
   };
 
   const [linkOpenFailed, setLinkOpenFailed] = useState(false);
@@ -380,6 +525,51 @@ export function OnboardingFlow({
               <Text style={[styles.heading, rtl.text]}>{s.onboarding.accountTitle}</Text>
               <Text style={[styles.sub, rtl.text]}>{s.onboarding.accountSubtitle}</Text>
 
+              {/* Deux façons d'avoir un compte. Le choix est posé avant les
+                  champs : il décide de ce qu'on demande ensuite. */}
+              <View style={styles.channelBlock}>
+                <Text style={[styles.label, rtl.text]}>{s.onboarding.methodLabel}</Text>
+                <View style={[styles.channelRow, rtl.row]}>
+                  {(['code', 'password'] as const).map((option) => {
+                    const active = option === method;
+                    return (
+                      <Pressable
+                        key={option}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected: active }}
+                        accessibilityLabel={
+                          option === 'code' ? s.onboarding.methodCode : s.onboarding.methodPassword
+                        }
+                        onPress={() => {
+                          setMethod(option);
+                          setAccountError('');
+                          // Une adresse reste valable pour les deux ; un
+                          // numéro, non : le mot de passe n'existe que par
+                          // e-mail.
+                          if (option === 'password' && channel !== 'email') {
+                            setPhone('');
+                            setChannel('email');
+                          }
+                        }}
+                        style={[styles.channelButton, active && styles.channelButtonActive]}
+                      >
+                        <Text style={[styles.channelText, active && styles.channelTextActive]}>
+                          {option === 'code' ? '💬' : '🔑'}{' '}
+                          {option === 'code'
+                            ? s.onboarding.methodCode
+                            : s.onboarding.methodPassword}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                <Text style={[styles.channelHint, rtl.text]}>
+                  {method === 'code'
+                    ? s.onboarding.methodCodeHint
+                    : s.onboarding.methodPasswordHint}
+                </Text>
+              </View>
+
               <Field
                 label={s.onboarding.firstNameLabel}
                 placeholder={s.onboarding.firstNamePlaceholder}
@@ -389,22 +579,57 @@ export function OnboardingFlow({
                 error={errors.firstName}
               />
               <Field
-                label={channel === 'email' ? s.onboarding.emailLabel : s.onboarding.phoneLabel}
+                label={
+                  method === 'password' || channel === 'email'
+                    ? s.onboarding.emailLabel
+                    : s.onboarding.phoneLabel
+                }
                 placeholder={
-                  channel === 'email'
+                  method === 'password' || channel === 'email'
                     ? s.onboarding.emailPlaceholder
                     : s.onboarding.phonePlaceholder
                 }
                 value={phone}
                 onChangeText={setPhone}
-                keyboardType={channel === 'email' ? 'email-address' : 'phone-pad'}
+                keyboardType={
+                  method === 'password' || channel === 'email' ? 'email-address' : 'phone-pad'
+                }
                 autoCapitalize="none"
                 autoCorrect={false}
                 error={errors.phone}
-                hint={channel === 'email' ? s.onboarding.emailHint : s.onboarding.phoneHint}
+                hint={
+                  // En mode mot de passe, ce n'est pas un code qui arrive dans
+                  // la boîte mais un lien : le dire juste évite d'attendre le
+                  // mauvais message.
+                  method === 'password'
+                    ? s.onboarding.methodPasswordHint
+                    : channel === 'email'
+                      ? s.onboarding.emailHint
+                      : s.onboarding.phoneHint
+                }
               />
 
-              {availableChannels.length > 1 ? (
+              {method === 'password' ? (
+                <Field
+                  label={s.onboarding.passwordLabel}
+                  placeholder={s.onboarding.passwordPlaceholder}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!passwordShown}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="newPassword"
+                  hint={s.onboarding.passwordHint}
+                  action={{
+                    label: passwordShown ? s.onboarding.passwordHide : s.onboarding.passwordShow,
+                    onPress: () => setPasswordShown((montré) => !montré),
+                  }}
+                />
+              ) : null}
+
+              {/* Le canal ne se choisit que pour un code : un mot de passe
+                  s'accompagne toujours d'une adresse. */}
+              {method === 'code' && availableChannels.length > 1 ? (
                 <View style={styles.channelBlock}>
                   <Text style={[styles.label, rtl.text]}>{s.onboarding.channelLabel}</Text>
                   <View style={[styles.channelRow, rtl.row]}>
@@ -442,15 +667,133 @@ export function OnboardingFlow({
 
               <PrimaryButton
                 label={s.onboarding.createAccount}
-                loading={verification.status.kind === 'sending'}
-                onPress={submitAccount}
+                loading={busy || verification.status.kind === 'sending'}
+                onPress={method === 'password' ? submitRegistration : submitAccount}
               />
+
+              {accountError ? (
+                <Text style={[styles.positionError, rtl.text]}>{accountError}</Text>
+              ) : null}
 
               {verification.error ? (
                 <Text style={[styles.positionError, rtl.text]}>
                   {verificationMessage(verification.error)}
                 </Text>
               ) : null}
+
+              {/* Un voisin qui réinstalle l'application arrive ici : il lui
+                  faut une porte, pas un formulaire de création. */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={s.onboarding.haveAccount}
+                onPress={() => basculerVers('login')}
+                style={styles.lienSecondaire}
+              >
+                <Text style={styles.lienSecondaireTexte}>{s.onboarding.haveAccount}</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {step === 2 && accountPane === 'confirm' ? (
+            <View>
+              <Text style={styles.stepEmoji}>✉️</Text>
+              <Text style={[styles.heading, rtl.text]}>{s.onboarding.confirmTitle}</Text>
+
+              {linkUnsent ? (
+                <Text style={[styles.positionError, rtl.text]}>
+                  {s.onboarding.confirmNotSent}
+                </Text>
+              ) : (
+                <Text style={[styles.sub, rtl.text]}>
+                  {format(s.onboarding.confirmSubtitle, { email: phone })}
+                </Text>
+              )}
+
+              <Text style={[styles.channelHint, rtl.text]}>{s.onboarding.confirmSpam}</Text>
+
+              <PrimaryButton
+                label={s.onboarding.confirmDone}
+                onPress={() => basculerVers('login')}
+              />
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={s.onboarding.confirmResend}
+                onPress={resendConfirmation}
+                disabled={busy}
+                style={styles.lienSecondaire}
+              >
+                <Text style={styles.lienSecondaireTexte}>{s.onboarding.confirmResend}</Text>
+              </Pressable>
+
+              {accountNotice ? (
+                <Text style={[styles.noticeReussi, rtl.text]}>{accountNotice}</Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          {step === 2 && accountPane === 'login' ? (
+            <View>
+              <Text style={styles.stepEmoji}>🔑</Text>
+              <Text style={[styles.heading, rtl.text]}>{s.onboarding.loginTitle}</Text>
+              <Text style={[styles.sub, rtl.text]}>{s.onboarding.loginSubtitle}</Text>
+
+              <Field
+                label={s.onboarding.emailLabel}
+                placeholder={s.onboarding.emailPlaceholder}
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="emailAddress"
+              />
+              <Field
+                label={s.onboarding.passwordLabel}
+                placeholder={s.onboarding.passwordPlaceholder}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!passwordShown}
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="password"
+                action={{
+                  label: passwordShown ? s.onboarding.passwordHide : s.onboarding.passwordShow,
+                  onPress: () => setPasswordShown((montré) => !montré),
+                }}
+              />
+
+              <PrimaryButton
+                label={s.onboarding.login}
+                loading={busy}
+                onPress={submitLogin}
+              />
+
+              {accountError ? (
+                <Text style={[styles.positionError, rtl.text]}>{accountError}</Text>
+              ) : null}
+              {accountNotice ? (
+                <Text style={[styles.noticeReussi, rtl.text]}>{accountNotice}</Text>
+              ) : null}
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={s.onboarding.forgotPassword}
+                onPress={forgotPassword}
+                disabled={busy}
+                style={styles.lienSecondaire}
+              >
+                <Text style={styles.lienSecondaireTexte}>{s.onboarding.forgotPassword}</Text>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={s.onboarding.noAccount}
+                onPress={() => basculerVers('phone')}
+                style={styles.lienSecondaire}
+              >
+                <Text style={styles.lienSecondaireTexte}>{s.onboarding.noAccount}</Text>
+              </Pressable>
             </View>
           ) : null}
 
@@ -770,6 +1113,19 @@ const styles = StyleSheet.create({
   },
   langButtons: { alignSelf: 'stretch', gap: spacing.md },
   stepEmoji: { fontSize: 34, marginBottom: spacing.sm, textAlign: 'center' },
+  lienSecondaire: { marginTop: spacing.md, alignItems: 'center' },
+  lienSecondaireTexte: {
+    color: colors.brand,
+    fontWeight: '600',
+    fontSize: fontSizes.small,
+  },
+  noticeReussi: {
+    marginTop: spacing.sm,
+    color: colors.aid,
+    fontSize: fontSizes.small,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   heading: { fontSize: fontSizes.heading, fontWeight: '700', color: colors.ink },
   sub: { fontSize: fontSizes.small, color: colors.muted, marginBottom: spacing.lg, marginTop: 4 },
   label: {

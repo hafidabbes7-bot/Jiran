@@ -96,6 +96,47 @@ export type ClaimLinkResult =
   | ({ ok: true } & VerifiedSession)
   | { ok: false; reason: 'pending' | 'expired' | 'consumed' | 'not_found' | 'network' };
 
+/**
+ * Inscription par adresse et mot de passe.
+ *
+ * `emailSent` dit si le lien est réellement parti. Sans fournisseur d'e-mail
+ * branché, il vaut `false` : l'application doit alors le dire, plutôt
+ * qu'afficher « regarde ta boîte » devant une boîte qui ne recevra rien.
+ */
+export type RegisterResult =
+  | { ok: true; emailSent: boolean; devLink?: string }
+  | {
+      ok: false;
+      reason:
+        | 'adresse_invalide'
+        | 'mot_de_passe_trop_court'
+        | 'mot_de_passe_trop_long'
+        | 'mot_de_passe_trop_courant'
+        | 'rate_limited'
+        | 'network';
+    };
+
+export type LoginResult =
+  | ({ ok: true } & VerifiedSession)
+  | {
+      ok: false;
+      reason:
+        | 'identifiants_refuses'
+        | 'adresse_non_confirmee'
+        | 'compte_bloque'
+        | 'rate_limited'
+        | 'network';
+    };
+
+/** Profil déjà enregistré côté serveur pour un identifiant vérifié. */
+export interface ExistingProfile {
+  firstName: string;
+  neighborhoodId: string;
+  building?: string;
+  joinedAt: string;
+  isModerator: boolean;
+}
+
 export interface AuthService {
   /** Canaux réellement ouverts côté serveur. */
   listChannels(): Promise<Channel[]>;
@@ -103,6 +144,16 @@ export interface AuthService {
   verifyCode(challengeId: string, code: string): Promise<VerifyCodeResult>;
   /** Interrogé en boucle pendant que le voisin envoie son message WhatsApp. */
   claimLink(challengeId: string): Promise<ClaimLinkResult>;
+
+  /** Crée un compte par adresse et mot de passe ; un lien part par e-mail. */
+  register(email: string, password: string): Promise<RegisterResult>;
+  login(email: string, password: string): Promise<LoginResult>;
+  /** Renvoie le lien de confirmation. Silencieux si l'adresse est inconnue. */
+  resendConfirmation(email: string): Promise<{ ok: boolean; emailSent: boolean }>;
+  /** Demande un lien pour choisir un nouveau mot de passe. */
+  forgotPassword(email: string): Promise<{ ok: boolean; emailSent: boolean }>;
+  /** Profil déjà créé pour ce jeton, s'il y en a un. */
+  existingProfile(token: string): Promise<ExistingProfile | null>;
 }
 
 /** Coupe l'attente : sans cela, un serveur injoignable fige l'inscription. */
@@ -246,6 +297,105 @@ export class HttpAuthService implements AuthService {
       return { ok: false, reason: reason ?? 'not_found' };
     } catch {
       return { ok: false, reason: 'network' };
+    }
+  }
+
+  // --- Comptes par adresse et mot de passe -----------------------------
+
+  async register(email: string, password: string): Promise<RegisterResult> {
+    try {
+      const { status, data } = await postJson('/auth/register', { email, password });
+
+      if (status === 201) {
+        return {
+          ok: true,
+          emailSent: data.emailSent === true,
+          ...(typeof data.devLink === 'string' ? { devLink: data.devLink } : {}),
+        };
+      }
+
+      const known = [
+        'adresse_invalide',
+        'mot_de_passe_trop_court',
+        'mot_de_passe_trop_long',
+        'mot_de_passe_trop_courant',
+        'rate_limited',
+      ] as const;
+      const reason = known.find((value) => value === asString(data.error));
+      return { ok: false, reason: reason ?? 'adresse_invalide' };
+    } catch {
+      return { ok: false, reason: 'network' };
+    }
+  }
+
+  async login(email: string, password: string): Promise<LoginResult> {
+    try {
+      const { status, data } = await postJson('/auth/login', { email, password });
+
+      if (status === 200) {
+        return {
+          ok: true,
+          identifier: asString(data.identifier ?? data.phone),
+          token: asString(data.token),
+        };
+      }
+
+      const known = [
+        'identifiants_refuses',
+        'adresse_non_confirmee',
+        'compte_bloque',
+        'rate_limited',
+      ] as const;
+      const reason = known.find((value) => value === asString(data.error));
+      return { ok: false, reason: reason ?? 'identifiants_refuses' };
+    } catch {
+      return { ok: false, reason: 'network' };
+    }
+  }
+
+  async resendConfirmation(email: string): Promise<{ ok: boolean; emailSent: boolean }> {
+    return this.demanderLien('/auth/resend-confirmation', email);
+  }
+
+  async forgotPassword(email: string): Promise<{ ok: boolean; emailSent: boolean }> {
+    return this.demanderLien('/auth/forgot-password', email);
+  }
+
+  /**
+   * Les deux demandes de lien répondent pareil, exprès : le serveur ne dit
+   * jamais si l'adresse existe, donc l'application n'a rien de plus à montrer.
+   */
+  async existingProfile(token: string): Promise<ExistingProfile | null> {
+    try {
+      const { status, data } = await requestJson('/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (status !== 200) return null;
+
+      const profil = data.profile as Record<string, unknown> | null;
+      if (!profil) return null;
+
+      return {
+        firstName: asString(profil.firstName),
+        neighborhoodId: asString(profil.neighborhoodId),
+        ...(typeof profil.building === 'string' ? { building: profil.building } : {}),
+        joinedAt: asString(profil.joinedAt, new Date().toISOString()),
+        isModerator: profil.isModerator === true,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private async demanderLien(
+    chemin: string,
+    email: string
+  ): Promise<{ ok: boolean; emailSent: boolean }> {
+    try {
+      const { status, data } = await postJson(chemin, { email });
+      return { ok: status === 200, emailSent: data.emailSent === true };
+    } catch {
+      return { ok: false, emailSent: false };
     }
   }
 }

@@ -680,8 +680,16 @@ export async function createServer(options?: {
 
   serveWebApp(app, options?.webDir ?? config.webDir);
 
-  /** Contrôle qu'un jeton est encore valable, et à quel numéro il correspond. */
-  app.get('/auth/me', (request: Request, response: Response) => {
+  /**
+   * Contrôle qu'un jeton est encore valable, à qui il correspond, et si un
+   * profil existe déjà pour lui.
+   *
+   * Ce dernier point est ce qui permet à un voisin qui se reconnecte depuis un
+   * autre téléphone de retomber directement dans son quartier, au lieu de
+   * redéclarer son prénom, son quartier et de relire les règles — qu'il a déjà
+   * acceptées.
+   */
+  app.get('/auth/me', async (request: Request, response: Response) => {
     const header = request.header('authorization') ?? '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : '';
     const identifier = token ? readSessionToken(token, config.sessionSecret) : null;
@@ -690,8 +698,23 @@ export async function createServer(options?: {
       response.status(401).json({ error: 'invalid_token' });
       return;
     }
+    const membre = await content.findMemberByIdentifier(identifier);
+
     // `phone` reste là pour les applications déjà installées.
-    response.json({ phone: identifier, identifier, identifierKind: kindOf(identifier) });
+    response.json({
+      phone: identifier,
+      identifier,
+      identifierKind: kindOf(identifier),
+      profile: membre
+        ? {
+            firstName: membre.firstName,
+            neighborhoodId: membre.neighborhoodId,
+            building: membre.building,
+            joinedAt: membre.joinedAt,
+            isModerator: await moderation.isModerator(membre.identifier),
+          }
+        : null,
+    });
   });
 
   /**

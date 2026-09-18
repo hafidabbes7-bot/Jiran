@@ -139,6 +139,14 @@ Trois choix assumés dans ce lot :
  — une absence n'est visible que des voisins nommément désignés : l'annoncer au
    quartier reviendrait à donner l'adresse d'un logement vide.
 
+## Se créer un compte
+
+Deux chemins, au choix du voisin : un **code à usage unique** (SMS, WhatsApp ou
+e-mail — rien à retenir), ou une **adresse et un mot de passe**, confirmés par
+un lien reçu dans la boîte. Les deux créent un vrai compte sur le serveur : on
+le retrouve depuis n'importe quel téléphone. Voir
+[docs/authentification.md](docs/authentification.md).
+
 ## Ce qui reste comme limite de l'hébergement gratuit
 
 **Les données ne disparaissent plus.** Elles vivaient dans un fichier posé à
