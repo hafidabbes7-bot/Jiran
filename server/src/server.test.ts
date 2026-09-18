@@ -65,6 +65,7 @@ describe('API de vérification', () => {
       verificationDecorative: false,
       push: { provider: 'test', delivers: false },
       database: { configured: Boolean(process.env.DATABASE_URL) },
+      emailAccounts: { enabled: true, canSendLinks: false },
       photos: { storage: 'base' },
     });
   });

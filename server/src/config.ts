@@ -200,6 +200,27 @@ export const config = {
   webDir: process.env.WEB_DIR ?? '',
 
   /**
+   * Requêtes d'authentification autorisées par minute et par adresse IP.
+   *
+   * En Algérie, les opérateurs mobiles partagent une même adresse publique
+   * entre des milliers d'abonnés : un plafond trop bas ne punit pas un
+   * attaquant, il ferme la porte à tout un quartier en même temps. Ce plafond
+   * n'est donc qu'un garde-fou contre le déluge ; c'est le blocage par compte
+   * — six essais, puis un quart d'heure — qui arrête celui qui cherche un mot
+   * de passe.
+   */
+  authRequestsPerMinute: intFromEnv('AUTH_RATE_LIMIT_PER_MINUTE', 60),
+
+  /**
+   * Adresse publique du service, pour fabriquer les liens envoyés par e-mail.
+   *
+   * Si elle est vide, le serveur la déduit de la requête reçue. C'est juste
+   * dans presque tous les cas, et ça évite une variable de plus à poser ; la
+   * renseigner reste préférable dès qu'un proxy s'en mêle.
+   */
+  publicUrl: (process.env.PUBLIC_URL ?? '').replace(/\/+$/, ''),
+
+  /**
    * Ménage quotidien des publications.
    *
    * Activé par défaut : c'est lui qui tient l'hébergement gratuit dans ses

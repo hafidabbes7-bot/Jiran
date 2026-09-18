@@ -20,6 +20,14 @@ import { NotificationService } from './content/notifications.js';
 import { ContentRepository } from './content/repository.js';
 import { ModerationQueue } from './content/moderationQueue.js';
 import { createContentRouter } from './content/routes.js';
+import { AccountService } from './auth/accounts.js';
+import {
+  messageDeConfirmation,
+  messageDeReinitialisation,
+  pageDeConfirmation,
+  pageDeNouveauMotDePasse,
+} from './auth/emails.js';
+import { LONGUEUR_MAXIMALE, LONGUEUR_MINIMALE } from './auth/password.js';
 import { createPushSender, type PushSender } from './push/index.js';
 import { kindOf, maskIdentifier } from './identity.js';
 import { maskPhone } from './phone.js';
@@ -57,6 +65,29 @@ const verifyCodeSchema = z.object({
 });
 
 const verifyLinkSchema = z.object({ challengeId: z.string().min(1).max(100) });
+
+/**
+ * Inscription par adresse et mot de passe.
+ *
+ * L'adresse n'est pas validée finement ici : `AccountService` s'en charge, et
+ * un motif trop strict rejetterait des adresses valides et rares.
+ */
+const registerSchema = z.object({
+  email: z.string().trim().min(6).max(254),
+  password: z.string().min(LONGUEUR_MINIMALE).max(LONGUEUR_MAXIMALE),
+});
+
+const loginSchema = z.object({
+  email: z.string().trim().min(6).max(254),
+  password: z.string().min(1).max(LONGUEUR_MAXIMALE),
+});
+
+const emailOnlySchema = z.object({ email: z.string().trim().min(6).max(254) });
+
+const resetSchema = z.object({
+  token: z.string().min(10).max(200),
+  password: z.string().min(LONGUEUR_MINIMALE).max(LONGUEUR_MAXIMALE),
+});
 
 /**
  * Sert l'application web, si elle a été construite.
@@ -155,6 +186,8 @@ export async function createServer(options?: {
   push?: PushSender;
   /** Dossier de l'application web à servir en plus de l'API. */
   webDir?: string;
+  /** Plafond des requêtes d'authentification par minute et par IP. */
+  authRequestsPerMinute?: number;
 }) {
   const store = options?.store ?? new InMemoryChallengeStore();
   const providers = options?.providers ?? createChannelProviders();
@@ -179,6 +212,8 @@ export async function createServer(options?: {
     planifierNettoyage(new CleanupService(database, photoStorage));
   }
 
+  const comptes = new AccountService(database);
+
   const verification = new VerificationService(store, providers, {
     length: config.otp.length,
     ttlSeconds: config.otp.ttlSeconds,
@@ -191,7 +226,7 @@ export async function createServer(options?: {
     whatsappBusinessNumber: config.whatsapp.businessNumber || undefined,
   });
 
-  const perIp = new SlidingWindowLimiter(30, 60);
+  const perIp = new SlidingWindowLimiter(options?.authRequestsPerMinute ?? config.authRequestsPerMinute, 60);
 
   const app = express();
   app.disable('x-powered-by');
@@ -261,6 +296,9 @@ export async function createServer(options?: {
       // De quoi vérifier d'un coup d'œil qu'un déploiement est bien branché,
       // sans jamais rien révéler de l'adresse ni des clés.
       database: { configured: Boolean(config.databaseUrl) },
+      // Les comptes par mot de passe existent toujours ; ce qui varie, c'est
+      // la capacité d'envoyer le lien qui les active.
+      emailAccounts: { enabled: true, canSendLinks: Boolean(providers.email) },
       photos: { storage: photoStorage ? 'supabase' : 'base' },
     });
   });
@@ -307,6 +345,229 @@ export async function createServer(options?: {
         response.status(502).json({ error: result.reason });
         return;
     }
+  });
+
+  // --- Comptes par adresse e-mail et mot de passe ----------------------
+  //
+  // Le parcours par téléphone garde le sien, sans mot de passe : un code reçu,
+  // et c'est tout. Les deux aboutissent au même endroit — un identifiant
+  // vérifié, qui possède le compte et son historique en base.
+
+  /** Adresse publique du service, pour fabriquer un lien ouvrable. */
+  const adressePublique = (request: Request): string => {
+    if (config.publicUrl) return config.publicUrl;
+    // Derrière le proxy de Render, `protocol` suit X-Forwarded-Proto grâce à
+    // `trust proxy` ; l'en-tête Host porte le vrai domaine.
+    return `${request.protocol}://${request.get('host') ?? 'localhost'}`;
+  };
+
+  const lienDeConfirmation = (request: Request, jeton: string, but: 'confirmation' | 'reset') =>
+    `${adressePublique(request)}/auth/${but === 'confirmation' ? 'confirm' : 'reset'}?token=${encodeURIComponent(jeton)}`;
+
+  /**
+   * Envoie le lien, et dit si le canal e-mail est seulement décoratif.
+   *
+   * Sans fournisseur d'e-mail configuré, rien ne part — comme pour les codes.
+   * On le dit à l'application plutôt que de la laisser afficher « regarde ta
+   * boîte » devant une boîte qui ne recevra jamais rien.
+   */
+  const envoyerLien = async (
+    request: Request,
+    lien: { identifier: string; but: 'confirmation' | 'reset'; jeton: string }
+  ): Promise<{ envoye: boolean; lienDev?: string }> => {
+    const url = lienDeConfirmation(request, lien.jeton, lien.but);
+    const message =
+      lien.but === 'confirmation' ? messageDeConfirmation(url) : messageDeReinitialisation(url);
+
+    const fournisseur = providers.email;
+    if (!fournisseur) {
+      console.warn(
+        `[auth] aucun fournisseur e-mail : lien ${lien.but} non envoyé à ${maskIdentifier(lien.identifier)}`
+      );
+      // Même porte que pour les codes à usage unique : en essai assumé, le lien
+      // est rendu pour pouvoir avancer sans boîte aux lettres. Elle se referme
+      // d'elle-même dès qu'un vrai fournisseur est posé.
+      return { envoye: false, ...(config.exposeDevCode ? { lienDev: url } : {}) };
+    }
+
+    try {
+      await fournisseur.send({ to: lien.identifier, message });
+      return { envoye: true };
+    } catch (error) {
+      console.error(`[auth] envoi du lien ${lien.but} impossible`, error);
+      return { envoye: false };
+    }
+  };
+
+  /**
+   * Crée un compte, ou reprend une inscription non confirmée.
+   *
+   * La réponse est la même dans tous les cas où rien n'a échoué, adresse déjà
+   * prise comprise : sinon, essayer des adresses jusqu'à voir la réponse
+   * changer dirait qui habite le quartier.
+   */
+  app.post('/auth/register', async (request: Request, response: Response) => {
+    const parsed = registerSchema.safeParse(request.body);
+    if (!parsed.success) {
+      const faible = parsed.error.issues.some((issue) => issue.path[0] === 'password');
+      response.status(400).json({ error: faible ? 'mot_de_passe_trop_court' : 'invalid_request' });
+      return;
+    }
+
+    const résultat = await comptes.inscrire(parsed.data.email, parsed.data.password);
+    if (!résultat.ok) {
+      response.status(400).json({ error: résultat.raison });
+      return;
+    }
+
+    // Pas de lien : l'adresse a déjà un compte confirmé. On ne le dit pas.
+    if (!résultat.lien) {
+      response.status(201).json({ ok: true, emailSent: Boolean(providers.email) });
+      return;
+    }
+
+    const envoi = await envoyerLien(request, résultat.lien);
+    console.info(`[auth] inscription : ${maskIdentifier(résultat.lien.identifier)}`);
+    response.status(201).json({ ok: true, emailSent: envoi.envoye, ...(envoi.lienDev ? { devLink: envoi.lienDev } : {}) });
+  });
+
+  /** Ouvre le lien reçu par e-mail. Répond une page, pas du JSON. */
+  app.get('/auth/confirm', async (request: Request, response: Response) => {
+    const jeton = typeof request.query.token === 'string' ? request.query.token : '';
+    const résultat = jeton
+      ? await comptes.confirmer(jeton)
+      : ({ ok: false, raison: 'jeton_inconnu' } as const);
+
+    response.setHeader('Content-Type', 'text/html; charset=utf-8');
+    // Un lien de confirmation ne doit jamais être gardé par un cache
+    // intermédiaire : il ne sert qu'une fois, et il est personnel.
+    response.setHeader('Cache-Control', 'no-store');
+
+    if (résultat.ok) {
+      console.info(`[auth] adresse confirmée : ${maskIdentifier(résultat.identifier)}`);
+      response.status(200).send(
+        pageDeConfirmation({
+          titre: 'Adresse confirmée',
+          message: 'Ton compte est prêt. Tu peux revenir sur Jiran et te connecter.',
+          réussi: true,
+          lienApplication: adressePublique(request),
+        })
+      );
+      return;
+    }
+
+    const messages: Record<string, { titre: string; message: string }> = {
+      jeton_expire: {
+        titre: 'Lien périmé',
+        message:
+          "Ce lien avait 24 heures pour servir. Retourne sur Jiran et demande-en un nouveau.",
+      },
+      jeton_deja_utilise: {
+        titre: 'Lien déjà utilisé',
+        message: 'Ton adresse est sans doute déjà confirmée : essaie simplement de te connecter.',
+      },
+      jeton_inconnu: {
+        titre: 'Lien invalide',
+        message: "Ce lien ne correspond à rien. Vérifie qu'il a été copié en entier.",
+      },
+    };
+    const texte = messages[résultat.raison] ?? messages.jeton_inconnu!;
+    response.status(400).send(
+      pageDeConfirmation({ ...texte, réussi: false, lienApplication: adressePublique(request) })
+    );
+  });
+
+  /** Page du lien de réinitialisation : deux champs, aucune application requise. */
+  app.get('/auth/reset', (request: Request, response: Response) => {
+    const jeton = typeof request.query.token === 'string' ? request.query.token : '';
+    response.setHeader('Content-Type', 'text/html; charset=utf-8');
+    response.setHeader('Cache-Control', 'no-store');
+
+    if (!jeton) {
+      response.status(400).send(
+        pageDeConfirmation({
+          titre: 'Lien invalide',
+          message: "Ce lien ne correspond à rien. Vérifie qu'il a été copié en entier.",
+          réussi: false,
+        })
+      );
+      return;
+    }
+
+    response.send(pageDeNouveauMotDePasse(jeton, LONGUEUR_MINIMALE));
+  });
+
+  app.post('/auth/login', async (request: Request, response: Response) => {
+    const parsed = loginSchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    const résultat = await comptes.connecter(parsed.data.email, parsed.data.password);
+    if (!résultat.ok) {
+      const codes = {
+        identifiants_refuses: 401,
+        adresse_non_confirmee: 403,
+        compte_bloque: 429,
+      } as const;
+      response.status(codes[résultat.raison]).json({ error: résultat.raison });
+      return;
+    }
+
+    console.info(`[auth] connexion : ${maskIdentifier(résultat.identifier)}`);
+    response.json({
+      phone: résultat.identifier,
+      identifier: résultat.identifier,
+      identifierKind: kindOf(résultat.identifier),
+      token: issueSessionToken(résultat.identifier, config.sessionSecret, config.session.ttlDays),
+    });
+  });
+
+  /** Renvoie un lien de confirmation. Réponse identique, adresse connue ou non. */
+  app.post('/auth/resend-confirmation', async (request: Request, response: Response) => {
+    const parsed = emailOnlySchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    const lien = await comptes.renvoyerConfirmation(parsed.data.email);
+    const envoi = lien ? await envoyerLien(request, lien) : { envoye: false as boolean };
+    response.json({ ok: true, emailSent: envoi.envoye, ...('lienDev' in envoi && envoi.lienDev ? { devLink: envoi.lienDev } : {}) });
+  });
+
+  app.post('/auth/forgot-password', async (request: Request, response: Response) => {
+    const parsed = emailOnlySchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    const lien = await comptes.demanderReinitialisation(parsed.data.email);
+    const envoi = lien ? await envoyerLien(request, lien) : { envoye: false as boolean };
+    response.json({ ok: true, emailSent: envoi.envoye, ...('lienDev' in envoi && envoi.lienDev ? { devLink: envoi.lienDev } : {}) });
+  });
+
+  app.post('/auth/reset-password', async (request: Request, response: Response) => {
+    const parsed = resetSchema.safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    const résultat = await comptes.reinitialiser(parsed.data.token, parsed.data.password);
+    if (!résultat.ok) {
+      response.status(400).json({ error: résultat.raison });
+      return;
+    }
+
+    console.info(`[auth] mot de passe changé : ${maskIdentifier(résultat.identifier)}`);
+    response.json({
+      identifier: résultat.identifier,
+      identifierKind: kindOf(résultat.identifier),
+      token: issueSessionToken(résultat.identifier, config.sessionSecret, config.session.ttlDays),
+    });
   });
 
   app.post('/auth/verify-code', async (request: Request, response: Response) => {
