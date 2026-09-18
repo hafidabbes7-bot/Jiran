@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Tous les textes de l'application sont déclarés ici.
+      Pour ajouter l'arabe : copier ce fichier dans res/values-ar/strings.xml
+      et traduire les valeurs (les noms restent identiques).
+      Le RTL est déjà activé via android:supportsRtl="true" dans le manifeste.
+    -->
+    <string name="app_name">Peintre Pro DZ</string>
+    <string name="app_title">PEINTRE PRO DZ</string>
+
+    <!-- Actions communes -->
+    <string name="action_save">Enregistrer</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_delete">Supprimer</string>
+    <string name="action_edit">Modifier</string>
+    <string name="action_add">Ajouter</string>
+    <string name="action_back">Retour</string>
+    <string name="action_search">Rechercher</string>
+    <string name="action_confirm">Confirmer</string>
+    <string name="action_close">Fermer</string>
+    <string name="action_ok">OK</string>
+    <string name="action_duplicate">Dupliquer</string>
+    <string name="action_open">Ouvrir</string>
+    <string name="action_new">Nouveau</string>
+    <string name="action_reset">Réinitialiser</string>
+
+    <!-- Accueil -->
+    <string name="home_subtitle">Devis et chantiers de peinture</string>
+    <string name="home_stat_quotes">Devis</string>
+    <string name="home_stat_accepted">Devis acceptés</string>
+    <string name="home_stat_sites">Chantiers en cours</string>
+    <string name="home_stat_outstanding">Montant à encaisser</string>
+    <string name="home_new_quote">Nouveau devis</string>
+    <string name="home_quotes">Mes devis</string>
+    <string name="home_sites">Mes chantiers</string>
+    <string name="home_clients">Mes clients</string>
+    <string name="home_payments">Paiements</string>
+    <string name="home_settings">Paramètres</string>
+    <string name="home_quick_calc">CALCUL RAPIDE</string>
+    <string name="home_month_title">Ce mois</string>
+    <string name="home_month_created">Devis créés</string>
+    <string name="home_month_accepted">Devis acceptés</string>
+    <string name="home_month_sites_done">Chantiers terminés</string>
+    <string name="home_month_quoted">Montant des devis (non encaissé)</string>
+    <string name="home_month_collected">Montant encaissé</string>
+    <string name="home_month_remaining">Montant restant à encaisser</string>
+
+    <!-- Clients -->
+    <string name="clients_title">Mes clients</string>
+    <string name="clients_empty">Aucun client. Appuyez sur + pour en ajouter un.</string>
+    <string name="clients_search_hint">Rechercher un client…</string>
+    <string name="client_new">Nouveau client</string>
+    <string name="client_edit">Modifier le client</string>
+    <string name="client_name">Nom</string>
+    <string name="client_phone">Téléphone</string>
+    <string name="client_address">Adresse</string>
+    <string name="client_notes">Notes</string>
+    <string name="client_detail_title">Fiche client</string>
+    <string name="client_quotes_history">Devis du client</string>
+    <string name="client_sites">Chantiers du client</string>
+    <string name="client_remaining">Reste à encaisser</string>
+    <string name="client_no_quotes">Aucun devis pour ce client.</string>
+    <string name="client_no_sites">Aucun chantier pour ce client.</string>
+    <string name="client_delete_title">Supprimer ce client ?</string>
+    <string name="client_delete_message">Cette action est définitive.</string>
+    <string name="client_delete_blocked">Impossible de supprimer : ce client a des devis. Supprimez d\'abord ses devis.</string>
+    <string name="client_error_name">Le nom du client est obligatoire.</string>
+
+    <!-- Devis : liste -->
+    <string name="quotes_title">Mes devis</string>
+    <string name="quotes_empty">Aucun devis pour le moment.</string>
+    <string name="quotes_search_hint">Rechercher (numéro, client)…</string>
+    <string name="quotes_filter_all">Tous</string>
+    <string name="quotes_filter_period">Période</string>
+    <string name="quotes_period_all">Toutes les dates</string>
+    <string name="quotes_period_month">Ce mois</string>
+    <string name="quotes_period_year">Cette année</string>
+    <string name="quote_delete_title">Supprimer ce devis ?</string>
+    <string name="quote_delete_message">Le devis, ses pièces et ses lignes seront supprimés définitivement.</string>
+    <string name="quote_duplicated">Devis dupliqué.</string>
+
+    <!-- Devis : éditeur -->
+    <string name="quote_new_title">Nouveau devis</string>
+    <string name="quote_edit_title">Devis</string>
+    <string name="quote_section_client">1. Client</string>
+    <string name="quote_section_site">2. Chantier</string>
+    <string name="quote_section_rooms">3. Pièces</string>
+    <string name="quote_section_lines">4. Travaux et matériaux</string>
+    <string name="quote_section_totals">5. Total</string>
+    <string name="quote_select_client">Choisir un client</string>
+    <string name="quote_change_client">Changer de client</string>
+    <string name="quote_create_client">Créer un client</string>
+    <string name="quote_no_client">Aucun client sélectionné</string>
+    <string name="quote_error_client">Veuillez choisir un client avant d\'enregistrer le devis.</string>
+    <string name="quote_number">Numéro de devis</string>
+    <string name="quote_site_type">Type de chantier</string>
+    <string name="quote_site_address">Adresse du chantier</string>
+    <string name="quote_date">Date</string>
+    <string name="quote_notes">Notes</string>
+    <string name="quote_level">Niveau de devis</string>
+    <string name="quote_status">Statut</string>
+    <string name="quote_add_room">Ajouter une pièce</string>
+    <string name="quote_no_rooms">Aucune pièce. Ajoutez une pièce pour calculer les surfaces.</string>
+    <string name="quote_add_line">Ajouter une ligne</string>
+    <string name="quote_no_lines">Aucune ligne. Ajoutez des travaux, matériaux ou main-d\'œuvre.</string>
+    <string name="quote_saved">Devis enregistré.</string>
+    <string name="quote_convert_site">Convertir en chantier</string>
+    <string name="quote_pdf">Générer le PDF</string>
+    <string name="quote_share">Partager</string>
+    <string name="quote_coming_phase2">Disponible en phase 2</string>
+
+    <!-- Pièces -->
+    <string name="room_new_title">Nouvelle pièce</string>
+    <string name="room_edit_title">Pièce</string>
+    <string name="room_name">Nom de la pièce</string>
+    <string name="room_dimensions">Dimensions</string>
+    <string name="room_length">Longueur (m)</string>
+    <string name="room_width">Largeur (m)</string>
+    <string name="room_height">Hauteur (m)</string>
+    <string name="room_openings">Portes et fenêtres</string>
+    <string name="room_doors">Portes</string>
+    <string name="room_windows">Fenêtres</string>
+    <string name="room_count">Nombre</string>
+    <string name="room_opening_width">Largeur (m)</string>
+    <string name="room_opening_height">Hauteur (m)</string>
+    <string name="room_surfaces">Surfaces calculées</string>
+    <string name="room_wall_area">Surface des murs</string>
+    <string name="room_openings_area">Surface des ouvertures</string>
+    <string name="room_net_wall_area">Surface nette des murs</string>
+    <string name="room_ceiling_area">Surface du plafond</string>
+    <string name="room_manual_override">Corriger les surfaces à la main</string>
+    <string name="room_manual_wall">Surface murs corrigée (m²)</string>
+    <string name="room_manual_ceiling">Surface plafond corrigée (m²)</string>
+    <string name="room_error_dimensions">Longueur, largeur et hauteur doivent être supérieures à 0.</string>
+    <string name="room_error_name">Le nom de la pièce est obligatoire.</string>
+    <string name="room_works">Travaux de la pièce</string>
+    <string name="room_add_work">Ajouter un travail</string>
+    <string name="room_no_works">Aucun travail pour cette pièce.</string>
+    <string name="room_delete_title">Supprimer cette pièce ?</string>
+    <string name="room_delete_message">Les travaux liés à cette pièce seront aussi supprimés.</string>
+    <string name="room_openings_warning">Les ouvertures dépassent la surface des murs : surface nette ramenée à 0.</string>
+
+    <!-- Lignes du devis -->
+    <string name="line_designation">Désignation</string>
+    <string name="line_unit">Unité</string>
+    <string name="line_quantity">Quantité</string>
+    <string name="line_unit_price">Prix unitaire</string>
+    <string name="line_total">Total</string>
+    <string name="line_category">Catégorie</string>
+    <string name="line_add_title">Ajouter une ligne</string>
+    <string name="line_edit_title">Modifier la ligne</string>
+    <string name="line_from_tariff">Depuis mes tarifs</string>
+    <string name="line_custom">Ligne libre</string>
+    <string name="line_base_quantity">Base de quantité</string>
+    <string name="line_base_net_walls">Murs nets</string>
+    <string name="line_base_ceiling">Plafond</string>
+    <string name="line_base_walls_ceiling">Murs + plafond</string>
+    <string name="line_base_doors">Portes (unités)</string>
+    <string name="line_base_windows">Fenêtres (unités)</string>
+    <string name="line_base_custom">Saisie libre</string>
+    <string name="line_error_quantity">La quantité ne peut pas être négative.</string>
+    <string name="line_error_price">Le prix ne peut pas être négatif.</string>
+    <string name="line_error_designation">La désignation est obligatoire.</string>
+
+    <!-- Totaux -->
+    <string name="total_works">Sous-total travaux</string>
+    <string name="total_materials">Sous-total matériaux</string>
+    <string name="total_labor">Main-d\'œuvre</string>
+    <string name="total_other">Autres frais</string>
+    <string name="total_subtotal">Sous-total</string>
+    <string name="total_discount">Remise</string>
+    <string name="total_after_discount">Total après remise</string>
+    <string name="total_vat_enabled">Appliquer la TVA</string>
+    <string name="total_vat_rate">Taux de TVA (%)</string>
+    <string name="total_vat">TVA</string>
+    <string name="total_grand">TOTAL</string>
+    <string name="total_deposit">Acompte</string>
+    <string name="total_paid">Déjà payé</string>
+    <string name="total_remaining">Reste à payer</string>
+    <string name="total_error_discount">La remise ne peut pas dépasser le sous-total.</string>
+
+    <!-- Tarifs -->
+    <string name="tariffs_title">Mes tarifs</string>
+    <string name="tariffs_empty">Aucun tarif. Ajoutez vos prix habituels.</string>
+    <string name="tariff_new">Nouveau tarif</string>
+    <string name="tariff_edit">Modifier le tarif</string>
+    <string name="tariff_label">Prestation</string>
+    <string name="tariff_price">Prix</string>
+    <string name="tariff_level">Niveau</string>
+    <string name="tariff_delete_title">Supprimer ce tarif ?</string>
+    <string name="tariff_delete_message">Les devis déjà créés ne seront pas modifiés.</string>
+    <string name="tariff_reset_title">Réinitialiser les tarifs ?</string>
+    <string name="tariff_reset_message">Les tarifs par défaut seront rétablis. Vos devis ne changent pas.</string>
+    <string name="tariff_hint_prices">Les prix ci-dessous sont des exemples : modifiez-les selon vos tarifs réels.</string>
+
+    <!-- Calcul rapide -->
+    <string name="quick_title">Calcul rapide</string>
+    <string name="quick_coats">Nombre de couches</string>
+    <string name="quick_price_per_sqm">Prix au m² (peinture)</string>
+    <string name="quick_coverage">Rendement (m²/L)</string>
+    <string name="quick_results">Résultat</string>
+    <string name="quick_paint_quantity">Quantité de peinture estimée</string>
+    <string name="quick_estimated_price">Prix estimé (murs nets)</string>
+    <string name="quick_total">Total estimatif</string>
+    <string name="quick_create_quote">Créer un devis à partir de ce calcul</string>
+    <string name="quick_pots">Conditionnements proposés</string>
+    <string name="quick_estimate_warning">Estimation indicative : le rendement réel dépend du produit et du support.</string>
+    <string name="quick_include_ceiling">Inclure le plafond</string>
+
+    <!-- Paramètres -->
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_company">Mon entreprise</string>
+    <string name="settings_company_name">Nom de l\'entreprise</string>
+    <string name="settings_phone">Téléphone</string>
+    <string name="settings_address">Adresse</string>
+    <string name="settings_email">Email</string>
+    <string name="settings_quote_defaults">Valeurs par défaut du devis</string>
+    <string name="settings_currency">Devise</string>
+    <string name="settings_validity_days">Validité du devis (jours)</string>
+    <string name="settings_conditions">Conditions et modalités de paiement</string>
+    <string name="settings_coverage">Rendement par défaut (m²/L)</string>
+    <string name="settings_coats">Nombre de couches par défaut</string>
+    <string name="settings_data">Données</string>
+    <string name="settings_tariffs">Mes tarifs</string>
+    <string name="settings_backup_hint">La sauvegarde et l\'export JSON arrivent en phase 3. Vos données sont déjà enregistrées sur le téléphone.</string>
+    <string name="settings_saved">Paramètres enregistrés.</string>
+    <string name="settings_logo_hint">Le logo sera ajouté avec le PDF (phase 2).</string>
+
+    <!-- Écrans à venir -->
+    <string name="soon_title">Bientôt disponible</string>
+    <string name="soon_sites">Les chantiers arrivent en phase 2 : conversion d\'un devis accepté, avancement et photos.</string>
+    <string name="soon_payments">Les paiements arrivent en phase 2 : acompte, encaissements et reste à payer.</string>
+
+    <!-- Statuts de devis -->
+    <string name="status_draft">Brouillon</string>
+    <string name="status_sent">Envoyé</string>
+    <string name="status_accepted">Accepté</string>
+    <string name="status_refused">Refusé</string>
+    <string name="status_cancelled">Annulé</string>
+
+    <!-- Niveaux -->
+    <string name="level_economique">Économique</string>
+    <string name="level_standard">Standard</string>
+    <string name="level_premium">Premium</string>
+
+    <!-- Types de chantier -->
+    <string name="site_type_apartment">Appartement</string>
+    <string name="site_type_villa">Villa</string>
+    <string name="site_type_shop">Local commercial</string>
+    <string name="site_type_office">Bureau</string>
+    <string name="site_type_facade">Façade</string>
+    <string name="site_type_other">Autre</string>
+
+    <!-- Statuts de chantier -->
+    <string name="site_status_preparation">Préparation</string>
+    <string name="site_status_in_progress">En cours</string>
+    <string name="site_status_done">Terminé</string>
+    <string name="site_status_paused">Suspendu</string>
+    <string name="site_status_cancelled">Annulé</string>
+
+    <!-- Unités -->
+    <string name="unit_m2">m²</string>
+    <string name="unit_ml">ml</string>
+    <string name="unit_piece">unité</string>
+    <string name="unit_lump">forfait</string>
+    <string name="unit_liter">litre</string>
+    <string name="unit_kg">kg</string>
+
+    <!-- Catégories de ligne -->
+    <string name="category_work">Travaux</string>
+    <string name="category_material">Matériaux</string>
+    <string name="category_labor">Main-d\'œuvre</string>
+    <string name="category_other">Autres frais</string>
+
+    <!-- Modes de paiement -->
+    <string name="payment_cash">Espèces</string>
+    <string name="payment_transfer">Virement</string>
+    <string name="payment_check">Chèque</string>
+    <string name="payment_other">Autre</string>
+
+    <!-- Phases photo -->
+    <string name="photo_before">Avant</string>
+    <string name="photo_during">Pendant</string>
+    <string name="photo_after">Après</string>
+
+    <!-- Divers -->
+    <string name="value_none">—</string>
+    <string name="required_field">Champ obligatoire</string>
+    <string name="error_number_invalid">Valeur invalide.</string>
+    <string name="error_negative">La valeur ne peut pas être négative.</string>
+</resources>
