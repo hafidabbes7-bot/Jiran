@@ -6,29 +6,41 @@
 
 <style>
   /* ------------------------------------------------------------------
-     Palette reprise du thème Material 3 de l'application Android :
-     vert atelier (#1B5E5A) et ocre (#FFC24B) sur un fond plâtre.
+     Palette : vert atelier et ocre sur un fond plâtre, reprise du thème
+     Material 3 de l'application Android.
+
+     color-scheme est déclaré dans les trois états : c'est ce qui empêche
+     Chrome et Samsung Internet d'appliquer leur « mode sombre forcé », qui
+     assombrit le fond sans toucher au texte — d'où l'écriture noire
+     illisible. La page gère son propre thème, le navigateur n'y touche plus.
      ------------------------------------------------------------------ */
   :root {
+    color-scheme: light;
+
     --platre: #F2F0E9;
     --papier: #FFFFFF;
     --encre: #16201F;
-    --estompe: #5E6C6A;
-    --trait: #DFDCD2;
+    --estompe: #56635F;
+    --trait: #DCD8CD;
     --atelier: #1B5E5A;
     --atelier-fonce: #0E3E3B;
-    --atelier-doux: #DCEBE8;
-    --ocre: #E29A24;
-    --ocre-douce: #FBEACB;
+    --atelier-doux: #D7E9E6;
+    --ocre: #C07617;
+    --ocre-douce: #FAEBD2;
     --ombre: rgba(22, 32, 31, 0.10);
 
-    --brouillon: #B07C0A;
+    /* Séries des graphiques — validées (bande de clarté, chroma, écart
+       daltonien, contraste) sur la surface des cartes. */
+    --serie-encaisse: #00897B;
+    --serie-reste: #C07617;
+
+    --brouillon: #9A6A06;
     --envoye: #1565C0;
     --accepte: #2E7D32;
     --refuse: #C62828;
-    --annule: #6B7370;
+    --annule: #5E6B67;
 
-    --r: 14px;
+    --r: 16px;
     --gouttiere: 16px;
     --titre: 'Archivo', 'IBM Plex Sans', system-ui, sans-serif;
     --texte: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
@@ -37,44 +49,54 @@
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --platre: #121817;
+      color-scheme: dark;
+
+      --platre: #101615;
       --papier: #1B2423;
-      --encre: #ECF1EF;
-      --estompe: #9AA8A5;
-      --trait: #2E3A38;
+      --encre: #EEF3F1;
+      --estompe: #A4B2AE;
+      --trait: #32403D;
       --atelier: #6FBDB4;
       --atelier-fonce: #9BD5CD;
-      --atelier-doux: #23342F;
-      --ocre: #F3B953;
+      --atelier-doux: #24352F;
+      --ocre: #F0B453;
       --ocre-douce: #3A2E17;
-      --ombre: rgba(0, 0, 0, 0.4);
+      --ombre: rgba(0, 0, 0, 0.45);
+
+      --serie-encaisse: #26A69A;
+      --serie-reste: #C08420;
 
       --brouillon: #E0A81F;
       --envoye: #6BA6E8;
       --accepte: #74C47A;
       --refuse: #EF7B76;
-      --annule: #949E9B;
+      --annule: #94A19D;
     }
   }
 
   :root[data-theme="dark"] {
-    --platre: #121817;
+    color-scheme: dark;
+
+    --platre: #101615;
     --papier: #1B2423;
-    --encre: #ECF1EF;
-    --estompe: #9AA8A5;
-    --trait: #2E3A38;
+    --encre: #EEF3F1;
+    --estompe: #A4B2AE;
+    --trait: #32403D;
     --atelier: #6FBDB4;
     --atelier-fonce: #9BD5CD;
-    --atelier-doux: #23342F;
-    --ocre: #F3B953;
+    --atelier-doux: #24352F;
+    --ocre: #F0B453;
     --ocre-douce: #3A2E17;
-    --ombre: rgba(0, 0, 0, 0.4);
+    --ombre: rgba(0, 0, 0, 0.45);
+
+    --serie-encaisse: #26A69A;
+    --serie-reste: #C08420;
 
     --brouillon: #E0A81F;
     --envoye: #6BA6E8;
     --accepte: #74C47A;
     --refuse: #EF7B76;
-    --annule: #949E9B;
+    --annule: #94A19D;
   }
 
   * { box-sizing: border-box; }
@@ -84,7 +106,7 @@
     background: var(--platre);
     color: var(--encre);
     font-family: var(--texte);
-    font-size: 16px;
+    font-size: 17px;
     line-height: 1.45;
     -webkit-text-size-adjust: 100%;
   }
@@ -120,15 +142,22 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .barre button {
-    background: rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.18);
     color: inherit;
     border: 0;
-    border-radius: 10px;
-    padding: 7px 11px;
+    border-radius: 11px;
+    min-width: 42px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 10px;
     font: inherit;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
   }
+  [dir="rtl"] #btnRetour svg { transform: scaleX(-1); }
   .barre button:hover { background: rgba(255,255,255,0.28); }
 
   main { padding: 16px var(--gouttiere) 64px; display: flex; flex-direction: column; gap: 14px; }
@@ -191,7 +220,7 @@
   }
   :root[data-theme="dark"] .btn { color: #0E1918; }
   .btn:hover { filter: brightness(1.08); }
-  .btn .ico { font-size: 22px; line-height: 1; }
+  .btn .ico, .note .ico, .banniere .ico { display: flex; align-items: center; line-height: 1; }
   .btn.eclair { background: var(--ocre); color: #2A1B00; min-height: 68px; font-size: 19px; }
   .btn.second {
     background: transparent;
@@ -392,6 +421,149 @@
 
   .pdp { font-size: 13px; color: var(--estompe); text-align: center; padding: 6px 0 0; }
 
+  /* ------------------------------------------------- tableau de bord */
+
+  .heros {
+    position: relative;
+    overflow: hidden;
+    background: var(--atelier);
+    color: #FFFFFF;
+    border-radius: 20px;
+    padding: 18px;
+  }
+  :root[data-theme="dark"] .heros { background: var(--atelier-doux); color: var(--encre); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .heros { background: var(--atelier-doux); color: var(--encre); }
+  }
+  .heros .etiq {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+  }
+  .heros .somme {
+    font-family: var(--titre);
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .heros .dessin {
+    position: absolute;
+    inset-inline-end: 10px;
+    top: 10px;
+    width: 96px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* Barre empilée encaissé / reste : 2 px de fond entre les segments. */
+  .empilee {
+    display: flex;
+    gap: 2px;
+    height: 14px;
+    margin-top: 16px;
+    border-radius: 7px;
+    overflow: hidden;
+    background: transparent;
+  }
+  .empilee span { display: block; height: 100%; }
+  .empilee .vide0 { flex: 1; background: rgba(255,255,255,0.28); }
+
+  .legende {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 12px;
+    font-size: 14px;
+  }
+  .legende div { display: flex; align-items: center; gap: 7px; }
+  .legende i {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex: 0 0 auto;
+  }
+  .legende b { font-family: var(--chiffres); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  /* Tuiles chiffrées */
+  .tuiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .tuile2 {
+    background: var(--papier);
+    border: 1px solid var(--trait);
+    border-radius: var(--r);
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .tuile2 .puceIco {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    background: var(--atelier-doux);
+    color: var(--atelier);
+  }
+  .tuile2.ocre .puceIco { background: var(--ocre-douce); color: var(--ocre); }
+  .tuile2 .corps2 { min-width: 0; display: flex; flex-direction: column; }
+  .tuile2 .val2 {
+    font-family: var(--titre);
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .tuile2 .etiq2 { font-size: 13px; color: var(--estompe); line-height: 1.25; }
+
+  /* Graphique en barres */
+  .graphe { width: 100%; height: auto; display: block; }
+  .graphe .barre { cursor: pointer; }
+  .graphe text { font-family: var(--texte); }
+  .infoGraphe {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--estompe);
+    min-height: 20px;
+  }
+  .infoGraphe b { color: var(--encre); font-family: var(--chiffres); font-weight: 500; }
+
+  /* Répartition par statut */
+  .rangStatut { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 14px; }
+  .rangStatut .nomStatut { width: 84px; flex: 0 0 auto; }
+  .rangStatut .piste { flex: 1; height: 12px; background: var(--trait); border-radius: 6px; overflow: hidden; }
+  .rangStatut .piste span { display: block; height: 100%; border-radius: 6px; }
+  .rangStatut .nb { width: 26px; text-align: end; font-family: var(--chiffres); font-variant-numeric: tabular-nums; }
+
+  /* Grille des grands boutons */
+  .actions { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 520px) { .actions { grid-template-columns: 1fr 1fr; } }
+  .actions .btn.eclair { grid-column: 1 / -1; }
+
+  .btn .puceIco {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    background: rgba(255,255,255,0.18);
+  }
+  .btn.eclair .puceIco { background: rgba(42,27,0,0.14); }
+
+  .titreSection {
+    font-family: var(--titre);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--estompe);
+    margin: 6px 0 -4px;
+  }
+
   @media print {
     .barre, .noPrint { display: none !important; }
     body, .app, main { background: #FFFFFF; padding: 0; margin: 0; max-width: none; gap: 0; }
@@ -403,8 +575,9 @@
 
 <div class="app">
   <header class="barre">
-    <button id="btnRetour" type="button" hidden data-act="retour" aria-label="Retour">◀</button>
+    <button id="btnRetour" type="button" hidden data-act="retour"></button>
     <h1 id="titreBarre">PEINTRE PRO DZ</h1>
+    <button type="button" data-act="theme" id="btnTheme"></button>
     <button type="button" data-act="langue" id="btnLangue">ع</button>
   </header>
   <main id="vue"></main>
@@ -522,10 +695,21 @@
       M2: "m²", ML: "ml", UNITE: "unité", FORFAIT: "forfait", LITRE: "litre", KG: "kg",
       TRAVAUX: "Travaux", MATERIAUX: "Matériaux", MAIN_OEUVRE: "Main-d'œuvre", AUTRES: "Autres frais",
       ECONOMIQUE: "Économique", STANDARD: "Standard", PREMIUM: "Premium",
+      tbMoisTitre: "Montant des devis, 6 derniers mois",
+      tbRepartition: "Vos devis par statut",
+      tbAucuneDonnee: "Pas encore de devis : créez le premier.",
+      tbToucherBarre: "Touchez une barre pour voir le mois.",
+      tbEncaisse: "Encaissé",
+      tbResteCourt: "Reste",
+      tbActions: "Que voulez-vous faire ?",
+      tbClients: "Clients",
+      themeAuto: "Thème automatique",
+      themeClair: "Thème clair",
+      themeSombre: "Thème sombre",
       essaiTitre: "Version d'essai",
       essaiTexte: "Cette page rejoue le devis de PEINTRE PRO DZ dans le navigateur, sans rien installer. Les données restent dans ce navigateur uniquement. L'application Android, elle, les enregistre dans une vraie base SQLite.",
       exempleTitre: "Données d'exemple",
-      exempleTexte: "Deux clients et deux devis sont fournis pour essayer tout de suite. Effacez-les quand vous voulez."
+      exempleTexte: "Deux clients et trois devis sont fournis pour essayer tout de suite. Effacez-les quand vous voulez."
     },
     ar: {
       titre: "بينتر برو دي زد", sousTitre: "عروض الأسعار وأوراش الدهن",
@@ -628,10 +812,21 @@
       M2: "م²", ML: "م.ط", UNITE: "وحدة", FORFAIT: "جزافي", LITRE: "لتر", KG: "كغ",
       TRAVAUX: "أشغال", MATERIAUX: "مواد", MAIN_OEUVRE: "يد عاملة", AUTRES: "مصاريف أخرى",
       ECONOMIQUE: "اقتصادي", STANDARD: "عادي", PREMIUM: "ممتاز",
+      tbMoisTitre: "مبلغ العروض، آخر 6 أشهر",
+      tbRepartition: "عروضك حسب الحالة",
+      tbAucuneDonnee: "لا يوجد أي عرض بعد: أنشئ الأول.",
+      tbToucherBarre: "المس عموداً لرؤية الشهر.",
+      tbEncaisse: "المحصَّل",
+      tbResteCourt: "الباقي",
+      tbActions: "ماذا تريد أن تفعل؟",
+      tbClients: "الزبائن",
+      themeAuto: "السمة تلقائية",
+      themeClair: "سمة فاتحة",
+      themeSombre: "سمة داكنة",
       essaiTitre: "نسخة تجريبية",
       essaiTexte: "هذه الصفحة تُحاكي عرض السعر في المتصفح دون أي تثبيت. البيانات تبقى في هذا المتصفح فقط. أما تطبيق أندرويد فيحفظها في قاعدة بيانات SQLite حقيقية.",
       exempleTitre: "بيانات مثال",
-      exempleTexte: "زبونان وعرضا سعر جاهزان للتجربة. يمكنك حذفهما متى شئت."
+      exempleTexte: "زبونان وثلاثة عروض أسعار جاهزة للتجربة. يمكنك حذفها متى شئت."
     }
   };
 
@@ -735,7 +930,7 @@
     return isFinite(x) ? x : 0;
   }
 
-  var nfMontant = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
+  var nfMontant = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
   var nfDecimal = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
 
   function argent(v) { return nfMontant.format(arrondi(v)) + " " + E.params.devise; }
@@ -837,8 +1032,8 @@
     var d1 = {
       id: id(), numero: "DEV-" + new Date().getFullYear() + "-0001", clientId: c1.id,
       typeChantier: "APPARTEMENT", adresse: "Cité 500 logements, Bt C, Blida",
-      date: Date.now() - 86400000 * 9, notes: "", niveau: "STANDARD", statut: "ACCEPTE",
-      remise: 0, tvaActive: false, tvaTaux: 19, acompte: 100000, validite: 30,
+      date: Date.now() - 86400000 * 65, notes: "", niveau: "STANDARD", statut: "ACCEPTE",
+      remise: 0, tvaActive: false, tvaTaux: 19, acompte: 40000, validite: 30,
       pieces: [salon, chambre],
       lignes: [
         { id: id(), pieceId: salon.id, categorie: "TRAVAUX", designation: "Enduit", unite: "M2", qte: arrondi(sSalon.net), pu: 250 },
@@ -848,7 +1043,7 @@
         { id: id(), pieceId: null, categorie: "MATERIAUX", designation: "Peinture (pot)", unite: "LITRE", qte: 30, pu: 600 },
         { id: id(), pieceId: null, categorie: "MAIN_OEUVRE", designation: "Main-d'œuvre au forfait", unite: "FORFAIT", qte: 1, pu: 25000 }
       ],
-      paiements: [{ id: id(), montant: 40000, date: Date.now() - 86400000 * 3, mode: "ESPECES", note: "" }]
+      paiements: [{ id: id(), montant: 30000, date: Date.now() - 86400000 * 40, mode: "ESPECES", note: "" }]
     };
 
     var bureau = piece("Bureau");
@@ -856,7 +1051,7 @@
     var sBureau = surfaces(bureau);
 
     var d2 = {
-      id: id(), numero: "DEV-" + new Date().getFullYear() + "-0002", clientId: c2.id,
+      id: id(), numero: "DEV-" + new Date().getFullYear() + "-0003", clientId: c2.id,
       typeChantier: "BUREAU", adresse: "Rue Didouche Mourad, Alger",
       date: Date.now() - 86400000 * 2, notes: "", niveau: "PREMIUM", statut: "ENVOYE",
       remise: 5000, tvaActive: false, tvaTaux: 19, acompte: 0, validite: 30,
@@ -869,11 +1064,29 @@
       paiements: []
     };
 
+    var chambre2 = piece("Chambre 2");
+    chambre2.longueur = 3.5; chambre2.largeur = 3; chambre2.hauteur = 2.8;
+    chambre2.portes = 1; chambre2.fenetres = 1;
+    var sChambre2 = surfaces(chambre2);
+
+    var d3 = {
+      id: id(), numero: "DEV-" + new Date().getFullYear() + "-0002", clientId: c1.id,
+      typeChantier: "APPARTEMENT", adresse: "Cité 500 logements, Bt C, Blida",
+      date: Date.now() - 86400000 * 34, notes: "", niveau: "ECONOMIQUE", statut: "BROUILLON",
+      remise: 0, tvaActive: false, tvaTaux: 19, acompte: 0, validite: 30,
+      pieces: [chambre2],
+      lignes: [
+        { id: id(), pieceId: chambre2.id, categorie: "TRAVAUX", designation: "Rebouchage", unite: "M2", qte: arrondi(sChambre2.net), pu: 96 },
+        { id: id(), pieceId: chambre2.id, categorie: "TRAVAUX", designation: "Peinture 2 couches", unite: "M2", qte: arrondi(sChambre2.net), pu: 360 }
+      ],
+      paiements: []
+    };
+
     return {
       version: 1,
       exemple: true,
       clients: [c1, c2],
-      devis: [d1, d2],
+      devis: [d1, d3, d2],
       tarifs: tarifsParDefaut(),
       params: {
         entreprise: "", tel: "", adresse: "", email: "", devise: "DA",
@@ -941,12 +1154,95 @@
     if (rendu.apres) { rendu.apres(); }
   }
 
+  /* Trois états : automatique (réglage du téléphone), clair, sombre. Le choix
+     est mémorisé, et il prime sur le mode sombre forcé du navigateur. */
+  var theme = "auto";
+  try { theme = localStorage.getItem("ppdz-theme") || "auto"; } catch (e) {}
+  if (["auto", "clair", "sombre"].indexOf(theme) < 0) { theme = "auto"; }
+
+  function appliquerTheme() {
+    var racine = document.documentElement;
+    if (theme === "clair") { racine.setAttribute("data-theme", "light"); }
+    else if (theme === "sombre") { racine.setAttribute("data-theme", "dark"); }
+    else { racine.removeAttribute("data-theme"); }
+
+    var bouton = document.getElementById("btnTheme");
+    var nom = theme === "clair" ? "soleil" : (theme === "sombre" ? "lune" : "auto");
+    var cle = theme === "clair" ? "themeClair" : (theme === "sombre" ? "themeSombre" : "themeAuto");
+    bouton.innerHTML = svgIco(nom, 20);
+    bouton.setAttribute("aria-label", t(cle));
+    bouton.setAttribute("title", t(cle));
+    try { localStorage.setItem("ppdz-theme", theme); } catch (e) {}
+  }
+
   function appliquerLangue() {
     document.documentElement.lang = langue;
     document.documentElement.dir = langue === "ar" ? "rtl" : "ltr";
     document.getElementById("btnLangue").textContent = langue === "ar" ? "FR" : "ع";
-    document.getElementById("btnRetour").setAttribute("aria-label", t("retour"));
+    var retourBtn = document.getElementById("btnRetour");
+    retourBtn.innerHTML = svgIco("fleche", 22);
+    retourBtn.setAttribute("aria-label", t("retour"));
     try { localStorage.setItem("ppdz-langue", langue); } catch (e) {}
+  }
+
+  /* =================================================================
+     Icônes : un seul jeu de dessins au trait, tracés à la couleur du
+     texte courant — donc lisibles dans les deux thèmes, sans image.
+     ================================================================= */
+
+  var ICONES = {
+    eclair: ["M13 2 4 14h7l-1 8 9-12h-7z"],
+    devis: ["M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z", "M14 3v5h5", "M9 13h6", "M9 17h4"],
+    dossier: ["M3 8a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"],
+    chantier: ["M4 16a8 8 0 0 1 16 0", "M2 18h20v2H2z", "M10 16V7a2 2 0 0 1 4 0v9"],
+    clients: ["M16 20v-1.5a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4V20", "M9.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7", "M21 20v-1.5a4 4 0 0 0-3-3.9"],
+    paiement: ["M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z", "M3 11h18", "M7 15h3"],
+    reglages: ["M4 7h16", "M4 12h16", "M4 17h16", "M9 5v4", "M16 10v4", "M12 15v4"],
+    plus: ["M12 5v14", "M5 12h14"],
+    poubelle: ["M4 7h16", "M10 11v6", "M14 11v6", "M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12", "M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"],
+    crayon: ["M4 20h4l10-10a2.8 2.8 0 0 0-4-4L4 16z", "M13.5 6.5l4 4"],
+    copier: ["M8 8h11v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z", "M16 5V4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h1"],
+    pdf: ["M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z", "M14 3v5h5", "M8 16h8"],
+    partager: ["M18 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", "M6 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", "M18 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", "M8.2 11 15.8 7", "M8.2 13l7.6 4"],
+    imprimer: ["M7 9V3h10v6", "M7 19H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2", "M7 15h10v6H7z"],
+    tarif: ["M3 11V5a2 2 0 0 1 2-2h6l9 9-8 8-9-9z", "M8 8h.01"],
+    sauver: ["M5 3h11l3 3v15H5z", "M8 3v6h8", "M8 14h8v7H8z"],
+    export: ["M12 3v12", "M8 7l4-4 4 4", "M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"],
+    import: ["M12 15V3", "M8 11l4 4 4-4", "M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"],
+    reinit: ["M20 12a8 8 0 1 1-2.4-5.7", "M20 4v5h-5"],
+    recherche: ["M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14", "M20 20l-4-4"],
+    soleil: ["M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8", "M12 2v2", "M12 20v2", "M2 12h2", "M20 12h2", "M4.9 4.9l1.4 1.4", "M17.7 17.7l1.4 1.4", "M19.1 4.9l-1.4 1.4", "M6.3 17.7l-1.4 1.4"],
+    lune: ["M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"],
+    auto: ["M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z", "M12 3v18"],
+    alerte: ["M12 4 2 20h20z", "M12 11v4", "M12 18h.01"],
+    info: ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18", "M12 11v5", "M12 8h.01"],
+    idee: ["M9 18h6", "M10 21h4", "M12 3a6 6 0 0 1 4 10.5V16H8v-2.5A6 6 0 0 1 12 3z"],
+    epingle: ["M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z", "M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"],
+    fleche: ["M15 6l-6 6 6 6"]
+  };
+
+  function svgIco(nom, taille) {
+    var chemins = ICONES[nom];
+    if (!chemins) { return ""; }
+    var t = taille || 22;
+    return '<svg viewBox="0 0 24 24" width="' + t + '" height="' + t + '" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ' +
+      'aria-hidden="true" focusable="false">' +
+      chemins.map(function (d) { return '<path d="' + d + '"/>'; }).join("") +
+      "</svg>";
+  }
+
+  /** Petit dessin d'atelier : mur peint, bande d'ocre et rouleau. */
+  function dessinAtelier() {
+    return '<svg class="dessin" viewBox="0 0 120 80" aria-hidden="true" focusable="false">' +
+      '<rect x="4" y="10" width="72" height="58" rx="5" fill="currentColor" opacity="0.28"/>' +
+      '<rect x="4" y="34" width="72" height="13" rx="3" fill="currentColor" opacity="0.55"/>' +
+      '<rect x="78" y="32" width="30" height="13" rx="4" fill="currentColor" opacity="0.9"/>' +
+      '<path d="M108 38.5h6v24h-7" fill="none" stroke="currentColor" stroke-width="3.5" ' +
+      'stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>' +
+      '<circle cx="24" cy="62" r="3" fill="currentColor" opacity="0.55"/>' +
+      '<circle cx="40" cy="66" r="2" fill="currentColor" opacity="0.4"/>' +
+      "</svg>";
   }
 
   /* =================================================================
@@ -996,9 +1292,18 @@
   var TYPES = ["APPARTEMENT", "VILLA", "LOCAL", "BUREAU", "FACADE", "AUTRE"];
   var NIVEAUX = ["ECONOMIQUE", "STANDARD", "PREMIUM"];
 
+  /* Les anciens émojis des appels existants sont rendus par le jeu d'icônes. */
+  var EMOJI_ICO = {
+    "💾": "sauver", "＋": "plus", "🗑": "poubelle", "✎": "crayon", "⧉": "copier",
+    "📄": "pdf", "↗": "partager", "🖨": "imprimer", "🏷": "tarif", "⬆": "export",
+    "⬇": "import", "↺": "reinit", "🧾": "devis", "👷": "chantier", "⚡": "eclair",
+    "⚙️": "reglages", "👤": "clients", "💰": "paiement", "📁": "dossier"
+  };
+
   function bouton(texteBouton, acte, classe, ico, extra) {
+    var dessin = ico ? (EMOJI_ICO[ico] ? svgIco(EMOJI_ICO[ico], 20) : esc(ico)) : "";
     return '<button type="button" class="btn ' + (classe || "") + '" data-act="' + acte + '"' + (extra || "") + '>' +
-      (ico ? '<span class="ico" aria-hidden="true">' + ico + "</span>" : "") +
+      (dessin ? '<span class="ico" aria-hidden="true">' + dessin + "</span>" : "") +
       "<span>" + esc(texteBouton) + "</span></button>";
   }
 
@@ -1008,44 +1313,183 @@
      7. Écrans
      ================================================================= */
 
+  var NOMS_MOIS = {
+    fr: ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."],
+    ar: ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"]
+  };
+
+  /** Montant des devis créés sur chacun des six derniers mois. */
+  function sixDerniersMois() {
+    var aujourdhui = new Date();
+    var mois = [];
+    for (var i = 5; i >= 0; i--) {
+      var d = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth() - i, 1);
+      mois.push({
+        debut: d.getTime(),
+        fin: new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime(),
+        label: (NOMS_MOIS[langue] || NOMS_MOIS.fr)[d.getMonth()],
+        valeur: 0
+      });
+    }
+    E.devis.forEach(function (d) {
+      var montant = totaux(d).total;
+      for (var i = 0; i < mois.length; i++) {
+        if (d.date >= mois[i].debut && d.date < mois[i].fin) { mois[i].valeur += montant; break; }
+      }
+    });
+    return mois;
+  }
+
+  /**
+   * Barres verticales : une seule série, donc pas de légende — le titre
+   * de la carte dit ce qui est mesuré. Seule la plus haute barre porte son
+   * montant ; les autres se lisent en touchant la barre.
+   */
+  function graphiqueMois(mois) {
+    var max = 0;
+    mois.forEach(function (m) { if (m.valeur > max) { max = m.valeur; } });
+    if (max <= 0) {
+      return '<p class="vide">' + esc(t("tbAucuneDonnee")) + "</p>";
+    }
+
+    var L = 320, H = 168, hautPad = 22, basPad = 30;
+    var pas = L / mois.length;
+    var largeurBarre = pas - 14;
+    var hauteurUtile = H - hautPad - basPad;
+    var indexMax = 0;
+    mois.forEach(function (m, i) { if (m.valeur >= mois[indexMax].valeur) { indexMax = i; } });
+
+    var corps = mois.map(function (m, i) {
+      var h = m.valeur > 0 ? Math.max(3, (m.valeur / max) * hauteurUtile) : 0;
+      var x = i * pas + 7;
+      var y = hautPad + (hauteurUtile - h);
+      var barre = h > 0
+        ? '<rect class="barre" x="' + x + '" y="' + y + '" width="' + largeurBarre + '" height="' + h +
+          '" rx="4" fill="var(--serie-encaisse)" data-act="barreMois" data-id="' + i + '"><title>' +
+          esc(m.label + " : " + argent(m.valeur)) + "</title></rect>"
+        : "";
+      var etiquette = i === indexMax
+        ? '<text x="' + (x + largeurBarre / 2) + '" y="' + (y - 7) + '" text-anchor="middle" ' +
+          'font-size="11" fill="var(--encre)">' + esc(nfMontant.format(Math.round(m.valeur))) + "</text>"
+        : "";
+      return barre + etiquette +
+        '<text x="' + (x + largeurBarre / 2) + '" y="' + (H - 10) +
+        '" text-anchor="middle" font-size="11" fill="var(--estompe)">' + esc(m.label) + "</text>";
+    }).join("");
+
+    return '<svg class="graphe" viewBox="0 0 ' + L + " " + H + '" role="img" ' +
+      'aria-label="' + esc(t("tbMoisTitre")) + '">' +
+      '<line x1="0" y1="' + (H - basPad) + '" x2="' + L + '" y2="' + (H - basPad) +
+      '" stroke="var(--trait)" stroke-width="1"/>' + corps + "</svg>" +
+      '<p class="infoGraphe" id="infoGraphe">' + esc(t("tbToucherBarre")) + "</p>";
+  }
+
+  /** Part encaissée et part restant à encaisser, sur une seule barre. */
+  function barreEncaissement(encaisse, reste) {
+    var total = encaisse + reste;
+    var partA = total > 0 ? Math.round((encaisse / total) * 100) : 0;
+    var partB = total > 0 ? 100 - partA : 0;
+    var segments = total > 0
+      ? '<span style="width:' + partA + '%;background:var(--serie-encaisse)"></span>' +
+        '<span style="width:' + partB + '%;background:var(--serie-reste)"></span>'
+      : '<span class="vide0"></span>';
+    return '<div class="empilee">' + segments + "</div>" +
+      '<div class="legende">' +
+      '<div><i style="background:var(--serie-encaisse)"></i>' + esc(t("tbEncaisse")) +
+      " <b>" + esc(argent(encaisse)) + "</b></div>" +
+      '<div><i style="background:var(--serie-reste)"></i>' + esc(t("tbResteCourt")) +
+      " <b>" + esc(argent(reste)) + "</b></div>" +
+      "</div>";
+  }
+
+  /** Répartition des devis par statut : la couleur ne porte jamais seule. */
+  function repartitionStatuts() {
+    var compte = {};
+    STATUTS.forEach(function (s) { compte[s] = 0; });
+    E.devis.forEach(function (d) { compte[d.statut] = (compte[d.statut] || 0) + 1; });
+    var max = 0;
+    STATUTS.forEach(function (s) { if (compte[s] > max) { max = compte[s]; } });
+    if (max === 0) { return '<p class="vide">' + esc(t("tbAucuneDonnee")) + "</p>"; }
+
+    return STATUTS.map(function (s) {
+      var part = Math.round((compte[s] / max) * 100);
+      return '<div class="rangStatut">' +
+        '<span class="nomStatut">' + esc(t(s)) + "</span>" +
+        '<span class="piste"><span style="width:' + part + '%;background:var(--' +
+        s.toLowerCase() + ')"></span></span>' +
+        '<span class="nb">' + compte[s] + "</span></div>";
+    }).join("");
+  }
+
+  function boutonAction(texteBouton, acte, nomIco, classe) {
+    return '<button type="button" class="btn ' + (classe || "") + '" data-act="' + acte + '">' +
+      '<span class="puceIco">' + svgIco(nomIco, 20) + "</span>" +
+      "<span>" + esc(texteBouton) + "</span></button>";
+  }
+
+  function tuileChiffre(nomIco, valeur, etiq, ocre) {
+    return '<div class="tuile2' + (ocre ? " ocre" : "") + '">' +
+      '<span class="puceIco">' + svgIco(nomIco, 20) + "</span>" +
+      '<span class="corps2"><span class="val2">' + esc(valeur) + "</span>" +
+      '<span class="etiq2">' + esc(etiq) + "</span></span></div>";
+  }
+
   VUES.accueil = function () {
     var acceptes = E.devis.filter(function (d) { return d.statut === "ACCEPTE"; });
     var aEncaisser = acceptes.reduce(function (a, d) { return a + totaux(d).reste; }, 0);
+    var encaisse = acceptes.reduce(function (a, d) {
+      var x = totaux(d);
+      return a + x.acompte + x.paye;
+    }, 0);
     var mois = debutMois();
     var duMois = E.devis.filter(function (d) { return d.date >= mois; });
-    var encaisse = E.devis.reduce(function (a, d) {
-      return a + (d.paiements || []).filter(function (p) { return p.date >= mois; })
-        .reduce(function (x, p) { return x + n(p.montant); }, 0);
-    }, 0);
 
     var html =
-      (E.exemple ? '<div class="banniere"><span class="ico" aria-hidden="true">📌</span><div class="corps"><strong>' +
-        esc(t("exempleTitre")) + "</strong><br>" + esc(t("exempleTexte")) +
-        '<div class="rangeeBtn" style="margin-top:10px">' +
+      (E.exemple ? '<div class="banniere"><span class="ico">' + svgIco("epingle", 20) +
+        '</span><div class="corps"><strong>' + esc(t("exempleTitre")) + "</strong><br>" +
+        esc(t("exempleTexte")) + '<div class="rangeeBtn" style="margin-top:10px">' +
         bouton(t("effacerExemples"), "effacerExemples", "danger mini") + "</div></div></div>" : "") +
-      '<div class="grille2">' +
-      tuile(t("statDevis"), String(E.devis.length)) +
-      tuile(t("statAcceptes"), String(acceptes.length)) +
-      tuile(t("statChantiers"), "0") +
-      tuile(t("statEncaisser"), argent(aEncaisser), true, true) +
+
+      '<section class="heros">' + dessinAtelier() +
+      '<div class="etiq">' + esc(t("statEncaisser")) + "</div>" +
+      '<div class="somme">' + esc(argent(aEncaisser)) + "</div>" +
+      barreEncaissement(encaisse, aEncaisser) +
+      "</section>" +
+
+      '<div class="tuiles">' +
+      tuileChiffre("devis", String(E.devis.length), t("statDevis")) +
+      tuileChiffre("dossier", String(acceptes.length), t("statAcceptes")) +
+      tuileChiffre("chantier", "0", t("statChantiers")) +
+      tuileChiffre("clients", String(E.clients.length), t("tbClients"), true) +
       "</div>" +
-      bouton(t("calculRapide"), "calcul", "eclair", "⚡") +
-      bouton(t("nouveauDevis"), "nouveauDevis", "", "🧾") +
-      bouton(t("mesDevis"), "devis", "", "📁") +
-      bouton(t("mesChantiers"), "phase2", "", "👷") +
-      bouton(t("mesClients"), "clients", "", "👤") +
-      bouton(t("paiements"), "phase2", "", "💰") +
-      bouton(t("parametres"), "parametres", "", "⚙️") +
+
+      '<div class="carte"><h2>' + esc(t("tbMoisTitre")) + "</h2>" +
+      graphiqueMois(sixDerniersMois()) + "</div>" +
+
+      '<div class="carte"><h2>' + esc(t("tbRepartition")) + "</h2>" +
+      repartitionStatuts() + "</div>" +
+
+      '<p class="titreSection">' + esc(t("tbActions")) + "</p>" +
+      '<div class="actions">' +
+      boutonAction(t("calculRapide"), "calcul", "eclair", "eclair") +
+      boutonAction(t("nouveauDevis"), "nouveauDevis", "devis") +
+      boutonAction(t("mesDevis"), "devis", "dossier") +
+      boutonAction(t("mesChantiers"), "phase2", "chantier") +
+      boutonAction(t("mesClients"), "clients", "clients") +
+      boutonAction(t("paiements"), "phase2", "paiement") +
+      boutonAction(t("parametres"), "parametres", "reglages") +
+      "</div>" +
+
       '<div class="carte"><h2>' + esc(t("ceMois")) + "</h2>" +
       tot(t("moisCrees"), String(duMois.length)) +
       tot(t("moisAcceptes"), String(duMois.filter(function (d) { return d.statut === "ACCEPTE"; }).length)) +
-      tot(t("moisChantiers"), "0") +
       tot(t("moisMontant"), argent(duMois.reduce(function (a, d) { return a + totaux(d).total; }, 0))) +
-      tot(t("moisEncaisse"), argent(encaisse)) +
       tot(t("moisRestant"), argent(aEncaisser), "fort") +
       "</div>" +
-      '<div class="banniere noPrint"><span class="ico" aria-hidden="true">ℹ️</span><div class="corps"><strong>' +
-      esc(t("essaiTitre")) + "</strong><br>" + esc(t("essaiTexte")) + "</div></div>";
+
+      '<div class="banniere noPrint"><span class="ico">' + svgIco("info", 20) +
+      '</span><div class="corps"><strong>' + esc(t("essaiTitre")) + "</strong><br>" +
+      esc(t("essaiTexte")) + "</div></div>";
 
     return { titre: t("titre"), html: html };
   };
@@ -1342,7 +1786,7 @@
       "<hr>" +
       tot(t("surfaceNette"), m2(s.net), "fort") +
       tot(t("surfacePlafond"), m2(s.plafond), "fort") +
-      (s.depassement ? '<div class="note"><span class="ico" aria-hidden="true">⚠️</span><span>' + esc(t("ouverturesTrop")) + "</span></div>" : "") +
+      (s.depassement ? '<div class="note"><span class="ico">' + svgIco("alerte", 20) + '</span><span>' + esc(t("ouverturesTrop")) + "</span></div>" : "") +
       '<div class="interrupteur" style="margin-top:12px"><span>' + esc(t("corriger")) + "</span>" +
       '<input type="checkbox" data-champ="pManuel"' + (manuel ? " checked" : "") + "></div>" +
       (manuel ?
@@ -1362,7 +1806,7 @@
     var niveau = ctx.niveau || "STANDARD";
     var l = E.tarifs.filter(function (x) { return x.niveau === niveau; });
     var html =
-      '<div class="note"><span class="ico" aria-hidden="true">💡</span><span>' + esc(t("prixExemples")) + "</span></div>" +
+      '<div class="note"><span class="ico">' + svgIco("idee", 20) + '</span><span>' + esc(t("prixExemples")) + "</span></div>" +
       '<div class="puces">' + NIVEAUX.map(function (nv) {
         return '<button type="button" class="puce" data-act="filtreNiveau" data-id="' + nv + '" aria-pressed="' + (niveau === nv) + '">' + esc(t(nv)) + "</button>";
       }).join("") + "</div>" +
@@ -1410,7 +1854,7 @@
       '<input type="checkbox" data-champ="qPlafond"' + (f.plafond ? " checked" : "") + "></div>" +
       "</div>" +
       '<div class="carte" id="blocCalcul">' + htmlCalcul(f) + "</div>" +
-      '<div class="note"><span class="ico" aria-hidden="true">⚠️</span><span>' + esc(t("avertEstimation")) + "</span></div>" +
+      '<div class="note"><span class="ico">' + svgIco("alerte", 20) + '</span><span>' + esc(t("avertEstimation")) + "</span></div>" +
       bouton(t("creerDevisDepuis"), "calculVersDevis", "", "🧾");
 
     return { titre: t("calculTitre"), html: html };
@@ -1652,7 +2096,22 @@
   A.langue = function () {
     langue = langue === "fr" ? "ar" : "fr";
     appliquerLangue();
+    appliquerTheme();
     dessiner();
+  };
+
+  A.theme = function () {
+    theme = theme === "auto" ? "clair" : (theme === "clair" ? "sombre" : "auto");
+    appliquerTheme();
+  };
+
+  /** Lecture d'une barre du graphique, au toucher comme au survol. */
+  A.barreMois = function (index) {
+    var mois = sixDerniersMois()[parseInt(index, 10)];
+    var info = document.getElementById("infoGraphe");
+    if (mois && info) {
+      info.innerHTML = esc(mois.label) + " : <b>" + esc(argent(mois.valeur)) + "</b>";
+    }
   };
 
   A.clients = function () { aller("clients", {}); };
@@ -2191,10 +2650,17 @@
     if (el && (el.tagName === "SELECT" || el.type === "checkbox" || el.type === "date")) { surSaisie(ev); }
   });
 
+  document.addEventListener("pointerover", function (ev) {
+    if (!ev.target || !ev.target.closest) { return; }
+    var barre = ev.target.closest('[data-act="barreMois"]');
+    if (barre) { A.barreMois(barre.getAttribute("data-id")); }
+  });
+
   document.addEventListener("keydown", function (ev) {
     if (ev.key === "Escape") { fermerModale(); }
   });
 
+  appliquerTheme();
   appliquerLangue();
   dessiner();
 })();

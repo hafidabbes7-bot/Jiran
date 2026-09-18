@@ -1,10 +1,32 @@
 # Version d'essai — PEINTRE PRO DZ
 
 `peintre-pro-dz-essai.html` est une **page unique** qui rejoue le cœur de
-PEINTRE PRO DZ dans un navigateur : clients, devis, pièces avec calcul
-automatique des surfaces, travaux depuis les tarifs, totaux (remise, TVA,
+PEINTRE PRO DZ dans un navigateur : tableau de bord, clients, devis, pièces avec
+calcul automatique des surfaces, travaux depuis les tarifs, totaux (remise, TVA,
 acompte, reste), calcul rapide de peinture, aperçu imprimable du devis, et
 bascule français / arabe avec passage en lecture de droite à gauche.
+
+## Lisibilité et thème
+
+Le bouton en haut à droite fait tourner **automatique → clair → sombre**, et le
+choix est mémorisé. La page déclare `color-scheme` dans les trois états : c'est
+ce qui empêche le « mode sombre forcé » de Chrome et de Samsung Internet
+d'assombrir le fond sans toucher au texte — le défaut qui rendait l'écriture
+noire illisible. Si l'affichage paraît bizarre, forcez **clair** avec ce bouton.
+
+## Tableau de bord
+
+- un chiffre principal, le **montant à encaisser**, avec la part déjà encaissée
+  et la part restante sur une même barre ;
+- quatre tuiles : devis, devis acceptés, chantiers en cours, clients ;
+- le **montant des devis sur six mois** en barres : touchez une barre pour lire
+  le mois ; seule la plus haute porte son montant, pour ne pas surcharger ;
+- la **répartition par statut**, où la couleur ne porte jamais seule : chaque
+  barre garde son libellé et son compte.
+
+Les couleurs des graphiques ont été validées (bande de clarté, saturation
+minimale, écart perceptible pour les daltoniens, contraste sur le fond) dans les
+deux thèmes.
 
 Rien à installer : on ouvre le fichier, ou le lien publié, et ça marche —
 y compris sans connexion une fois la page chargée.
