@@ -1,0 +1,608 @@
+/*
+ * TADDART — habillage.
+ *
+ * Terres, chaux, tuile et olivier : la palette vient des matériaux du village
+ * plutôt que d'un thème de jeu générique. Mode sombre par défaut, mode clair
+ * disponible dans les paramètres.
+ *
+ * Rien n'est chargé depuis Internet : ni police, ni image. Le jeu s'ouvre hors
+ * connexion, sur un téléphone, d'un simple double-clic sur index.html.
+ */
+
+:root {
+  --terre: #14110e;
+  --terre-haute: #211c17;
+  --panneau: #2a231c;
+  --trait: #3d3328;
+  --texte: #f0e6d8;
+  --pale: #a2937f;
+  --tuile: #c8763c;
+  --olive: #7c8c46;
+  --chaux: #e6dcc8;
+  --eau: #3d8bab;
+  --or: #d9a441;
+  --alerte: #cf5c46;
+  --touche: 52px;
+}
+
+:root[data-theme='clair'] {
+  --terre: #f4efe6;
+  --terre-haute: #ebe3d5;
+  --panneau: #ffffff;
+  --trait: #d9cdb8;
+  --texte: #2a231c;
+  --pale: #6d6153;
+  --chaux: #3a3128;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--terre);
+  color: var(--texte);
+  font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.ecran {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+}
+
+.ecran[hidden] {
+  display: none;
+}
+
+/* Accueil ---------------------------------------------------------------- */
+
+.accueil {
+  margin: auto;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+.logo {
+  margin: 0;
+  font-size: clamp(40px, 14vw, 64px);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--tuile);
+}
+
+.sous-titre {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--pale);
+}
+
+.devise {
+  margin: 16px 0 26px;
+  color: var(--pale);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.pile {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.avertissement {
+  margin: 20px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  color: var(--pale);
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+/* Boutons ---------------------------------------------------------------- */
+
+.bouton {
+  min-height: var(--touche);
+  padding: 0 18px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--panneau);
+  color: var(--texte);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.bouton:active {
+  transform: scale(0.985);
+}
+
+.bouton.majeur {
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--tuile), #a95c2b);
+  color: #24140b;
+}
+
+.bouton:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.bouton.mini {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* En-tête du jeu --------------------------------------------------------- */
+
+.hud {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  flex: none;
+}
+
+.stat {
+  padding: 6px 8px;
+  border: 1px solid var(--trait);
+  border-radius: 9px;
+  background: var(--terre-haute);
+  line-height: 1.15;
+}
+
+.stat small {
+  display: block;
+  color: var(--pale);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+}
+
+.stat b {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat.manque b {
+  color: var(--alerte);
+}
+
+.saison-barre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin: 7px 0;
+  font-size: 12px;
+  color: var(--pale);
+}
+
+.jauge {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--trait);
+  overflow: hidden;
+}
+
+.jauge i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--olive);
+  transform-origin: left center;
+}
+
+/* Carte ------------------------------------------------------------------ */
+
+.scene {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+#carte {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: manipulation;
+}
+
+.bandeau-construction {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(200, 118, 60, 0.92);
+  color: #24140b;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.bandeau-construction[hidden] {
+  display: none;
+}
+
+.info-case {
+  flex: none;
+  margin: 7px 0;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--trait);
+  border-radius: 9px;
+  background: var(--terre-haute);
+  color: var(--pale);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* Barre d'onglets -------------------------------------------------------- */
+
+.barre {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  flex: none;
+}
+
+.onglet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touche);
+  padding: 6px 2px;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  background: var(--panneau);
+  color: var(--texte);
+  font: inherit;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.onglet b {
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.onglet.alerte {
+  border-color: var(--or);
+  background: rgba(217, 164, 65, 0.18);
+}
+
+/* Feuille (panneaux) ----------------------------------------------------- */
+
+.feuille {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.feuille[hidden] {
+  display: none;
+}
+
+.feuille-fond {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 8, 6, 0.72);
+}
+
+.feuille-corps {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+  border-radius: 18px 18px 0 0;
+  background: var(--terre-haute);
+  border-top: 1px solid var(--trait);
+}
+
+.feuille-entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--trait);
+}
+
+.feuille-entete h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+
+.feuille-contenu {
+  padding: 12px 14px max(18px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Contenus des panneaux -------------------------------------------------- */
+
+.carte-item {
+  margin-bottom: 9px;
+  padding: 11px 13px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--panneau);
+}
+
+.carte-item h3 {
+  margin: 0 0 4px;
+  font-size: 14.5px;
+}
+
+.carte-item p {
+  margin: 6px 0 0;
+  color: var(--pale);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.carte-item .meta {
+  color: var(--pale);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+/* La distinction histoire / fiction passe d'abord par la couleur. */
+.badge {
+  display: inline-block;
+  margin-inline-end: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  vertical-align: 2px;
+}
+
+.badge.historique {
+  background: rgba(217, 164, 65, 0.2);
+  border: 1px solid var(--or);
+  color: var(--or);
+}
+
+.badge.fiction {
+  background: rgba(124, 140, 70, 0.2);
+  border: 1px solid var(--olive);
+  color: var(--olive);
+}
+
+.source {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--trait);
+  font-size: 11px;
+  color: var(--pale);
+  line-height: 1.5;
+}
+
+.source a {
+  color: var(--eau);
+  word-break: break-all;
+}
+
+.precaution {
+  margin-top: 8px;
+  padding: 7px 9px;
+  border-inline-start: 3px solid var(--or);
+  background: rgba(217, 164, 65, 0.08);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--pale);
+}
+
+.bouton-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--panneau);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.bouton-item .titre {
+  flex: 1;
+}
+
+.bouton-item .titre b {
+  display: block;
+  font-size: 14px;
+}
+
+.bouton-item .titre small {
+  color: var(--pale);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.bouton-item .prix {
+  color: var(--or);
+  font-size: 11px;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.bouton-item:disabled {
+  opacity: 0.45;
+}
+
+.progression {
+  margin: 8px 0 0;
+}
+
+.progression div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.progression .barre-fond {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--trait);
+  overflow: hidden;
+  margin-bottom: 9px;
+}
+
+.progression .barre-fond i {
+  display: block;
+  height: 100%;
+  background: var(--olive);
+}
+
+.progression .fait {
+  color: var(--olive);
+}
+
+.chronique {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chronique li {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--trait);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.chronique .an {
+  color: var(--or);
+  font-weight: 700;
+  margin-inline-end: 6px;
+}
+
+.famille {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--panneau);
+}
+
+.famille h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: var(--tuile);
+}
+
+.personne {
+  padding: 5px 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  border-block-start: 1px solid var(--trait);
+}
+
+.personne:first-of-type {
+  border-block-start: 0;
+}
+
+.personne .detail {
+  color: var(--pale);
+  font-size: 11px;
+}
+
+.personne.disparu {
+  opacity: 0.55;
+}
+
+.gen {
+  display: inline-block;
+  min-width: 20px;
+  margin-inline-end: 6px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--trait);
+  font-size: 10px;
+  text-align: center;
+}
+
+.note-encadree {
+  margin-bottom: 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--or);
+  border-radius: 12px;
+  background: rgba(217, 164, 65, 0.08);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.note-encadree h3 {
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  color: var(--or);
+}
+
+.note-encadree p {
+  margin: 0 0 7px;
+}
+
+.vide {
+  padding: 24px 10px;
+  color: var(--pale);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.ressources-liste {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.ressources-liste div {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border: 1px solid var(--trait);
+  border-radius: 9px;
+  font-size: 12.5px;
+}
+
+.ressources-liste b {
+  font-variant-numeric: tabular-nums;
+}

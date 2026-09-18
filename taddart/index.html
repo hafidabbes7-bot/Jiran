@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr" data-theme="sombre">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#14110e" />
+    <meta
+      name="description"
+      content="Taddart — Mémoire de Kabylie : bâtir un village kabyle fictif sur plusieurs générations, et distinguer ce que l’histoire documente de ce que le jeu invente."
+    />
+    <title>Taddart — Mémoire de Kabylie</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2314110e'/%3E%3Cpath d='M6 22h20L16 9z' fill='%23c8763c'/%3E%3Crect x='9' y='22' width='14' height='4' fill='%23a08a6a'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <!-- ===================================================== ACCUEIL -->
+    <section class="ecran" id="ecran-accueil">
+      <div class="accueil">
+        <h1 class="logo">TADDART</h1>
+        <p class="sous-titre">MÉMOIRE DE KABYLIE</p>
+        <p class="devise">Construis ton village. Vis son histoire. Transmets sa mémoire.</p>
+        <div class="pile">
+          <button class="bouton majeur" id="btn-jouer">JOUER</button>
+          <button class="bouton" id="btn-continuer">CONTINUER</button>
+          <button class="bouton" id="btn-histoire-accueil">HISTOIRE</button>
+          <button class="bouton" id="btn-musee-accueil">MUSÉE</button>
+          <button class="bouton" id="btn-familles-accueil">ARBRE FAMILIAL</button>
+          <button class="bouton" id="btn-parametres">PARAMÈTRES</button>
+        </div>
+        <p class="avertissement">
+          Village, habitants et missions sont <b>fictifs</b>. Les fiches d’histoire reposent sur des
+          sources citées et portent la mention HISTORIQUE.
+        </p>
+      </div>
+    </section>
+
+    <!-- ========================================================= JEU -->
+    <section class="ecran" id="ecran-jeu" hidden>
+      <header class="hud" id="hud"></header>
+
+      <div class="saison-barre">
+        <span id="saison-texte">An 1 — printemps</span>
+        <div class="jauge"><i id="jauge-saison"></i></div>
+        <button class="bouton mini" id="btn-vitesse">▶ ×1</button>
+      </div>
+
+      <div class="scene" id="scene">
+        <canvas id="carte"></canvas>
+        <div class="bandeau-construction" id="bandeau-construction" hidden></div>
+      </div>
+
+      <p class="info-case" id="info-case">Touchez une case pour l’examiner.</p>
+
+      <nav class="barre">
+        <button class="onglet" data-panneau="construire"><b>⛏</b>CONSTRUIRE</button>
+        <button class="onglet" data-panneau="village"><b>🏘</b>VILLAGE</button>
+        <button class="onglet" data-panneau="tajmaet"><b>⚖</b>TAJMAƐT</button>
+        <button class="onglet" data-panneau="histoire"><b>📜</b>HISTOIRE</button>
+        <button class="onglet" data-panneau="musee"><b>🏛</b>MUSÉE</button>
+        <button class="onglet" data-panneau="familles"><b>👣</b>FAMILLES</button>
+      </nav>
+    </section>
+
+    <!-- ===================================================== PANNEAU -->
+    <div class="feuille" id="feuille" hidden>
+      <div class="feuille-fond" id="feuille-fond"></div>
+      <div class="feuille-corps">
+        <header class="feuille-entete">
+          <h2 id="feuille-titre">Titre</h2>
+          <button class="bouton mini" id="feuille-fermer" aria-label="Fermer">✕</button>
+        </header>
+        <div class="feuille-contenu" id="feuille-contenu"></div>
+      </div>
+    </div>
+
+    <script src="./donnees-histoire.js"></script>
+    <script src="./donnees-jeu.js"></script>
+    <script src="./moteur.js"></script>
+    <script src="./game.js"></script>
+  </body>
+</html>
