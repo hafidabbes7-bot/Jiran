@@ -13,6 +13,8 @@ espace dédié, vérifié et organisé par quartier.
 | `docs/cahier-des-charges.md` | Toutes les décisions de conception validées (concept, regroupement par quartier, modération, 24 écrans, périmètre V1) |
 | `prototype/jiran-accueil.html` | Prototype visuel HTML autonome — 24 écrans navigables, bilingue FR/AR avec bascule RTL |
 | `essai/jiran-essai.html` | Version d'essai en une page, publiée sur claude.ai : le socle fonctionne à plusieurs, sans rien installer ([README](essai/README.md)) |
+| `shadow-loop/` | **Application séparée** : Shadow Loop, jeu de puzzle hors ligne, sans rapport avec le réseau de quartier ([README](shadow-loop/README.md)) |
+| `taddart/` | **Application séparée** : Taddart — Mémoire de Kabylie, jeu de village kabyle avec corpus historique sourcé ([README](taddart/README.md)) |
 
 ## Essayer tout de suite
 

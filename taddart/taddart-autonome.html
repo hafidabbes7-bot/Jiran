@@ -1,0 +1,3068 @@
+<!doctype html>
+<html lang="fr" data-theme="sombre">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#14110e" />
+    <meta
+      name="description"
+      content="Taddart — Mémoire de Kabylie : bâtir un village kabyle fictif sur plusieurs générations, et distinguer ce que l’histoire documente de ce que le jeu invente."
+    />
+    <title>Taddart — Mémoire de Kabylie</title>
+    <style>
+/*
+ * TADDART — habillage.
+ *
+ * Terres, chaux, tuile et olivier : la palette vient des matériaux du village
+ * plutôt que d'un thème de jeu générique. Mode sombre par défaut, mode clair
+ * disponible dans les paramètres.
+ *
+ * Rien n'est chargé depuis Internet : ni police, ni image. Le jeu s'ouvre hors
+ * connexion, sur un téléphone, d'un simple double-clic sur index.html.
+ */
+
+:root {
+  --terre: #14110e;
+  --terre-haute: #211c17;
+  --panneau: #2a231c;
+  --trait: #3d3328;
+  --texte: #f0e6d8;
+  --pale: #a2937f;
+  --tuile: #c8763c;
+  --olive: #7c8c46;
+  --chaux: #e6dcc8;
+  --eau: #3d8bab;
+  --or: #d9a441;
+  --alerte: #cf5c46;
+  --touche: 52px;
+}
+
+:root[data-theme='clair'] {
+  --terre: #f4efe6;
+  --terre-haute: #ebe3d5;
+  --panneau: #ffffff;
+  --trait: #d9cdb8;
+  --texte: #2a231c;
+  --pale: #6d6153;
+  --chaux: #3a3128;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--terre);
+  color: var(--texte);
+  font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.ecran {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+}
+
+.ecran[hidden] {
+  display: none;
+}
+
+/* Accueil ---------------------------------------------------------------- */
+
+.accueil {
+  margin: auto;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+.logo {
+  margin: 0;
+  font-size: clamp(40px, 14vw, 64px);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--tuile);
+}
+
+.sous-titre {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--pale);
+}
+
+.devise {
+  margin: 16px 0 26px;
+  color: var(--pale);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.pile {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.avertissement {
+  margin: 20px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  color: var(--pale);
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+/* Boutons ---------------------------------------------------------------- */
+
+.bouton {
+  min-height: var(--touche);
+  padding: 0 18px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--panneau);
+  color: var(--texte);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.bouton:active {
+  transform: scale(0.985);
+}
+
+.bouton.majeur {
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--tuile), #a95c2b);
+  color: #24140b;
+}
+
+.bouton:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.bouton.mini {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* En-tête du jeu --------------------------------------------------------- */
+
+.hud {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  flex: none;
+}
+
+.stat {
+  padding: 6px 8px;
+  border: 1px solid var(--trait);
+  border-radius: 9px;
+  background: var(--terre-haute);
+  line-height: 1.15;
+}
+
+.stat small {
+  display: block;
+  color: var(--pale);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+}
+
+.stat b {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat.manque b {
+  color: var(--alerte);
+}
+
+.saison-barre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin: 7px 0;
+  font-size: 12px;
+  color: var(--pale);
+}
+
+.jauge {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--trait);
+  overflow: hidden;
+}
+
+.jauge i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--olive);
+  transform-origin: left center;
+}
+
+/* Carte ------------------------------------------------------------------ */
+
+.scene {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+#carte {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: manipulation;
+}
+
+.bandeau-construction {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(200, 118, 60, 0.92);
+  color: #24140b;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.bandeau-construction[hidden] {
+  display: none;
+}
+
+.info-case {
+  flex: none;
+  margin: 7px 0;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--trait);
+  border-radius: 9px;
+  background: var(--terre-haute);
+  color: var(--pale);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* Barre d'onglets -------------------------------------------------------- */
+
+.barre {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  flex: none;
+}
+
+.onglet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touche);
+  padding: 6px 2px;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  background: var(--panneau);
+  color: var(--texte);
+  font: inherit;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.onglet b {
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.onglet.alerte {
+  border-color: var(--or);
+  background: rgba(217, 164, 65, 0.18);
+}
+
+/* Feuille (panneaux) ----------------------------------------------------- */
+
+.feuille {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.feuille[hidden] {
+  display: none;
+}
+
+.feuille-fond {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 8, 6, 0.72);
+}
+
+.feuille-corps {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+  border-radius: 18px 18px 0 0;
+  background: var(--terre-haute);
+  border-top: 1px solid var(--trait);
+}
+
+.feuille-entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--trait);
+}
+
+.feuille-entete h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+
+.feuille-contenu {
+  padding: 12px 14px max(18px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Contenus des panneaux -------------------------------------------------- */
+
+.carte-item {
+  margin-bottom: 9px;
+  padding: 11px 13px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--panneau);
+}
+
+.carte-item h3 {
+  margin: 0 0 4px;
+  font-size: 14.5px;
+}
+
+.carte-item p {
+  margin: 6px 0 0;
+  color: var(--pale);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.carte-item .meta {
+  color: var(--pale);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+/* La distinction histoire / fiction passe d'abord par la couleur. */
+.badge {
+  display: inline-block;
+  margin-inline-end: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  vertical-align: 2px;
+}
+
+.badge.historique {
+  background: rgba(217, 164, 65, 0.2);
+  border: 1px solid var(--or);
+  color: var(--or);
+}
+
+.badge.fiction {
+  background: rgba(124, 140, 70, 0.2);
+  border: 1px solid var(--olive);
+  color: var(--olive);
+}
+
+.source {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--trait);
+  font-size: 11px;
+  color: var(--pale);
+  line-height: 1.5;
+}
+
+.source a {
+  color: var(--eau);
+  word-break: break-all;
+}
+
+.precaution {
+  margin-top: 8px;
+  padding: 7px 9px;
+  border-inline-start: 3px solid var(--or);
+  background: rgba(217, 164, 65, 0.08);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--pale);
+}
+
+.bouton-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--panneau);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.bouton-item .titre {
+  flex: 1;
+}
+
+.bouton-item .titre b {
+  display: block;
+  font-size: 14px;
+}
+
+.bouton-item .titre small {
+  color: var(--pale);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.bouton-item .prix {
+  color: var(--or);
+  font-size: 11px;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.bouton-item:disabled {
+  opacity: 0.45;
+}
+
+.progression {
+  margin: 8px 0 0;
+}
+
+.progression div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.progression .barre-fond {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--trait);
+  overflow: hidden;
+  margin-bottom: 9px;
+}
+
+.progression .barre-fond i {
+  display: block;
+  height: 100%;
+  background: var(--olive);
+}
+
+.progression .fait {
+  color: var(--olive);
+}
+
+.chronique {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chronique li {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--trait);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.chronique .an {
+  color: var(--or);
+  font-weight: 700;
+  margin-inline-end: 6px;
+}
+
+.famille {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--panneau);
+}
+
+.famille h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: var(--tuile);
+}
+
+.personne {
+  padding: 5px 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  border-block-start: 1px solid var(--trait);
+}
+
+.personne:first-of-type {
+  border-block-start: 0;
+}
+
+.personne .detail {
+  color: var(--pale);
+  font-size: 11px;
+}
+
+.personne.disparu {
+  opacity: 0.55;
+}
+
+.gen {
+  display: inline-block;
+  min-width: 20px;
+  margin-inline-end: 6px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--trait);
+  font-size: 10px;
+  text-align: center;
+}
+
+.note-encadree {
+  margin-bottom: 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--or);
+  border-radius: 12px;
+  background: rgba(217, 164, 65, 0.08);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.note-encadree h3 {
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  color: var(--or);
+}
+
+.note-encadree p {
+  margin: 0 0 7px;
+}
+
+.vide {
+  padding: 24px 10px;
+  color: var(--pale);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.ressources-liste {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.ressources-liste div {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border: 1px solid var(--trait);
+  border-radius: 9px;
+  font-size: 12.5px;
+}
+
+.ressources-liste b {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2314110e'/%3E%3Cpath d='M6 22h20L16 9z' fill='%23c8763c'/%3E%3Crect x='9' y='22' width='14' height='4' fill='%23a08a6a'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <!-- ===================================================== ACCUEIL -->
+    <section class="ecran" id="ecran-accueil">
+      <div class="accueil">
+        <h1 class="logo">TADDART</h1>
+        <p class="sous-titre">MÉMOIRE DE KABYLIE</p>
+        <p class="devise">Construis ton village. Vis son histoire. Transmets sa mémoire.</p>
+        <div class="pile">
+          <button class="bouton majeur" id="btn-jouer">JOUER</button>
+          <button class="bouton" id="btn-continuer">CONTINUER</button>
+          <button class="bouton" id="btn-histoire-accueil">HISTOIRE</button>
+          <button class="bouton" id="btn-musee-accueil">MUSÉE</button>
+          <button class="bouton" id="btn-familles-accueil">ARBRE FAMILIAL</button>
+          <button class="bouton" id="btn-parametres">PARAMÈTRES</button>
+        </div>
+        <p class="avertissement">
+          Village, habitants et missions sont <b>fictifs</b>. Les fiches d’histoire reposent sur des
+          sources citées et portent la mention HISTORIQUE.
+        </p>
+      </div>
+    </section>
+
+    <!-- ========================================================= JEU -->
+    <section class="ecran" id="ecran-jeu" hidden>
+      <header class="hud" id="hud"></header>
+
+      <div class="saison-barre">
+        <span id="saison-texte">An 1 — printemps</span>
+        <div class="jauge"><i id="jauge-saison"></i></div>
+        <button class="bouton mini" id="btn-vitesse">▶ ×1</button>
+      </div>
+
+      <div class="scene" id="scene">
+        <canvas id="carte"></canvas>
+        <div class="bandeau-construction" id="bandeau-construction" hidden></div>
+      </div>
+
+      <p class="info-case" id="info-case">Touchez une case pour l’examiner.</p>
+
+      <nav class="barre">
+        <button class="onglet" data-panneau="construire"><b>⛏</b>CONSTRUIRE</button>
+        <button class="onglet" data-panneau="village"><b>🏘</b>VILLAGE</button>
+        <button class="onglet" data-panneau="tajmaet"><b>⚖</b>TAJMAƐT</button>
+        <button class="onglet" data-panneau="histoire"><b>📜</b>HISTOIRE</button>
+        <button class="onglet" data-panneau="musee"><b>🏛</b>MUSÉE</button>
+        <button class="onglet" data-panneau="familles"><b>👣</b>FAMILLES</button>
+      </nav>
+    </section>
+
+    <!-- ===================================================== PANNEAU -->
+    <div class="feuille" id="feuille" hidden>
+      <div class="feuille-fond" id="feuille-fond"></div>
+      <div class="feuille-corps">
+        <header class="feuille-entete">
+          <h2 id="feuille-titre">Titre</h2>
+          <button class="bouton mini" id="feuille-fermer" aria-label="Fermer">✕</button>
+        </header>
+        <div class="feuille-contenu" id="feuille-contenu"></div>
+      </div>
+    </div>
+
+    <script>
+'use strict';
+/**
+ * TADDART — corpus historique.
+ *
+ * RÈGLE ABSOLUE DE CE FICHIER : rien de ce qui porte le statut « HISTORICAL »
+ * n'est inventé. Chaque fiche porte une source consultable. Aucune citation
+ * n'est attribuée à un personnage historique — le jeu décrit, il ne fait pas
+ * parler les morts.
+ *
+ * Là où les sources divergent (le jour exact d'une capture, le nom réel d'un
+ * chef), la fiche le dit au lieu de trancher : c'est le champ « precaution ».
+ *
+ * Tout ce qui relève du village du joueur — ses habitants, ses décisions, ses
+ * missions — vit dans donnees-jeu.js et porte le statut « FICTION ». Les deux
+ * ne se mélangent jamais, ni dans les données, ni à l'écran.
+ */
+
+(function (racineGlobale) {
+  'use strict';
+
+  /** Sources institutionnelles et universitaires, citées par les fiches. */
+  const SOURCES = {
+    unesco102: {
+      nom: 'UNESCO, Centre du patrimoine mondial — « Al Qal’a des Beni Hammad »',
+      url: 'https://whc.unesco.org/fr/list/102/',
+    },
+    encyclopedieBejaia: {
+      nom: 'Encyclopédie berbère, notice « Béjaïa » (OpenEdition Journals)',
+      url: 'https://journals.openedition.org/encyclopedieberbere/1507',
+    },
+    encyclopedie1871: {
+      nom: 'Encyclopédie berbère, notice « Kabylie : l’insurrection de 1871 » (OpenEdition Journals)',
+      url: 'https://journals.openedition.org/encyclopedieberbere/1410',
+    },
+    bnf1871: {
+      nom: 'Bibliothèque nationale de France — « L’insurrection de la Grande Kabylie en 1871 »',
+      url: 'https://www.bnf.fr/fr/mediatheque/linsurrection-de-la-grande-kabylie-en-1871',
+    },
+    halSaldae: {
+      nom: 'S. Djermoune, « Le Librator Nonius Datus et l’aqueduc de Saldae », HAL, Université Toulouse–Jean Jaurès',
+      url: 'https://univ-tlse2.hal.science/hal-01325522',
+    },
+    insaniyat: {
+      nom: 'Insaniyat, revue du CRASC — recherches sur la tajmaɛt et le village kabyle',
+      url: 'https://journals.openedition.org/insaniyat/',
+    },
+    mahe: {
+      nom: 'Alain Mahé, « Histoire de la Grande Kabylie, XIXe-XXe siècles. Anthropologie historique du lien social dans les communautés villageoises », Bouchène, 2001',
+      url: '',
+    },
+    cnrtlBougie: {
+      nom: 'CNRTL (CNRS) — étymologie du mot « bougie »',
+      url: 'https://www.cnrtl.fr/etymologie/bougie',
+    },
+  };
+
+  /**
+   * Faits documentés. Champs imposés : id, title, date, region, description,
+   * status, source. « status » vaut toujours HISTORICAL ici.
+   */
+  const HISTORICAL_EVENTS = [
+    {
+      id: 'saldae-romaine',
+      title: 'Saldae, port de l’Afrique romaine',
+      date: 'Ier siècle av. J.-C. – IIIe siècle',
+      region: 'Béjaïa (Saldae)',
+      categorie: 'lieu',
+      description:
+        'Le site de l’actuelle Béjaïa porte à l’époque romaine le nom de Saldae. C’est un port de l’Afrique romaine, relié à l’intérieur des terres et intégré au réseau des cités de la côte. Le nom antique est resté attaché à la ville dans la documentation savante.',
+      precaution:
+        'Le jeu ne reconstitue pas la ville antique : il signale seulement que le site est occupé et nommé depuis l’Antiquité.',
+      status: 'HISTORICAL',
+      source: SOURCES.encyclopedieBejaia,
+    },
+    {
+      id: 'aqueduc-saldae',
+      title: 'L’aqueduc de Saldae et le récit de Nonius Datus',
+      date: 'IIe siècle (chantier vers 147-152)',
+      region: 'De Toudja à Béjaïa',
+      categorie: 'document',
+      description:
+        'Un aqueduc conduisait l’eau des sources de Toudja jusqu’à Saldae. Son tracé comportait un tunnel percé sous la montagne. Une inscription retrouvée à Lambèse en 1866 conserve le récit de l’ingénieur (librator) Nonius Datus : les deux équipes creusant l’une vers l’autre s’étaient manquées sous la roche, et il fallut relier les deux galeries. C’est l’un des rares témoignages techniques directs d’un chantier romain.',
+      precaution:
+        'Le texte de l’inscription n’est pas reproduit ici : le jeu en résume le contenu, sans en donner de traduction prêtée à l’auteur.',
+      status: 'HISTORICAL',
+      source: SOURCES.halSaldae,
+    },
+    {
+      id: 'qalaa-beni-hammad',
+      title: 'La Qal’a des Beni Hammad',
+      date: 'Fondée en 1007 — site ruiné au XIIe siècle',
+      region: 'Monts du Hodna, wilaya de M’Sila',
+      categorie: 'patrimoine',
+      description:
+        'Première capitale de la dynastie hammadide, cité fortifiée dont subsistent l’enceinte, des ensembles résidentiels, un palais et le minaret de la grande mosquée. Le site est inscrit sur la Liste du patrimoine mondial de l’UNESCO depuis 1980.',
+      precaution: 'Le site n’est pas en Kabylie : il est cité parce que l’histoire de Béjaïa en découle directement.',
+      status: 'HISTORICAL',
+      source: SOURCES.unesco102,
+    },
+    {
+      id: 'bejaia-hammadide',
+      title: 'Béjaïa, capitale hammadide',
+      date: 'À partir de 1067',
+      region: 'Béjaïa',
+      categorie: 'evenement',
+      description:
+        'L’émir hammadide an-Nasir fait entreprendre des travaux sur le site de l’ancienne Saldae et lui donne le nom d’an-Nasiriya. Le transfert de la capitale depuis la Qal’a des Beni Hammad s’achève sous son successeur. La pression des nomades sur le Hodna et l’essor des échanges maritimes comptent parmi les raisons avancées par les historiens.',
+      status: 'HISTORICAL',
+      source: SOURCES.encyclopedieBejaia,
+    },
+    {
+      id: 'bejaia-mediterranee',
+      title: 'Béjaïa, port et foyer de savoirs en Méditerranée',
+      date: 'XIe – XIVe siècle',
+      region: 'Béjaïa',
+      categorie: 'evenement',
+      description:
+        'Devenue capitale, la ville est l’un des grands ports du Maghreb médiéval, en relation avec les ports italiens et catalans. On y échange notamment la cire, les cuirs et les produits agricoles de l’arrière-pays. C’est aussi un centre d’enseignement fréquenté par des lettrés venus de tout le bassin méditerranéen.',
+      status: 'HISTORICAL',
+      source: SOURCES.encyclopedieBejaia,
+    },
+    {
+      id: 'bougie-cire',
+      title: 'Le mot « bougie » vient du nom de la ville',
+      date: 'Attesté en français médiéval',
+      region: 'Béjaïa / Bougie',
+      categorie: 'objet',
+      description:
+        'Le français « bougie » — la chandelle — tire son nom de Bougie, forme française du nom de Béjaïa, en raison du commerce de cire dont la ville était un point d’exportation. C’est une trace linguistique durable de l’activité marchande du port.',
+      status: 'HISTORICAL',
+      source: SOURCES.cnrtlBougie,
+    },
+    {
+      id: 'tajmaat-institution',
+      title: 'La tajmaɛt, assemblée du village',
+      date: 'Documentée aux XIXe et XXe siècles',
+      region: 'Kabylie',
+      categorie: 'patrimoine',
+      description:
+        'Dans les villages kabyles, la tajmaɛt désigne à la fois l’assemblée des hommes adultes du village et le lieu couvert où elle se tient. Les travaux d’anthropologie et d’histoire lui reconnaissent trois fonctions récurrentes : édicter un règlement local (qanun), organiser les travaux collectifs, et arbitrer les différends entre habitants.',
+      precaution:
+        'Les formes concrètes varient d’un village à l’autre et selon les époques. Beaucoup de descriptions anciennes proviennent de compilations coloniales, à lire avec recul. Le jeu s’en inspire ; il ne les reproduit pas.',
+      status: 'HISTORICAL',
+      source: SOURCES.insaniyat,
+    },
+    {
+      id: 'tiwizi',
+      title: 'La tiwizi, entraide et travail collectif',
+      date: 'Documentée aux XIXe et XXe siècles',
+      region: 'Kabylie',
+      categorie: 'patrimoine',
+      description:
+        'La tiwizi désigne le travail fourni collectivement et gratuitement par les villageois, pour un chantier d’intérêt commun ou au profit d’une famille : moisson, construction, réfection d’un chemin ou d’un point d’eau. Elle est décrite dans la littérature ethnographique comme l’un des ressorts de la vie villageoise.',
+      status: 'HISTORICAL',
+      source: SOURCES.insaniyat,
+    },
+    {
+      id: 'boubaghla',
+      title: 'Chérif Boubaghla',
+      date: 'Vers 1851 – décembre 1854',
+      region: 'Kabylie (région d’Akbou, vallée du Sebaou)',
+      categorie: 'personnage',
+      description:
+        'Chef de la résistance à la conquête française apparu en Kabylie au début des années 1850. Il conduit des attaques contre les postes et les relais de l’administration coloniale et rallie plusieurs tribus. Il est tué en décembre 1854.',
+      precaution:
+        'Les sources divergent sur son nom réel, sur son origine et sur le jour exact de sa mort. Le jeu retient seulement ce qui est concordant. Aucune parole ne lui est prêtée.',
+      status: 'HISTORICAL',
+      source: SOURCES.mahe,
+    },
+    {
+      id: 'fadhma-nsoumer',
+      title: 'Lalla Fadhma N’Soumer',
+      date: 'Vers 1830 – 1863',
+      region: 'Djurdjura (région de Soumeur / Ouerdja)',
+      categorie: 'personnage',
+      description:
+        'Figure de la résistance kabyle, liée au milieu religieux de la confrérie Rahmaniyya. Elle est associée aux combats menés aux côtés de Chérif Boubaghla, puis à la résistance opposée aux campagnes françaises de 1856-1857. Capturée en juillet 1857, elle est placée en résidence surveillée et meurt en 1863.',
+      precaution:
+        'Les sources donnent des dates différentes pour le jour de sa capture (11 ou 27 juillet 1857) : le jeu s’en tient au mois. Aucune citation ne lui est attribuée.',
+      status: 'HISTORICAL',
+      source: SOURCES.mahe,
+    },
+    {
+      id: 'campagne-1857',
+      title: 'La campagne de 1857 en Kabylie',
+      date: 'Mai – juillet 1857',
+      region: 'Djurdjura, pays des Aït Iraten',
+      categorie: 'evenement',
+      description:
+        'Campagne militaire française conduite dans le massif du Djurdjura contre les confédérations villageoises encore indépendantes. Elle comporte de durs combats, dont celui d’Icheriden en juin 1857, et s’achève par la soumission des Aït Iraten et l’édification d’un fort au cœur du pays — Fort-Napoléon, plus tard Fort-National, aujourd’hui Larbaâ Nath Irathen.',
+      precaution:
+        'Le jeu ne met en scène aucun combat. Il place le joueur du côté de la vie quotidienne d’un village : les réserves, l’eau, les familles, les déplacements.',
+      status: 'HISTORICAL',
+      source: SOURCES.mahe,
+    },
+    {
+      id: 'insurrection-1871',
+      title: 'L’insurrection de 1871 en Grande Kabylie',
+      date: 'Mars 1871 – janvier 1872',
+      region: 'Grande Kabylie et au-delà',
+      categorie: 'evenement',
+      description:
+        'Soulèvement déclenché en mars 1871 par le bachagha Mohamed El Mokrani. Le 8 avril 1871, le cheikh Aheddad, chef de la confrérie Rahmaniyya, appelle au soulèvement depuis Seddouk, ce qui étend considérablement le mouvement. El Mokrani est tué le 5 mai 1871 ; la lutte se poursuit sous la conduite de son frère Boumezrag jusqu’au début de 1872. La répression se traduit par des séquestres de terres, de lourdes contributions de guerre et des déportations.',
+      precaution:
+        'Les sources donnent le 15 ou le 16 mars pour le déclenchement : le jeu s’en tient au mois. Aucun dialogue n’est prêté à El Mokrani ni au cheikh Aheddad.',
+      status: 'HISTORICAL',
+      source: SOURCES.bnf1871,
+    },
+    {
+      id: 'bejaia-moderne',
+      title: 'Béjaïa aux XVIe siècle et après',
+      date: 'XVIe siècle',
+      region: 'Béjaïa',
+      categorie: 'lieu',
+      description:
+        'La ville est prise par les Espagnols en 1510 et occupée plusieurs décennies, avant de passer sous autorité ottomane au milieu du XVIe siècle. Ces épisodes marquent la fin de son rôle de capitale régionale, mais la ville reste un port actif.',
+      status: 'HISTORICAL',
+      source: SOURCES.encyclopedieBejaia,
+    },
+  ];
+
+  /** Texte affiché dans l’écran « Histoire », avant toute fiche. */
+  const NOTE_METHODE = {
+    titre: 'Ce que ce jeu affirme, et ce qu’il invente',
+    paragraphes: [
+      'Taddart mélange deux matières qui ne doivent jamais être confondues, et qui sont donc étiquetées partout dans le jeu.',
+      'Les fiches marquées HISTORIQUE reposent sur des sources institutionnelles ou universitaires, indiquées sur chaque fiche. Quand les sources divergent — un jour de capture, un nom — la fiche le signale plutôt que de choisir. Aucune parole n’est attribuée à un personnage historique.',
+      'Tout le reste — votre village, ses habitants, ses décisions, ses dix missions — est marqué FICTION DU JEU. Ces habitants n’ont jamais existé, et les situations que vous traversez sont des simulations inspirées d’un contexte, pas des faits.',
+      'La mécanique de la tajmaɛt est inspirée de l’organisation communautaire villageoise kabyle telle que la décrivent les travaux de recherche. Ce n’est pas une reproduction des règles historiques : un jeu simplifie, et la réalité variait d’un village à l’autre.',
+      'Enfin, le village que vous bâtissez est fictif. Il n’est la reconstitution d’aucun village réel, et sa carte n’est celle d’aucun lieu existant.',
+    ],
+  };
+
+  const HISTOIRE = { SOURCES, HISTORICAL_EVENTS, NOTE_METHODE };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = HISTOIRE;
+  else racineGlobale.HISTOIRE_TADDART = HISTOIRE;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+    </script>
+    <script>
+'use strict';
+/**
+ * TADDART — données du jeu. Tout ce fichier est de la FICTION.
+ *
+ * Aucun habitant, aucun village, aucune mission décrite ici n'a existé. Les
+ * missions s'inspirent d'un contexte historique documenté dans
+ * donnees-histoire.js, mais elles ne racontent aucun fait : ce sont des
+ * situations de gestion, écrites pour être jouées.
+ *
+ * Les bâtiments cherchent les formes de l'habitat kabyle plutôt qu'un décor
+ * générique : maisons basses de pierre à toiture de tuiles, serrées les unes
+ * contre les autres ; tajmaɛt couverte et ouverte sur la place ; minaret à
+ * base carrée. Le dessin reste schématique — des formes, pas une reconstitution.
+ */
+
+(function (racineGlobale) {
+  'use strict';
+
+  const SAISONS = ['printemps', 'été', 'automne', 'hiver'];
+
+  /** Terrains de la carte. « bati » dit si l'on peut y poser un bâtiment. */
+  const TERRAINS = {
+    montagne: { nom: 'Montagne', couleur: '#5a5f6e', bati: false },
+    rocher: { nom: 'Rocaille', couleur: '#7a7566', bati: true },
+    foret: { nom: 'Forêt', couleur: '#2f5d3a', bati: true },
+    coteau: { nom: 'Coteau', couleur: '#7d7a42', bati: true },
+    prairie: { nom: 'Terre cultivable', couleur: '#8d9a52', bati: true },
+    eau: { nom: 'Eau', couleur: '#2d6f8f', bati: false },
+  };
+
+  const RESSOURCES = [
+    { id: 'eau', nom: 'Eau', icone: '💧' },
+    { id: 'cereales', nom: 'Céréales', icone: '🌾' },
+    { id: 'fruits', nom: 'Fruits', icone: '🍇' },
+    { id: 'olives', nom: 'Olives', icone: '🫒' },
+    { id: 'huile', nom: 'Huile', icone: '🏺' },
+    { id: 'bois', nom: 'Bois', icone: '🪵' },
+    { id: 'pierre', nom: 'Pierre', icone: '🪨' },
+    { id: 'animaux', nom: 'Troupeau', icone: '🐐' },
+    { id: 'artisanat', nom: 'Artisanat', icone: '🧺' },
+    { id: 'argent', nom: 'Argent', icone: '🪙' },
+  ];
+
+  /**
+   * Bâtiments.
+   *
+   * « emplois » : nombre d'habitants adultes que le bâtiment occupe.
+   * « produit » : par saison et par travailleur, modulé par la saison — un
+   * champ ne donne rien en hiver, une oliveraie donne à l'automne.
+   */
+  const BATIMENTS = {
+    maison: {
+      nom: 'Maison',
+      description: 'Maison basse en pierre, toit de tuiles. Loge quatre personnes.',
+      cout: { argent: 40, bois: 6, pierre: 4 },
+      terrains: ['prairie', 'coteau', 'rocher'],
+      loge: 4,
+      emplois: 0,
+    },
+    tajmaet: {
+      nom: 'Tajmaɛt',
+      description: 'Lieu couvert où se tient l’assemblée du village, ouvert sur la place.',
+      cout: { argent: 120, bois: 14, pierre: 18 },
+      terrains: ['prairie', 'coteau', 'rocher'],
+      emplois: 0,
+      unique: true,
+    },
+    fontaine: {
+      nom: 'Fontaine',
+      description: 'Bassin maçonné alimenté par la source. À construire au bord de l’eau.',
+      cout: { argent: 60, pierre: 12 },
+      terrains: ['prairie', 'coteau', 'rocher'],
+      pres_de: 'eau',
+      emplois: 1,
+      produit: { eau: 34 },
+      saisons: { printemps: 1.2, été: 0.85, automne: 1, hiver: 1.05 },
+    },
+    champ: {
+      nom: 'Champ de céréales',
+      description: 'Orge et blé, semés à l’automne, moissonnés au début de l’été.',
+      cout: { argent: 30, bois: 2 },
+      terrains: ['prairie'],
+      emplois: 2,
+      produit: { cereales: 7 },
+      consomme: { eau: 2 },
+      saisons: { printemps: 0.3, été: 2.4, automne: 0.4, hiver: 0 },
+    },
+    oliveraie: {
+      nom: 'Oliveraie',
+      description: 'Oliviers de coteau. La cueillette occupe la fin de l’automne.',
+      cout: { argent: 45, bois: 3 },
+      terrains: ['coteau', 'prairie'],
+      emplois: 2,
+      produit: { olives: 6 },
+      consomme: { eau: 1 },
+      saisons: { printemps: 0.1, été: 0.2, automne: 2.6, hiver: 0.3 },
+    },
+    verger: {
+      nom: 'Verger de figuiers',
+      description: 'Figuiers et arbres fruitiers, au plus près des maisons.',
+      cout: { argent: 40, bois: 3 },
+      terrains: ['coteau', 'prairie'],
+      emplois: 1,
+      produit: { fruits: 6 },
+      consomme: { eau: 2 },
+      saisons: { printemps: 0.4, été: 1.8, automne: 1.4, hiver: 0.1 },
+    },
+    bergerie: {
+      nom: 'Bergerie',
+      description: 'Chèvres et moutons, menés aux pâtures de la montagne.',
+      cout: { argent: 70, bois: 8, pierre: 4 },
+      terrains: ['coteau', 'rocher', 'prairie'],
+      emplois: 2,
+      produit: { animaux: 1.4, fruits: 2 },
+      consomme: { eau: 3 },
+      saisons: { printemps: 1.3, été: 1, automne: 1, hiver: 0.6 },
+    },
+    cabane: {
+      nom: 'Coupe de bois',
+      description: 'Abri de bûcheron, en lisière de forêt.',
+      cout: { argent: 35, pierre: 2 },
+      terrains: ['foret'],
+      emplois: 2,
+      produit: { bois: 6 },
+      saisons: { printemps: 1, été: 1.2, automne: 1, hiver: 0.7 },
+    },
+    carriere: {
+      nom: 'Carrière',
+      description: 'Extraction de la pierre de construction.',
+      cout: { argent: 50, bois: 4 },
+      terrains: ['rocher', 'montagne'],
+      emplois: 2,
+      produit: { pierre: 5 },
+      saisons: { printemps: 1, été: 1.1, automne: 1, hiver: 0.6 },
+    },
+    moulin: {
+      nom: 'Moulin à huile',
+      description: 'Meule de pierre : les olives deviennent de l’huile.',
+      cout: { argent: 90, bois: 10, pierre: 14 },
+      terrains: ['prairie', 'coteau'],
+      emplois: 2,
+      transforme: { depuis: { olives: 6 }, vers: { huile: 3 } },
+      saisons: { printemps: 0.4, été: 0.4, automne: 2, hiver: 1.4 },
+    },
+    atelier: {
+      nom: 'Atelier',
+      description: 'Poterie, tissage, vannerie — les mains du village.',
+      cout: { argent: 80, bois: 10, pierre: 6 },
+      terrains: ['prairie', 'coteau', 'rocher'],
+      emplois: 3,
+      transforme: { depuis: { bois: 2, animaux: 0.4 }, vers: { artisanat: 3 } },
+      saisons: { printemps: 1, été: 1, automne: 1, hiver: 1.2 },
+    },
+    marche: {
+      nom: 'Marché',
+      description: 'Le jour de marché, l’huile et les poteries partent vers la vallée.',
+      cout: { argent: 120, bois: 12, pierre: 8 },
+      terrains: ['prairie', 'coteau'],
+      emplois: 2,
+      entretien: 3,
+      transforme: { depuis: { artisanat: 2, huile: 1 }, vers: { argent: 26 } },
+      saisons: { printemps: 1, été: 1.1, automne: 1.3, hiver: 0.8 },
+    },
+    ecole: {
+      nom: 'École',
+      description: 'Une salle, des bancs. Les enfants y apprennent à lire et à compter.',
+      cout: { argent: 150, bois: 14, pierre: 16 },
+      terrains: ['prairie', 'coteau'],
+      emplois: 1,
+      entretien: 5,
+      unique: true,
+      effets: { satisfaction: 8, instruction: 1 },
+    },
+    soins: {
+      nom: 'Centre de soins',
+      description: 'De quoi soigner les fièvres et assister les naissances.',
+      cout: { argent: 180, bois: 12, pierre: 18 },
+      terrains: ['prairie', 'coteau'],
+      emplois: 2,
+      entretien: 6,
+      unique: true,
+      effets: { satisfaction: 6, sante: 10 },
+    },
+    mosquee: {
+      nom: 'Mosquée',
+      description: 'Salle de prière et minaret à base carrée, comme au Maghreb.',
+      cout: { argent: 160, bois: 12, pierre: 22 },
+      terrains: ['prairie', 'coteau'],
+      emplois: 0,
+      entretien: 3,
+      unique: true,
+      effets: { satisfaction: 9 },
+    },
+    bibliotheque: {
+      nom: 'Bibliothèque',
+      description: 'On y garde les registres du village, et ce qui vient de Béjaïa.',
+      cout: { argent: 200, bois: 16, pierre: 18 },
+      terrains: ['prairie', 'coteau'],
+      emplois: 1,
+      entretien: 4,
+      unique: true,
+      effets: { satisfaction: 7 },
+    },
+    musee: {
+      nom: 'Musée de la mémoire',
+      description: 'Ce que le village a décidé de ne pas oublier.',
+      cout: { argent: 300, bois: 20, pierre: 26 },
+      terrains: ['prairie', 'coteau'],
+      emplois: 1,
+      entretien: 6,
+      unique: true,
+      effets: { satisfaction: 12 },
+    },
+    place: {
+      nom: 'Place du village',
+      description: 'Le terre-plein devant la tajmaɛt, où l’on se réunit et où jouent les enfants.',
+      cout: { argent: 50, pierre: 8 },
+      terrains: ['prairie', 'coteau', 'rocher'],
+      emplois: 0,
+      unique: true,
+      effets: { satisfaction: 5 },
+    },
+    chemin: {
+      nom: 'Chemin',
+      description: 'Un passage empierré entre les maisons et les terres.',
+      cout: { argent: 10, pierre: 2 },
+      terrains: ['prairie', 'coteau', 'rocher', 'foret'],
+      emplois: 0,
+      effets: { satisfaction: 0.4 },
+    },
+  };
+
+  /** Prénoms kabyles courants, pour les habitants engendrés par le jeu. */
+  const PRENOMS = {
+    homme: ['Ahmed', 'Saïd', 'Aksel', 'Mokrane', 'Idir', 'Amar', 'Slimane', 'Hocine', 'Belaïd', 'Mouloud', 'Arezki', 'Rabah', 'Boussad', 'Youcef', 'Meziane', 'Lounis', 'Smaïl', 'Tahar'],
+    femme: ['Yamina', 'Malika', 'Tassadit', 'Ouardia', 'Djohra', 'Fadhma', 'Dihya', 'Zohra', 'Taous', 'Chabha', 'Ferroudja', 'Nouara', 'Lounja', 'Saliha', 'Dahbia', 'Kahina', 'Hassina', 'Kamila'],
+  };
+
+  /** Noms de familles inventés, formés sur « At » (ceux de). */
+  const FAMILLES = ['At Yidir', 'At Meziane', 'At Saadi', 'At Ouali', 'At Braham', 'At Amrane', 'At Larbi', 'At Djoudi'];
+
+  /** Les cinq fondateurs, tels que demandés. Personnages fictifs. */
+  const FONDATEURS = [
+    { prenom: 'Ahmed', sexe: 'homme', age: 42, metier: 'agriculteur', famille: 'At Yidir' },
+    { prenom: 'Yamina', sexe: 'femme', age: 39, metier: 'artisan', famille: 'At Yidir' },
+    { prenom: 'Saïd', sexe: 'homme', age: 47, metier: 'berger', famille: 'At Meziane' },
+    { prenom: 'Malika', sexe: 'femme', age: 35, metier: 'commerçant', famille: 'At Saadi' },
+    { prenom: 'Aksel', sexe: 'homme', age: 15, metier: 'apprenti', famille: 'At Meziane' },
+  ];
+
+  const METIERS = {
+    'sans emploi': { nom: 'Sans emploi' },
+    apprenti: { nom: 'Apprenti' },
+    enfant: { nom: 'Enfant' },
+    ancien: { nom: 'Ancien' },
+    agriculteur: { nom: 'Agriculteur', batiment: 'champ' },
+    oleiculteur: { nom: 'Oléiculteur', batiment: 'oliveraie' },
+    arboriculteur: { nom: 'Arboriculteur', batiment: 'verger' },
+    berger: { nom: 'Berger', batiment: 'bergerie' },
+    bucheron: { nom: 'Bûcheron', batiment: 'cabane' },
+    carrier: { nom: 'Carrier', batiment: 'carriere' },
+    meunier: { nom: 'Meunier', batiment: 'moulin' },
+    artisan: { nom: 'Artisan', batiment: 'atelier' },
+    'commerçant': { nom: 'Commerçant', batiment: 'marche' },
+    'porteur d’eau': { nom: 'Porteur d’eau', batiment: 'fontaine' },
+    enseignant: { nom: 'Enseignant', batiment: 'ecole' },
+    soignant: { nom: 'Soignant', batiment: 'soins' },
+    bibliothecaire: { nom: 'Bibliothécaire', batiment: 'bibliotheque' },
+    conservateur: { nom: 'Conservateur', batiment: 'musee' },
+  };
+
+  /**
+   * Décisions de la tajmaɛt.
+   *
+   * Mécanique INSPIRÉE de l'organisation communautaire villageoise kabyle, et
+   * non reproduction de règles historiques : l'assemblée réelle ne se réduisait
+   * pas à trois boutons. Voir la fiche « La tajmaɛt » dans l'écran Histoire.
+   */
+  const DECISIONS = [
+    {
+      id: 'source',
+      titre: 'La source coule mal',
+      contexte: 'Le débit de la source a baissé depuis deux saisons. Les femmes descendent plus bas pour remplir les jarres.',
+      options: [
+        { texte: 'Réparer le captage en tiwizi', cout: { pierre: 8 }, effets: { eau: 40, satisfaction: 6 }, memoire: 'La source a été réparée par un travail collectif.' },
+        { texte: 'Payer un maçon de la vallée', cout: { argent: 90 }, effets: { eau: 55, satisfaction: 2 }, memoire: 'Un maçon venu de la vallée a repris le captage de la source.' },
+        { texte: 'Attendre les pluies', cout: {}, effets: { satisfaction: -6 }, memoire: 'L’assemblée a choisi d’attendre les pluies.' },
+      ],
+    },
+    {
+      id: 'chemin',
+      titre: 'Le chemin des terres',
+      contexte: 'Le chemin qui mène aux champs se défait à chaque hiver. Les bêtes chargées y glissent.',
+      options: [
+        { texte: 'Empierrer le chemin en tiwizi', cout: { pierre: 12 }, effets: { satisfaction: 7, argentParSaison: 3 }, memoire: 'Le chemin des terres a été empierré par le village entier.' },
+        { texte: 'Le laisser en l’état', cout: {}, effets: { satisfaction: -4 }, memoire: 'L’assemblée a remis à plus tard la réfection du chemin.' },
+      ],
+    },
+    {
+      id: 'tiwizi-moisson',
+      titre: 'La moisson d’une famille',
+      contexte: 'Une famille a perdu son aîné avant la moisson. Ses champs sont mûrs et personne ne peut les couper.',
+      options: [
+        { texte: 'Organiser une tiwizi pour eux', cout: {}, effets: { cereales: 35, satisfaction: 10 }, memoire: 'Le village a moissonné les champs d’une famille endeuillée.' },
+        { texte: 'Leur avancer de l’argent', cout: { argent: 70 }, effets: { satisfaction: 3 }, memoire: 'L’assemblée a avancé de l’argent à une famille endeuillée.' },
+      ],
+    },
+    {
+      id: 'conflit',
+      titre: 'Un différend entre voisins',
+      contexte: 'Deux familles se disputent la limite d’un verger. Le ton est monté sur la place.',
+      options: [
+        { texte: 'Arbitrer, et faire appliquer la décision', cout: {}, effets: { satisfaction: 8 }, memoire: 'L’assemblée a tranché un différend de limite entre deux familles.' },
+        { texte: 'Renvoyer les familles dos à dos', cout: {}, effets: { satisfaction: -8 }, memoire: 'L’assemblée n’a pas tranché le différend des deux familles.' },
+        { texte: 'Racheter la parcelle pour le village', cout: { argent: 120 }, effets: { satisfaction: 5 }, memoire: 'Le village a racheté la parcelle disputée pour en faire un bien commun.' },
+      ],
+    },
+    {
+      id: 'espace-commun',
+      titre: 'Un espace pour la place',
+      contexte: 'La place est trop étroite les jours d’assemblée, et les enfants n’ont nulle part où jouer.',
+      options: [
+        { texte: 'Élargir la place et planter un frêne', cout: { argent: 60, bois: 6 }, effets: { satisfaction: 12 }, memoire: 'La place du village a été élargie, et un frêne y a été planté.' },
+        { texte: 'Garder la terre pour les cultures', cout: {}, effets: { cereales: 20, satisfaction: -3 }, memoire: 'L’assemblée a préféré garder la terre pour les cultures.' },
+      ],
+    },
+    {
+      id: 'agriculture',
+      titre: 'Investir dans les terres',
+      contexte: 'Les récoltes plafonnent. Certains proposent d’acheter des semences et de refaire les murets de soutènement.',
+      options: [
+        { texte: 'Acheter semences et refaire les murets', cout: { argent: 140, pierre: 10 }, effets: { rendementAgricole: 0.15, satisfaction: 4 }, memoire: 'Le village a investi dans ses terres : semences neuves et murets refaits.' },
+        { texte: 'Garder l’argent pour l’hiver', cout: {}, effets: { satisfaction: -2 }, memoire: 'L’assemblée a gardé l’argent en réserve pour l’hiver.' },
+      ],
+    },
+    {
+      id: 'famille',
+      titre: 'Une famille demande à s’installer',
+      contexte: 'Une famille de quatre personnes, chassée par la sécheresse, demande une place au village.',
+      options: [
+        { texte: 'L’accueillir et lui attribuer une maison', cout: { cereales: 30 }, effets: { nouveauxHabitants: 4, satisfaction: 6 }, memoire: 'Le village a accueilli une famille venue de la sécheresse.' },
+        { texte: 'L’aider et la laisser passer son chemin', cout: { cereales: 15 }, effets: { satisfaction: -2 }, memoire: 'L’assemblée a aidé une famille de passage sans l’installer.' },
+      ],
+    },
+    {
+      id: 'grenier',
+      titre: 'Un grenier commun',
+      contexte: 'Un ancien rappelle qu’un village sans réserve commune est un village à la merci d’une mauvaise année.',
+      options: [
+        { texte: 'Bâtir un grenier commun', cout: { argent: 100, pierre: 14, bois: 8 }, effets: { satisfaction: 9, reserveCommune: 1 }, memoire: 'Un grenier commun a été bâti pour les mauvaises années.' },
+        { texte: 'Que chaque famille garde sa réserve', cout: {}, effets: { satisfaction: -1 }, memoire: 'L’assemblée a laissé chaque famille garder sa propre réserve.' },
+      ],
+    },
+  ];
+
+  /**
+   * Les dix missions de la V1. Toutes FICTION, sans exception.
+   *
+   * Chaque objectif se mesure : « valeur » lit l'état, « cible » dit où aller.
+   * L'interface en tire une barre de progression sans rien coder de plus.
+   */
+  const MISSIONS = [
+    {
+      numero: 1,
+      id: 'fonder',
+      titre: 'Fonder Taddart',
+      resume: 'Cinq maisons et dix-huit personnes. Il faut de la place et de quoi manger.',
+      statut: 'FICTION',
+      objectifs: [
+        { texte: 'Bâtir une sixième maison', cible: 6, valeur: (e) => e.compte('maison') },
+        { texte: 'Ouvrir un champ de céréales', cible: 1, valeur: (e) => e.compte('champ') },
+      ],
+      recompense: { argent: 60 },
+    },
+    {
+      numero: 2,
+      id: 'eau',
+      titre: 'L’eau d’abord',
+      resume: 'Aucun village kabyle ne s’installe loin d’un point d’eau. Captez la source.',
+      statut: 'FICTION',
+      objectifs: [
+        { texte: 'Construire une fontaine au bord de l’eau', cible: 1, valeur: (e) => e.compte('fontaine') },
+        { texte: 'Tenir 80 mesures d’eau en réserve', cible: 80, valeur: (e) => Math.floor(e.ressources.eau) },
+      ],
+      recompense: { argent: 70 },
+    },
+    {
+      numero: 3,
+      id: 'agriculture',
+      titre: 'Le pain de l’année',
+      resume: 'L’orge se sème à l’automne et se moissonne au début de l’été. Trois champs valent mieux qu’un.',
+      statut: 'FICTION',
+      objectifs: [
+        { texte: 'Cultiver trois champs', cible: 3, valeur: (e) => e.compte('champ') },
+        { texte: 'Récolter 150 mesures de céréales en tout', cible: 150, valeur: (e) => Math.floor(e.cumul.cereales) },
+      ],
+      recompense: { argent: 80 },
+    },
+    {
+      numero: 4,
+      id: 'tajmaet',
+      titre: 'Réunir la tajmaɛt',
+      resume:
+        'Le village ne se dirige pas tout seul. Réunissez l’assemblée et tranchez. Mécanique inspirée de l’organisation communautaire villageoise kabyle — voir la fiche dans l’écran Histoire.',
+      statut: 'FICTION',
+      objectifs: [
+        { texte: 'Tenir deux assemblées et décider', cible: 2, valeur: (e) => e.assemblees },
+      ],
+      recompense: { argent: 90 },
+    },
+    {
+      numero: 5,
+      id: 'artisanat',
+      titre: 'Les mains du village',
+      resume: 'Poterie, tissage, vannerie : ce que la terre ne donne pas, les mains le font.',
+      statut: 'FICTION',
+      objectifs: [
+        { texte: 'Ouvrir un atelier', cible: 1, valeur: (e) => e.compte('atelier') },
+        { texte: 'Produire 40 objets artisanaux', cible: 40, valeur: (e) => Math.floor(e.cumul.artisanat) },
+      ],
+      recompense: { argent: 110 },
+    },
+    {
+      numero: 6,
+      id: 'commerce',
+      titre: 'Le jour de marché',
+      resume: 'L’huile et les poteries descendent vers la vallée, et l’argent remonte.',
+      statut: 'FICTION',
+      objectifs: [
+        { texte: 'Construire un marché', cible: 1, valeur: (e) => e.compte('marche') },
+        { texte: 'Réunir 500 pièces', cible: 500, valeur: (e) => Math.floor(e.ressources.argent) },
+      ],
+      recompense: { argent: 0, museeIds: ['bougie-cire'] },
+    },
+    {
+      numero: 7,
+      id: 'developpement',
+      titre: 'Le village grandit',
+      resume: 'Douze maisons, une école, et des gens qui restent.',
+      statut: 'FICTION',
+      objectifs: [
+        { texte: 'Atteindre douze maisons', cible: 12, valeur: (e) => e.compte('maison') },
+        { texte: 'Construire l’école', cible: 1, valeur: (e) => e.compte('ecole') },
+        { texte: 'Satisfaction à 60', cible: 60, valeur: (e) => Math.floor(e.satisfaction) },
+      ],
+      recompense: { argent: 150 },
+    },
+    {
+      numero: 8,
+      id: 'bejaia',
+      titre: 'Ce qui vient de Béjaïa',
+      resume:
+        'Le port de la côte n’est pas qu’un marché : c’est une bibliothèque à ciel ouvert. Bâtissez la vôtre pour en garder trace.',
+      statut: 'FICTION',
+      objectifs: [
+        { texte: 'Construire la bibliothèque', cible: 1, valeur: (e) => e.compte('bibliotheque') },
+      ],
+      recompense: {
+        argent: 60,
+        museeIds: ['saldae-romaine', 'aqueduc-saldae', 'qalaa-beni-hammad', 'bejaia-hammadide', 'bejaia-mediterranee', 'bejaia-moderne'],
+      },
+    },
+    {
+      numero: 9,
+      id: 'annees-difficiles',
+      titre: 'Les années difficiles',
+      resume:
+        'Une période de tension et de disette. Tenez le village debout : les réserves, l’eau, les familles.',
+      statut: 'FICTION',
+      note:
+        'SIMULATION DE GESTION inspirée du contexte des campagnes françaises en Kabylie entre 1844 et 1857. Les événements que vous vivez ici sont inventés. Les faits documentés de cette période sont présentés séparément, dans les fiches HISTORIQUE de l’écran Histoire.',
+      statutHistorique: ['boubaghla', 'fadhma-nsoumer', 'campagne-1857'],
+      objectifs: [
+        { texte: 'Compter au moins 22 habitants', cible: 22, valeur: (e) => e.habitantsVivants().length },
+        { texte: 'Constituer 200 mesures de nourriture', cible: 200, valeur: (e) => Math.floor(e.ressources.cereales + e.ressources.fruits) },
+        { texte: 'Garder la satisfaction au-dessus de 45', cible: 45, valeur: (e) => Math.floor(e.satisfaction) },
+      ],
+      recompense: { argent: 120, museeIds: ['boubaghla', 'fadhma-nsoumer', 'campagne-1857', 'insurrection-1871'] },
+    },
+    {
+      numero: 10,
+      id: 'generations',
+      titre: 'Transmettre',
+      resume: 'Un village tient quand ceux qui y sont nés y restent, et bâtissent à leur tour.',
+      statut: 'FICTION',
+      objectifs: [
+        { texte: 'Voir naître la troisième génération', cible: 3, valeur: (e) => e.generationMax() },
+        { texte: 'Construire le Musée de la mémoire', cible: 1, valeur: (e) => e.compte('musee') },
+      ],
+      recompense: { argent: 200, museeIds: ['tajmaat-institution', 'tiwizi'] },
+    },
+  ];
+
+  const JEU = { SAISONS, TERRAINS, RESSOURCES, BATIMENTS, PRENOMS, FAMILLES, FONDATEURS, METIERS, DECISIONS, MISSIONS };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = JEU;
+  else racineGlobale.JEU_TADDART = JEU;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+    </script>
+    <script>
+'use strict';
+/**
+ * TADDART — simulation du village. Aucun appel au navigateur.
+ *
+ * Le moteur ne sait ni dessiner ni sauvegarder : il fait avancer un village
+ * saison après saison. On peut donc le faire tourner dans Node et vérifier
+ * qu'un village survit, que les générations se succèdent et que les dix
+ * missions sont atteignables — voir tests/verifier.mjs.
+ *
+ * Le temps : une saison par tour, quatre saisons par an. Tout le hasard passe
+ * par un générateur à graine rangée dans la sauvegarde : reprendre une partie
+ * la reprend exactement où elle était, et un test rejoue la même histoire.
+ */
+
+(function (racineGlobale) {
+  'use strict';
+
+  const JEU = typeof module !== 'undefined' && module.exports ? require('./donnees-jeu.js') : racineGlobale.JEU_TADDART;
+  const { SAISONS, TERRAINS, BATIMENTS, PRENOMS, FAMILLES, FONDATEURS, METIERS, DECISIONS, MISSIONS } = JEU;
+
+  const TERRAIN_CLES = ['montagne', 'rocher', 'foret', 'coteau', 'prairie', 'eau'];
+  const LARGEUR = 16;
+  const HAUTEUR = 22;
+
+  const ADULTE = 16;
+  const ANCIEN = 62;
+  const EAU_PAR_HABITANT = 1.1;
+  const NOURRITURE_PAR_HABITANT = 1.15;
+
+  /* ------------------------------------------------------------ Hasard */
+
+  /** Générateur à graine (mulberry32) : l'état tient dans un entier, donc il se sauvegarde. */
+  function tirer(etat) {
+    etat.rng = (etat.rng + 0x6d2b79f5) >>> 0;
+    let t = etat.rng;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+
+  const entre = (etat, min, max) => min + Math.floor(tirer(etat) * (max - min + 1));
+  const parmi = (etat, liste) => liste[Math.floor(tirer(etat) * liste.length)];
+
+  /* ------------------------------------------------------------- Carte */
+
+  /**
+   * Relief : montagne en haut, terres cultivables en bas, un cours d'eau qui
+   * descend. C'est le profil d'un village de montagne kabyle — accroché au
+   * versant, ses terres en contrebas — sans copier aucun lieu réel.
+   */
+  function genererCarte(etat) {
+    const bruit = new Float32Array(LARGEUR * HAUTEUR);
+    for (let i = 0; i < bruit.length; i += 1) bruit[i] = tirer(etat);
+    // Trois lissages : des massifs, pas un damier.
+    for (let passe = 0; passe < 3; passe += 1) {
+      const copie = Float32Array.from(bruit);
+      for (let y = 0; y < HAUTEUR; y += 1) {
+        for (let x = 0; x < LARGEUR; x += 1) {
+          let somme = 0;
+          let n = 0;
+          for (let dy = -1; dy <= 1; dy += 1) {
+            for (let dx = -1; dx <= 1; dx += 1) {
+              const vx = x + dx;
+              const vy = y + dy;
+              if (vx < 0 || vy < 0 || vx >= LARGEUR || vy >= HAUTEUR) continue;
+              somme += copie[vy * LARGEUR + vx];
+              n += 1;
+            }
+          }
+          bruit[y * LARGEUR + x] = somme / n;
+        }
+      }
+    }
+
+    const cases = new Array(LARGEUR * HAUTEUR);
+    for (let y = 0; y < HAUTEUR; y += 1) {
+      for (let x = 0; x < LARGEUR; x += 1) {
+        const pente = 1 - y / (HAUTEUR - 1);
+        const altitude = pente * 0.72 + (bruit[y * LARGEUR + x] - 0.5) * 0.7;
+        let terrain = 'prairie';
+        if (altitude > 0.62) terrain = 'montagne';
+        else if (altitude > 0.5) terrain = 'rocher';
+        else if (altitude > 0.36) terrain = 'foret';
+        else if (altitude > 0.2) terrain = 'coteau';
+        cases[y * LARGEUR + x] = TERRAIN_CLES.indexOf(terrain);
+      }
+    }
+
+    // Le ruisseau : il naît dans la roche et descend en serpentant.
+    let x = entre(etat, 2, LARGEUR - 3);
+    const source = { x, y: 2 };
+    for (let y = 2; y < HAUTEUR; y += 1) {
+      cases[y * LARGEUR + x] = TERRAIN_CLES.indexOf('eau');
+      // Les berges sont cultivables : c'est là que s'installe le village.
+      for (const dx of [-1, 1]) {
+        const vx = x + dx;
+        if (vx > 0 && vx < LARGEUR - 1 && TERRAIN_CLES[cases[y * LARGEUR + vx]] === 'montagne') {
+          cases[y * LARGEUR + vx] = TERRAIN_CLES.indexOf('coteau');
+        }
+      }
+      if (tirer(etat) < 0.42) x = Math.max(1, Math.min(LARGEUR - 2, x + (tirer(etat) < 0.5 ? -1 : 1)));
+    }
+
+    return { largeur: LARGEUR, hauteur: HAUTEUR, cases, source };
+  }
+
+  const terrainDe = (etat, x, y) => {
+    if (x < 0 || y < 0 || x >= etat.carte.largeur || y >= etat.carte.hauteur) return null;
+    return TERRAIN_CLES[etat.carte.cases[y * etat.carte.largeur + x]];
+  };
+
+  const batimentEn = (etat, x, y) => etat.batiments.find((b) => b.x === x && b.y === y) || null;
+
+  const aCoteDe = (etat, x, y, terrain) => {
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      if (terrainDe(etat, x + dx, y + dy) === terrain) return true;
+    }
+    return false;
+  };
+
+  /** Dit si l'on peut bâtir ici, et sinon pourquoi — l'interface affiche la raison. */
+  function peutConstruire(etat, type, x, y) {
+    const modele = BATIMENTS[type];
+    if (!modele) return 'bâtiment inconnu';
+    const terrain = terrainDe(etat, x, y);
+    if (!terrain) return 'hors de la carte';
+    if (!TERRAINS[terrain].bati) return `on ne bâtit pas sur : ${TERRAINS[terrain].nom.toLowerCase()}`;
+    if (!modele.terrains.includes(terrain)) return `pas sur ce terrain (${TERRAINS[terrain].nom.toLowerCase()})`;
+    if (batimentEn(etat, x, y)) return 'la case est occupée';
+    if (modele.unique && etat.compte(type) > 0) return 'le village n’en a qu’un';
+    if (modele.pres_de && !aCoteDe(etat, x, y, modele.pres_de)) return 'à construire au bord de l’eau';
+    for (const [ressource, quantite] of Object.entries(modele.cout)) {
+      if (etat.ressources[ressource] < quantite) return `il manque : ${ressource}`;
+    }
+    return null;
+  }
+
+  function construire(etat, type, x, y) {
+    const refus = peutConstruire(etat, type, x, y);
+    if (refus) return refus;
+    const modele = BATIMENTS[type];
+    for (const [ressource, quantite] of Object.entries(modele.cout)) etat.ressources[ressource] -= quantite;
+
+    const doyen = etat.habitantsVivants().sort((a, b) => b.age - a.age)[0];
+    etat.batiments.push({
+      id: etat.prochainId++,
+      type,
+      x,
+      y,
+      annee: etat.annee,
+      generationDe: doyen ? doyen.prenom : null,
+      travailleurs: [],
+    });
+    repartirLesMetiers(etat);
+    noter(etat, `${modele.nom} — construite`, 'construction');
+    return null;
+  }
+
+  /* -------------------------------------------------------- Habitants */
+
+  function creerHabitant(etat, { prenom, sexe, age, metier, famille, generation = 1, parents = [] }) {
+    const habitant = {
+      id: etat.prochainId++,
+      prenom,
+      sexe,
+      age,
+      famille,
+      generation,
+      parents,
+      conjoint: null,
+      enfants: [],
+      metier: metier || (age < ADULTE ? 'enfant' : 'sans emploi'),
+      maison: null,
+      argent: entre(etat, 4, 18),
+      sante: entre(etat, 72, 96),
+      satisfaction: 60,
+      vivant: true,
+      neEn: etat.annee - age,
+      histoire: [],
+    };
+    etat.habitants.push(habitant);
+    return habitant;
+  }
+
+  const raconter = (etat, habitant, texte) => habitant.histoire.push({ annee: etat.annee, texte });
+
+  /**
+   * Chaque adulte disponible prend un poste dans un bâtiment qui en manque.
+   *
+   * Assignation automatique : sur un téléphone, affecter cinquante villageois à
+   * la main serait une corvée, pas un jeu.
+   */
+  function repartirLesMetiers(etat) {
+    const adultes = etat.habitantsVivants().filter((h) => h.age >= ADULTE && h.age < ANCIEN);
+    for (const habitant of adultes) {
+      habitant.metier = 'sans emploi';
+      habitant.batiment = null;
+    }
+    for (const habitant of etat.habitantsVivants()) {
+      if (habitant.age < ADULTE) habitant.metier = 'enfant';
+      else if (habitant.age >= ANCIEN) habitant.metier = 'ancien';
+    }
+
+    const libres = adultes.slice();
+    const aPourvoir = etat.batiments.filter((b) => BATIMENTS[b.type].emplois > 0);
+    for (const batiment of etat.batiments) batiment.travailleurs = [];
+
+    // Un bras dans chaque atelier avant d'en remplir un seul.
+    //
+    // Servir les bâtiments dans l'ordre de construction condamnait les derniers
+    // bâtis à ne jamais tourner : on montait un atelier et il ne produisait
+    // rien, sans que rien ne l'explique. En tournant, un bâtiment à moitié
+    // pourvu produit à moitié, ce qui se comprend et se corrige.
+    const maxEmplois = aPourvoir.reduce((max, b) => Math.max(max, BATIMENTS[b.type].emplois), 0);
+    for (let tour = 0; tour < maxEmplois && libres.length > 0; tour += 1) {
+      for (const batiment of aPourvoir) {
+        if (!libres.length) break;
+        if (BATIMENTS[batiment.type].emplois <= tour) continue;
+        const metier = Object.keys(METIERS).find((cle) => METIERS[cle].batiment === batiment.type) || 'sans emploi';
+        const habitant = libres.shift();
+        habitant.metier = metier;
+        habitant.batiment = batiment.id;
+        batiment.travailleurs.push(habitant.id);
+      }
+    }
+
+    // Les jeunes sans poste apprennent auprès des autres.
+    for (const habitant of libres) {
+      if (habitant.age < 22) habitant.metier = 'apprenti';
+    }
+  }
+
+  function loger(etat) {
+    const maisons = etat.batiments.filter((b) => b.type === 'maison');
+    const places = maisons.length * BATIMENTS.maison.loge;
+    const vivants = etat.habitantsVivants();
+    vivants.forEach((habitant, index) => {
+      const maison = maisons[Math.floor(index / BATIMENTS.maison.loge)];
+      habitant.maison = maison ? maison.id : null;
+    });
+    return { places, occupees: vivants.length };
+  }
+
+  /* ------------------------------------------------------ Production */
+
+  function produire(etat) {
+    const production = {};
+    const ajouter = (ressource, quantite) => {
+      production[ressource] = (production[ressource] || 0) + quantite;
+    };
+    const saison = SAISONS[etat.saison];
+
+    for (const batiment of etat.batiments) {
+      const modele = BATIMENTS[batiment.type];
+      const ouvriers = batiment.travailleurs.length;
+      if (!ouvriers && modele.emplois) continue;
+      const facteurSaison = modele.saisons ? modele.saisons[saison] : 1;
+      if (!facteurSaison) continue;
+
+      if (modele.produit) {
+        for (const [ressource, base] of Object.entries(modele.produit)) {
+          let quantite = base * ouvriers * facteurSaison;
+          if (['cereales', 'olives', 'fruits'].includes(ressource)) {
+            quantite *= 1 + etat.bonus.rendementAgricole;
+          }
+          ajouter(ressource, quantite);
+        }
+      }
+
+      if (modele.consomme) {
+        for (const [ressource, base] of Object.entries(modele.consomme)) {
+          ajouter(ressource, -base * ouvriers * facteurSaison);
+        }
+      }
+
+      if (modele.transforme) {
+        const { depuis, vers } = modele.transforme;
+        // On ne transforme que ce qu'on a : un moulin sans olives ne tourne pas.
+        let lots = ouvriers * facteurSaison;
+        for (const [ressource, base] of Object.entries(depuis)) {
+          if (base > 0) lots = Math.min(lots, etat.ressources[ressource] / base);
+        }
+        lots = Math.max(0, lots);
+        for (const [ressource, base] of Object.entries(depuis)) ajouter(ressource, -base * lots);
+        for (const [ressource, base] of Object.entries(vers)) ajouter(ressource, base * lots);
+      }
+    }
+
+    // L'eau puisée au ruisseau, à la main, jarre après jarre.
+    //
+    // Sans cela le village est à sec en trois saisons, avant même d'avoir pu
+    // bâtir sa fontaine : il mourait de soif pendant le tutoriel. Le puisage
+    // à la main ne suffit jamais à un village qui grandit — c'est justement ce
+    // qui pousse à capter la source.
+    ajouter('eau', Math.min(18, etat.habitantsVivants().length));
+
+    if (etat.bonus.argentParSaison) ajouter('argent', etat.bonus.argentParSaison);
+
+    // Entretien des bâtiments publics : une école ou un marché coûte à faire
+    // vivre. Les bâtiments de production, eux, se paient sur leur récolte.
+    const entretien = etat.batiments.reduce((total, b) => total + (BATIMENTS[b.type].entretien || 0), 0);
+    if (entretien) ajouter('argent', -entretien);
+
+    for (const [ressource, quantite] of Object.entries(production)) {
+      etat.ressources[ressource] = Math.max(0, etat.ressources[ressource] + quantite);
+      if (quantite > 0) etat.cumul[ressource] = (etat.cumul[ressource] || 0) + quantite;
+    }
+    return production;
+  }
+
+  /**
+   * Vente du surplus dans la vallée.
+   *
+   * Sans cela, un village sans marché n'a aucune rentrée d'argent et ne peut
+   * plus rien bâtir : une impasse. Les villages descendaient vendre l'huile,
+   * les figues et les poteries qui dépassaient leurs besoins. Le prix est
+   * mauvais tant qu'il n'y a pas de marché au village.
+   */
+  function vendreSurplus(etat) {
+    const bouches = Math.max(1, etat.habitantsVivants().length);
+    // Le bois, la pierre et le grain en excès se vendent aussi : sans cela, un
+    // village qui n'a pas encore de marché n'a aucune rentrée et reste bloqué,
+    // ce qui n'est ni jouable ni vraisemblable.
+    const prix = { cereales: 0.35, fruits: 0.5, olives: 0.9, huile: 3.5, artisanat: 5, animaux: 8, bois: 0.5, pierre: 0.6 };
+    const garde = { cereales: bouches * 8, fruits: bouches * 3, olives: 10, huile: 6, artisanat: 5, animaux: 10, bois: 40, pierre: 30 };
+    const part = etat.compte('marche') > 0 ? 0.5 : 0.25;
+    let gain = 0;
+    for (const [ressource, unitaire] of Object.entries(prix)) {
+      const surplus = etat.ressources[ressource] - garde[ressource];
+      if (surplus <= 0) continue;
+      const vendu = surplus * part;
+      etat.ressources[ressource] -= vendu;
+      gain += vendu * unitaire;
+    }
+    etat.ressources.argent += gain;
+    etat.cumul.argent += gain;
+    return gain;
+  }
+
+  function consommer(etat) {
+    const vivants = etat.habitantsVivants();
+    const besoinEau = vivants.length * EAU_PAR_HABITANT;
+    const besoinNourriture = vivants.length * NOURRITURE_PAR_HABITANT;
+
+    const eauBue = Math.min(etat.ressources.eau, besoinEau);
+    etat.ressources.eau -= eauBue;
+
+    // On mange d'abord les céréales, puis les fruits : le grain se garde.
+    let reste = besoinNourriture;
+    const pris = {};
+    for (const ressource of ['cereales', 'fruits']) {
+      const part = Math.min(etat.ressources[ressource], reste);
+      etat.ressources[ressource] -= part;
+      pris[ressource] = part;
+      reste -= part;
+    }
+
+    const manqueEau = besoinEau - eauBue;
+    const manqueNourriture = reste;
+    return { besoinEau, besoinNourriture, manqueEau, manqueNourriture, pris };
+  }
+
+  /* --------------------------------------------------- Satisfaction */
+
+  function recalculerSatisfaction(etat, manques) {
+    const vivants = etat.habitantsVivants();
+    const { places } = loger(etat);
+    // L'échelle est calibrée pour qu'un village bien tenu plafonne vers 85, pas
+    // 100 : il faut de la marge au-dessus, sinon la jauge ne récompense plus
+    // rien et ne signale plus rien.
+    let cible = 42;
+
+    cible += places >= vivants.length ? 8 : -18;
+    cible += manques.manqueNourriture > 0 ? -26 : etat.ressources.cereales + etat.ressources.fruits > vivants.length * 4 ? 9 : 2;
+    cible += manques.manqueEau > 0 ? -22 : etat.ressources.eau > vivants.length * 4 ? 7 : 2;
+
+    // Les équipements comptent, mais à rendement décroissant : sans plafond, un
+    // village bien doté reste scotché à 100 et la jauge cesse de dire quoi que
+    // ce soit — ni la disette ni la soif ne s'y verraient plus.
+    let apportBatiments = 0;
+    for (const batiment of etat.batiments) {
+      const effets = BATIMENTS[batiment.type].effets;
+      if (effets && effets.satisfaction) apportBatiments += effets.satisfaction;
+    }
+    cible += Math.min(20, apportBatiments);
+    cible += etat.bonus.satisfaction;
+
+    const sansEmploi = vivants.filter((h) => h.metier === 'sans emploi').length;
+    cible -= sansEmploi * 1.2;
+
+    cible = Math.max(0, Math.min(100, cible));
+    // On s'en approche par quarts : l'humeur d'un village ne bascule pas en un jour.
+    etat.satisfaction += (cible - etat.satisfaction) * 0.25;
+    for (const habitant of vivants) habitant.satisfaction = Math.round(etat.satisfaction);
+    return cible;
+  }
+
+  /* ---------------------------------------------------- Générations */
+
+  function passerUneAnnee(etat, manques) {
+    const evenements = [];
+    const vivants = etat.habitantsVivants();
+    const soins = etat.compte('soins') > 0;
+    const ecole = etat.compte('ecole') > 0;
+
+    for (const habitant of vivants) {
+      habitant.age += 1;
+      if (manques.manqueNourriture > 0 || manques.manqueEau > 0) habitant.sante -= entre(etat, 4, 12);
+      else habitant.sante = Math.min(100, habitant.sante + (soins ? 4 : 2));
+      if (habitant.age === ADULTE) {
+        raconter(etat, habitant, ecole ? 'Devenu adulte, après l’école du village.' : 'Devenu adulte.');
+      }
+    }
+
+    // Décès : le grand âge et la mauvaise santé, pas le hasard pur.
+    for (const habitant of vivants) {
+      const age = habitant.age;
+      let risque = age < 45 ? 0.005 : age < 58 ? 0.018 : age < 68 ? 0.05 : age < 78 ? 0.12 : 0.26;
+      if (habitant.sante < 45) risque += 0.06;
+      if (soins) risque *= 0.75;
+      if (tirer(etat) < risque) {
+        habitant.vivant = false;
+        habitant.mortEn = etat.annee;
+        raconter(etat, habitant, `Mort à ${age} ans.`);
+        evenements.push(`${habitant.prenom} (${habitant.famille}) s’est éteint à ${age} ans.`);
+        noter(etat, `${habitant.prenom} s’est éteint à ${age} ans`, 'deces');
+        // L'héritage : la maison, le métier et la bourse passent aux enfants.
+        const heritiers = habitant.enfants
+          .map((id) => etat.habitants.find((h) => h.id === id))
+          .filter((h) => h && h.vivant);
+        if (heritiers.length) {
+          const part = Math.floor(habitant.argent / heritiers.length);
+          for (const heritier of heritiers) {
+            heritier.argent += part;
+            raconter(etat, heritier, `A hérité de ${habitant.prenom}.`);
+          }
+        }
+        if (habitant.conjoint) {
+          const conjoint = etat.habitants.find((h) => h.id === habitant.conjoint);
+          if (conjoint) conjoint.conjoint = null;
+        }
+      }
+    }
+
+    // Mariages : deux adultes libres, sans parent commun, et un toit disponible.
+    const libres = etat.habitantsVivants().filter((h) => h.age >= 17 && h.age < 55 && !h.conjoint);
+    const hommes = libres.filter((h) => h.sexe === 'homme');
+    const femmes = libres.filter((h) => h.sexe === 'femme');
+    const { places } = loger(etat);
+    for (const homme of hommes) {
+      if (etat.habitantsVivants().length >= places) break;
+      const compatible = femmes.find(
+        (f) => !f.conjoint && !f.parents.some((p) => homme.parents.includes(p)) && Math.abs(f.age - homme.age) < 16
+      );
+      if (!compatible || tirer(etat) > 0.55) continue;
+      homme.conjoint = compatible.id;
+      compatible.conjoint = homme.id;
+      raconter(etat, homme, `Marié à ${compatible.prenom}.`);
+      raconter(etat, compatible, `Mariée à ${homme.prenom}.`);
+      evenements.push(`${homme.prenom} et ${compatible.prenom} se sont mariés.`);
+    }
+
+    // Naissances : il faut un couple, un toit libre et de quoi manger.
+    const nourritureOk = manques.manqueNourriture === 0;
+    for (const mere of etat.habitantsVivants()) {
+      if (mere.sexe !== 'femme' || !mere.conjoint || mere.age < 18 || mere.age > 42) continue;
+      if (etat.habitantsVivants().length >= places || !nourritureOk) break;
+      if (tirer(etat) > 0.34) continue;
+      const pere = etat.habitants.find((h) => h.id === mere.conjoint);
+      const sexe = tirer(etat) < 0.5 ? 'homme' : 'femme';
+      const enfant = creerHabitant(etat, {
+        prenom: parmi(etat, PRENOMS[sexe]),
+        sexe,
+        age: 0,
+        famille: pere ? pere.famille : mere.famille,
+        generation: Math.max(mere.generation, pere ? pere.generation : 1) + 1,
+        parents: pere ? [mere.id, pere.id] : [mere.id],
+      });
+      mere.enfants.push(enfant.id);
+      if (pere) pere.enfants.push(enfant.id);
+      raconter(etat, enfant, `Né à Taddart, en l’an ${etat.annee}.`);
+      evenements.push(`Naissance de ${enfant.prenom}, chez les ${enfant.famille}.`);
+      noter(etat, `Naissance de ${enfant.prenom} (${enfant.famille})`, 'naissance');
+    }
+
+    repartirLesMetiers(etat);
+    loger(etat);
+    return evenements;
+  }
+
+  /* ------------------------------------------------------- Tajmaɛt */
+
+  function proposerAssemblee(etat) {
+    if (etat.decision || etat.compte('tajmaet') === 0) return;
+    const dejaVues = etat.decisionsPassees || [];
+    const possibles = DECISIONS.filter((d) => !dejaVues.includes(d.id));
+    const choisie = possibles.length ? parmi(etat, possibles) : parmi(etat, DECISIONS);
+    etat.decision = { id: choisie.id, annee: etat.annee, saison: etat.saison };
+  }
+
+  /** Applique l'option choisie. Renvoie un message, ou une raison de refus. */
+  function trancher(etat, indexOption) {
+    if (!etat.decision) return 'aucune assemblée en cours';
+    const decision = DECISIONS.find((d) => d.id === etat.decision.id);
+    const option = decision.options[indexOption];
+    if (!option) return 'option inconnue';
+    for (const [ressource, quantite] of Object.entries(option.cout || {})) {
+      if (etat.ressources[ressource] < quantite) return `il manque : ${ressource}`;
+    }
+    for (const [ressource, quantite] of Object.entries(option.cout || {})) etat.ressources[ressource] -= quantite;
+
+    const effets = option.effets || {};
+    for (const [cle, valeur] of Object.entries(effets)) {
+      if (cle === 'satisfaction') etat.bonus.satisfaction += valeur;
+      else if (cle === 'rendementAgricole') etat.bonus.rendementAgricole += valeur;
+      else if (cle === 'argentParSaison') etat.bonus.argentParSaison += valeur;
+      else if (cle === 'reserveCommune') etat.bonus.reserveCommune = true;
+      else if (cle === 'nouveauxHabitants') accueillirFamille(etat, valeur);
+      else if (etat.ressources[cle] !== undefined) etat.ressources[cle] += valeur;
+    }
+
+    etat.assemblees += 1;
+    etat.decisionsPassees = [...(etat.decisionsPassees || []), decision.id];
+    etat.decision = null;
+    noter(etat, option.memoire, 'assemblee');
+    return null;
+  }
+
+  function accueillirFamille(etat, nombre) {
+    const famille = parmi(etat, FAMILLES);
+    for (let i = 0; i < nombre; i += 1) {
+      const sexe = tirer(etat) < 0.5 ? 'homme' : 'femme';
+      const age = i < 2 ? entre(etat, 24, 40) : entre(etat, 2, 14);
+      const habitant = creerHabitant(etat, { prenom: parmi(etat, PRENOMS[sexe]), sexe, age, famille, generation: 1 });
+      raconter(etat, habitant, `Arrivé à Taddart en l’an ${etat.annee}.`);
+    }
+    repartirLesMetiers(etat);
+  }
+
+  /* ------------------------------------------------------- Missions */
+
+  function verifierMission(etat) {
+    const mission = MISSIONS[etat.missionCourante];
+    if (!mission) return null;
+    const accomplie = mission.objectifs.every((objectif) => objectif.valeur(etat) >= objectif.cible);
+    if (!accomplie) return null;
+
+    etat.missionsFaites.push(mission.id);
+    etat.missionCourante += 1;
+    const recompense = mission.recompense || {};
+    if (recompense.argent) etat.ressources.argent += recompense.argent;
+    for (const id of recompense.museeIds || []) {
+      if (!etat.musee.includes(id)) etat.musee.push(id);
+    }
+    noter(etat, `Mission accomplie : ${mission.titre}`, 'mission');
+    return mission;
+  }
+
+  /* -------------------------------------------------- Mémoire du village */
+
+  function noter(etat, texte, type) {
+    etat.chronique.push({ annee: etat.annee, saison: SAISONS[etat.saison], texte, type });
+    if (etat.chronique.length > 400) etat.chronique.shift();
+  }
+
+  /* ---------------------------------------------------------- Partie */
+
+  function attacher(etat) {
+    etat.compte = (type) => etat.batiments.filter((b) => b.type === type).length;
+    etat.habitantsVivants = () => etat.habitants.filter((h) => h.vivant);
+    etat.generationMax = () => etat.habitantsVivants().reduce((max, h) => Math.max(max, h.generation), 1);
+    return etat;
+  }
+
+  function creerPartie(graine = Math.floor(Math.random() * 0xffffffff)) {
+    const etat = attacher({
+      version: 1,
+      graine: graine >>> 0,
+      rng: graine >>> 0,
+      annee: 1,
+      saison: 0,
+      prochainId: 1,
+      batiments: [],
+      habitants: [],
+      ressources: { eau: 60, cereales: 90, fruits: 30, olives: 0, huile: 6, bois: 40, pierre: 30, animaux: 6, artisanat: 4, argent: 180 },
+      cumul: { cereales: 0, fruits: 0, olives: 0, huile: 0, bois: 0, pierre: 0, animaux: 0, artisanat: 0, argent: 0, eau: 0 },
+      satisfaction: 58,
+      bonus: { satisfaction: 0, rendementAgricole: 0, argentParSaison: 0, reserveCommune: false },
+      missionCourante: 0,
+      missionsFaites: [],
+      assemblees: 0,
+      decision: null,
+      decisionsPassees: [],
+      chronique: [],
+      musee: [],
+      rapport: null,
+    });
+
+    etat.carte = genererCarte(etat);
+    installerLeVillage(etat);
+    noter(etat, 'Taddart est fondé.', 'mission');
+    return etat;
+  }
+
+  /** Pose le village de départ : place, tajmaɛt, cinq maisons, deux champs. */
+  function installerLeVillage(etat) {
+    const libres = [];
+    for (let y = Math.floor(etat.carte.hauteur * 0.45); y < etat.carte.hauteur - 1; y += 1) {
+      for (let x = 1; x < etat.carte.largeur - 1; x += 1) {
+        const terrain = terrainDe(etat, x, y);
+        if (terrain === 'prairie' || terrain === 'coteau') libres.push({ x, y, terrain });
+      }
+    }
+    // On se serre autour d'un même point : l'habitat kabyle est groupé.
+    const coeur = libres[Math.floor(libres.length / 2)] || { x: 3, y: etat.carte.hauteur - 4 };
+    libres.sort(
+      (a, b) => Math.hypot(a.x - coeur.x, a.y - coeur.y) - Math.hypot(b.x - coeur.x, b.y - coeur.y)
+    );
+
+    const poser = (type, filtre) => {
+      const place = libres.find(
+        (c) => !batimentEn(etat, c.x, c.y) && BATIMENTS[type].terrains.includes(c.terrain) && (!filtre || filtre(c))
+      );
+      if (!place) return false;
+      const doyen = etat.habitants.length ? etat.habitants[0].prenom : null;
+      etat.batiments.push({ id: etat.prochainId++, type, x: place.x, y: place.y, annee: 1, generationDe: doyen, travailleurs: [] });
+      return true;
+    };
+
+    poser('tajmaet');
+    poser('place');
+    for (let i = 0; i < 5; i += 1) poser('maison');
+    for (let i = 0; i < 2; i += 1) poser('champ', (c) => c.terrain === 'prairie');
+
+    for (const fondateur of FONDATEURS) {
+      const habitant = creerHabitant(etat, { ...fondateur, generation: 1 });
+      raconter(etat, habitant, 'Parmi les fondateurs de Taddart.');
+    }
+    // Deux couples parmi les fondateurs, pour que le village ait une suite.
+    const [ahmed, yamina, said, malika] = etat.habitants;
+    ahmed.conjoint = yamina.id;
+    yamina.conjoint = ahmed.id;
+    said.conjoint = malika.id;
+    malika.conjoint = said.id;
+
+    while (etat.habitantsVivants().length < 18) {
+      const sexe = tirer(etat) < 0.5 ? 'homme' : 'femme';
+      const age = entre(etat, 1, 58);
+      const habitant = creerHabitant(etat, {
+        prenom: parmi(etat, PRENOMS[sexe]),
+        sexe,
+        age,
+        famille: parmi(etat, FAMILLES),
+        generation: 1,
+      });
+      raconter(etat, habitant, 'Présent à la fondation du village.');
+    }
+
+    repartirLesMetiers(etat);
+    loger(etat);
+  }
+
+  /**
+   * Une saison. C'est le seul point d'entrée du temps qui passe.
+   */
+  function avancerSaison(etat) {
+    const production = produire(etat);
+    const vente = vendreSurplus(etat);
+    const manques = consommer(etat);
+    const evenements = [];
+
+    if (manques.manqueNourriture > 0) {
+      evenements.push(`Les réserves n’ont pas suffi : il a manqué ${Math.ceil(manques.manqueNourriture)} parts de nourriture.`);
+      noter(etat, 'Disette : les réserves n’ont pas suffi.', 'crise');
+    }
+    if (manques.manqueEau > 0) {
+      evenements.push(`L’eau a manqué : ${Math.ceil(manques.manqueEau)} mesures de moins que le nécessaire.`);
+      noter(etat, 'L’eau a manqué au village.', 'crise');
+    }
+
+    recalculerSatisfaction(etat, manques);
+    // Le souvenir d'une bonne décision s'estompe. Sans cela les bonus
+    // s'empilent, la jauge se colle à 100 et ne dit plus rien du village.
+    etat.bonus.satisfaction *= 0.94;
+
+    etat.saison += 1;
+    if (etat.saison >= SAISONS.length) {
+      etat.saison = 0;
+      etat.annee += 1;
+      evenements.push(...passerUneAnnee(etat, manques));
+      proposerAssemblee(etat);
+    }
+
+    const mission = verifierMission(etat);
+    if (mission) evenements.push(`Mission accomplie : ${mission.titre}.`);
+
+    etat.rapport = { annee: etat.annee, saison: SAISONS[etat.saison], production, vente, manques, evenements };
+    return etat.rapport;
+  }
+
+  /* --------------------------------------------------- Sauvegarde */
+
+  // Les fonctions attachées ne sont pas sérialisées par JSON : rien à nettoyer.
+  const serialiser = (etat) => JSON.stringify(etat);
+  const deserialiser = (texte) => attacher(JSON.parse(texte));
+
+  const MOTEUR = {
+    LARGEUR,
+    HAUTEUR,
+    ADULTE,
+    ANCIEN,
+    TERRAIN_CLES,
+    creerPartie,
+    avancerSaison,
+    construire,
+    peutConstruire,
+    trancher,
+    proposerAssemblee,
+    terrainDe,
+    batimentEn,
+    serialiser,
+    deserialiser,
+    attacher,
+    noter,
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = MOTEUR;
+  else racineGlobale.MOTEUR_TADDART = MOTEUR;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+    </script>
+    <script>
+'use strict';
+/**
+ * TADDART — interface, carte et sauvegarde.
+ *
+ * Ce fichier ne décide rien du village : il lit l'état produit par moteur.js,
+ * le dessine, et renvoie les gestes du joueur au moteur. Toute la règle du jeu
+ * est ailleurs, ce qui permet de la vérifier sans navigateur.
+ *
+ * Une règle d'affichage traverse tout le fichier : rien ne s'affiche sans son
+ * étiquette. Une fiche d'histoire porte HISTORIQUE et sa source ; tout ce qui
+ * vient du village porte FICTION DU JEU. Les deux ne se ressemblent pas, même
+ * de loin, même en diagonale.
+ */
+
+/* global HISTOIRE_TADDART, JEU_TADDART, MOTEUR_TADDART */
+
+(function () {
+  'use strict';
+
+  const HISTOIRE = HISTOIRE_TADDART;
+  const JEU = JEU_TADDART;
+  const M = MOTEUR_TADDART;
+  const { BATIMENTS, TERRAINS, RESSOURCES, SAISONS, DECISIONS, MISSIONS, METIERS } = JEU;
+
+  const CLE = 'taddart.v1';
+  const CLE_REGLAGES = 'taddart.reglages.v1';
+  const DUREE_SAISON = 11000; // millisecondes à la vitesse ×1
+
+  const $ = (s) => document.querySelector(s);
+  const echapper = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  let partie = null;
+  let vitesse = 1;
+  let horloge = 0;
+  let typeAConstruire = null;
+  let caseChoisie = null;
+  let reglages = { theme: 'sombre' };
+
+  /* ======================================================= Sauvegarde */
+
+  function lireReglages() {
+    try {
+      Object.assign(reglages, JSON.parse(localStorage.getItem(CLE_REGLAGES) || '{}'));
+    } catch (erreur) {
+      /* stockage indisponible : on joue sans mémoire des réglages */
+    }
+    document.documentElement.dataset.theme = reglages.theme;
+  }
+
+  function ecrireReglages() {
+    try {
+      localStorage.setItem(CLE_REGLAGES, JSON.stringify(reglages));
+    } catch (erreur) {
+      /* sans effet */
+    }
+  }
+
+  function sauvegarder() {
+    if (!partie) return;
+    try {
+      localStorage.setItem(CLE, M.serialiser(partie));
+    } catch (erreur) {
+      /* quota ou navigation privée : la partie continue en mémoire */
+    }
+  }
+
+  function sauvegardeExiste() {
+    try {
+      return Boolean(localStorage.getItem(CLE));
+    } catch (erreur) {
+      return false;
+    }
+  }
+
+  function charger() {
+    try {
+      const texte = localStorage.getItem(CLE);
+      if (!texte) return null;
+      return M.deserialiser(texte);
+    } catch (erreur) {
+      return null;
+    }
+  }
+
+  function effacerPartie() {
+    try {
+      localStorage.removeItem(CLE);
+    } catch (erreur) {
+      /* sans effet */
+    }
+    partie = null;
+  }
+
+  /* ========================================================== Écrans */
+
+  function montrer(nom) {
+    $('#ecran-accueil').hidden = nom !== 'accueil';
+    $('#ecran-jeu').hidden = nom !== 'jeu';
+    if (nom === 'jeu') redimensionner();
+  }
+
+  function ouvrirFeuille(titre, html) {
+    $('#feuille-titre').textContent = titre;
+    $('#feuille-contenu').innerHTML = html;
+    $('#feuille-contenu').scrollTop = 0;
+    $('#feuille').hidden = false;
+  }
+
+  const fermerFeuille = () => {
+    $('#feuille').hidden = true;
+  };
+
+  /* ====================================================== Rendu carte */
+
+  const toile = $('#carte');
+  const ctx = toile.getContext('2d');
+  let vue = { t: 20, ox: 0, oy: 0, largeur: 0, hauteur: 0 };
+
+  /**
+   * Mesure la toile elle-même, et rien d'autre.
+   *
+   * Mesurer le conteneur avant que le HUD ne soit rempli donnait une hauteur
+   * trop grande : la carte était dessinée décalée, et chaque toucher tombait
+   * sur la mauvaise case. On mesure donc l'élément que l'on vise réellement,
+   * juste avant de dessiner comme avant de convertir un toucher.
+   */
+  function mesurer() {
+    const largeur = toile.clientWidth;
+    const hauteur = toile.clientHeight;
+    if (!largeur || !hauteur) return false;
+    if (vue.largeur !== largeur || vue.hauteur !== hauteur) {
+      const densite = Math.min(window.devicePixelRatio || 1, 2);
+      toile.width = Math.round(largeur * densite);
+      toile.height = Math.round(hauteur * densite);
+      ctx.setTransform(densite, 0, 0, densite, 0, 0);
+      vue.largeur = largeur;
+      vue.hauteur = hauteur;
+    }
+    return true;
+  }
+
+  function redimensionner() {
+    if (mesurer() && partie) dessiner();
+  }
+
+  window.addEventListener('resize', redimensionner);
+  window.addEventListener('orientationchange', () => setTimeout(redimensionner, 150));
+  // Le HUD grandit quand il se remplit : la toile change de taille sans que la
+  // fenêtre bouge. Seul un observateur le voit.
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(redimensionner).observe(toile);
+  }
+
+  /** Voile coloré de la saison : le même village ne se regarde pas pareil en juillet. */
+  const VOILE_SAISON = {
+    printemps: null,
+    été: 'rgba(224, 178, 74, 0.13)',
+    automne: 'rgba(183, 96, 48, 0.14)',
+    hiver: 'rgba(150, 175, 200, 0.16)',
+  };
+
+  function rect(x, y, l, h, couleur) {
+    ctx.fillStyle = couleur;
+    ctx.fillRect(x, y, l, h);
+  }
+
+  function dessinerTerrain(tx, ty, terrain) {
+    const t = vue.t;
+    const x = vue.ox + tx * t;
+    const y = vue.oy + ty * t;
+    rect(x, y, t, t, TERRAINS[terrain].couleur);
+
+    ctx.save();
+    ctx.globalAlpha = 0.28;
+    if (terrain === 'montagne') {
+      ctx.fillStyle = '#424653';
+      ctx.beginPath();
+      ctx.moveTo(x + t * 0.5, y + t * 0.15);
+      ctx.lineTo(x + t * 0.9, y + t * 0.85);
+      ctx.lineTo(x + t * 0.1, y + t * 0.85);
+      ctx.closePath();
+      ctx.fill();
+    } else if (terrain === 'foret') {
+      ctx.fillStyle = '#1e4226';
+      for (const [dx, dy, r] of [[0.3, 0.35, 0.16], [0.68, 0.5, 0.18], [0.45, 0.72, 0.15]]) {
+        ctx.beginPath();
+        ctx.arc(x + t * dx, y + t * dy, t * r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (terrain === 'coteau') {
+      // Les banquettes de culture : la montagne kabyle est terrassée.
+      ctx.strokeStyle = '#5e5c31';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 3; i += 1) {
+        ctx.beginPath();
+        ctx.moveTo(x + 1, y + (t * i) / 3);
+        ctx.lineTo(x + t - 1, y + (t * i) / 3);
+        ctx.stroke();
+      }
+    } else if (terrain === 'rocher') {
+      ctx.fillStyle = '#5f5b50';
+      ctx.fillRect(x + t * 0.2, y + t * 0.22, t * 0.2, t * 0.16);
+      ctx.fillRect(x + t * 0.58, y + t * 0.55, t * 0.24, t * 0.18);
+    } else if (terrain === 'eau') {
+      ctx.strokeStyle = '#8fc6dd';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(x + t * 0.18, y + t * 0.4);
+      ctx.lineTo(x + t * 0.82, y + t * 0.6);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Les bâtiments, en formes simples.
+   *
+   * On cherche les signes de l'habitat kabyle : corps bas en pierre, toiture de
+   * tuiles à faible pente, maisons serrées, minaret à base carrée. C'est un
+   * schéma lisible à vingt pixels, pas une reconstitution d'architecture.
+   */
+  function dessinerBatiment(batiment) {
+    const t = vue.t;
+    const x = vue.ox + batiment.x * t;
+    const y = vue.oy + batiment.y * t;
+    const type = batiment.type;
+    const PIERRE = '#bfae92';
+    const TUILE = '#b9662f';
+    const BOIS = '#7a5533';
+
+    // Socle d'assise : sans lui, une oliveraie posée sur de la forêt ou une
+    // cabane en lisière se confondent avec le décor, et le joueur ne voit plus
+    // ce qu'il a bâti.
+    ctx.fillStyle = 'rgba(28, 22, 16, 0.42)';
+    ctx.fillRect(x + 1, y + 1, t - 2, t - 2);
+
+    const corps = (x0, y0, l, h, couleur = PIERRE) => rect(x + t * x0, y + t * y0, t * l, t * h, couleur);
+    const toiture = (x0, x1, yBas, yHaut, couleur = TUILE) => {
+      ctx.fillStyle = couleur;
+      ctx.beginPath();
+      ctx.moveTo(x + t * x0, y + t * yBas);
+      ctx.lineTo(x + t * x1, y + t * yBas);
+      ctx.lineTo(x + t * (x1 - 0.1), y + t * yHaut);
+      ctx.lineTo(x + t * (x0 + 0.1), y + t * yHaut);
+      ctx.closePath();
+      ctx.fill();
+    };
+    const bosquet = (couleur, points) => {
+      ctx.fillStyle = couleur;
+      for (const [dx, dy, r] of points) {
+        ctx.beginPath();
+        ctx.arc(x + t * dx, y + t * dy, t * r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
+    if (type === 'maison') {
+      corps(0.22, 0.48, 0.56, 0.34);
+      toiture(0.14, 0.86, 0.5, 0.26);
+      rect(x + t * 0.45, y + t * 0.66, t * 0.12, t * 0.16, '#5b4630');
+    } else if (type === 'tajmaet') {
+      corps(0.1, 0.42, 0.8, 0.44, '#cbbb9d');
+      toiture(0.04, 0.96, 0.44, 0.2);
+      // L'arcade ouverte sur la place.
+      ctx.fillStyle = '#4a3a27';
+      for (const dx of [0.22, 0.44, 0.66]) {
+        ctx.beginPath();
+        ctx.arc(x + t * (dx + 0.06), y + t * 0.74, t * 0.08, Math.PI, 0);
+        ctx.fill();
+      }
+    } else if (type === 'place') {
+      ctx.fillStyle = '#a89878';
+      ctx.beginPath();
+      ctx.arc(x + t * 0.5, y + t * 0.5, t * 0.42, 0, Math.PI * 2);
+      ctx.fill();
+      bosquet('#4f6b35', [[0.5, 0.42, 0.16]]);
+      rect(x + t * 0.47, y + t * 0.5, t * 0.06, t * 0.2, BOIS);
+    } else if (type === 'fontaine') {
+      corps(0.24, 0.3, 0.52, 0.3, '#cbbb9d');
+      ctx.fillStyle = '#2d6f8f';
+      ctx.fillRect(x + t * 0.2, y + t * 0.62, t * 0.6, t * 0.2);
+      ctx.fillStyle = '#8fc6dd';
+      ctx.fillRect(x + t * 0.46, y + t * 0.42, t * 0.08, t * 0.22);
+    } else if (type === 'champ') {
+      const saison = SAISONS[partie.saison];
+      const couleur = saison === 'été' ? '#d8b24a' : saison === 'automne' ? '#a98548' : saison === 'hiver' ? '#79764c' : '#8fa348';
+      rect(x + t * 0.08, y + t * 0.12, t * 0.84, t * 0.76, couleur);
+      ctx.strokeStyle = 'rgba(70,60,30,0.45)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 4; i += 1) {
+        ctx.beginPath();
+        ctx.moveTo(x + t * 0.1, y + t * (0.12 + (i * 0.76) / 4));
+        ctx.lineTo(x + t * 0.9, y + t * (0.12 + (i * 0.76) / 4));
+        ctx.stroke();
+      }
+    } else if (type === 'oliveraie') {
+      bosquet('#5c6b42', [[0.3, 0.38, 0.17], [0.68, 0.36, 0.15], [0.48, 0.68, 0.18]]);
+    } else if (type === 'verger') {
+      bosquet('#6f8f3f', [[0.32, 0.4, 0.17], [0.66, 0.62, 0.17]]);
+    } else if (type === 'bergerie') {
+      corps(0.16, 0.5, 0.68, 0.3, '#b0a189');
+      toiture(0.1, 0.9, 0.52, 0.34, '#8a6a45');
+      bosquet('#efe7d6', [[0.3, 0.86, 0.06], [0.52, 0.88, 0.06], [0.72, 0.85, 0.06]]);
+    } else if (type === 'cabane') {
+      toiture(0.18, 0.82, 0.8, 0.34, '#6e4e2e');
+      rect(x + t * 0.44, y + t * 0.62, t * 0.12, t * 0.18, '#3f2c19');
+    } else if (type === 'carriere') {
+      ctx.fillStyle = '#9a9384';
+      for (const [dx, dy, s] of [[0.24, 0.3, 0.22], [0.58, 0.46, 0.26], [0.34, 0.66, 0.2]]) {
+        ctx.fillRect(x + t * dx, y + t * dy, t * s, t * s * 0.8);
+      }
+    } else if (type === 'moulin') {
+      corps(0.18, 0.44, 0.64, 0.4);
+      toiture(0.12, 0.88, 0.46, 0.22);
+      ctx.strokeStyle = '#59493a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x + t * 0.5, y + t * 0.66, t * 0.13, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (type === 'atelier') {
+      corps(0.18, 0.44, 0.64, 0.4);
+      toiture(0.12, 0.88, 0.46, 0.22);
+      ctx.fillStyle = '#a8542c';
+      ctx.beginPath();
+      ctx.arc(x + t * 0.5, y + t * 0.68, t * 0.11, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (type === 'marche') {
+      for (let i = 0; i < 3; i += 1) {
+        rect(x + t * (0.12 + i * 0.27), y + t * 0.36, t * 0.22, t * 0.12, i % 2 ? '#c8763c' : '#d9c9a8');
+        rect(x + t * (0.2 + i * 0.27), y + t * 0.48, t * 0.05, t * 0.3, BOIS);
+      }
+    } else if (type === 'ecole') {
+      corps(0.12, 0.42, 0.76, 0.44, '#cbbb9d');
+      toiture(0.06, 0.94, 0.44, 0.24);
+      ctx.fillStyle = '#4a3a27';
+      for (const dx of [0.24, 0.46, 0.68]) ctx.fillRect(x + t * dx, y + t * 0.58, t * 0.1, t * 0.12);
+    } else if (type === 'soins') {
+      corps(0.16, 0.42, 0.68, 0.44, '#d8d0bc');
+      toiture(0.1, 0.9, 0.44, 0.24, '#9a7b52');
+      rect(x + t * 0.44, y + t * 0.56, t * 0.12, t * 0.26, '#6f8f3f');
+      rect(x + t * 0.36, y + t * 0.64, t * 0.28, t * 0.1, '#6f8f3f');
+    } else if (type === 'mosquee') {
+      corps(0.2, 0.5, 0.6, 0.36, '#d8d0bc');
+      toiture(0.14, 0.86, 0.52, 0.34, '#a8865a');
+      // Minaret à base carrée, comme au Maghreb.
+      rect(x + t * 0.66, y + t * 0.16, t * 0.16, t * 0.44, '#d8d0bc');
+      rect(x + t * 0.64, y + t * 0.12, t * 0.2, t * 0.06, '#a8865a');
+    } else if (type === 'bibliotheque') {
+      corps(0.14, 0.4, 0.72, 0.46, '#c9b898');
+      toiture(0.08, 0.92, 0.42, 0.22);
+      rect(x + t * 0.3, y + t * 0.56, t * 0.4, t * 0.08, '#6b5334');
+      rect(x + t * 0.3, y + t * 0.68, t * 0.4, t * 0.08, '#6b5334');
+    } else if (type === 'musee') {
+      corps(0.1, 0.4, 0.8, 0.48, '#ddd3bb');
+      toiture(0.04, 0.96, 0.42, 0.2, '#b9662f');
+      ctx.fillStyle = '#8d7d62';
+      for (const dx of [0.2, 0.38, 0.56, 0.74]) ctx.fillRect(x + t * dx, y + t * 0.54, t * 0.06, t * 0.3);
+    } else if (type === 'chemin') {
+      rect(x + t * 0.2, y, t * 0.6, t, '#a3906f');
+    }
+
+    // Un bâtiment à court de bras ne produit pas : il faut le voir.
+    const modele = BATIMENTS[type];
+    if (modele.emplois && batiment.travailleurs.length < modele.emplois) {
+      ctx.fillStyle = batiment.travailleurs.length === 0 ? '#cf5c46' : '#d9a441';
+      ctx.beginPath();
+      ctx.arc(x + t * 0.86, y + t * 0.14, t * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function dessiner() {
+    if (!partie || !mesurer()) return;
+    const carte = partie.carte;
+    vue.t = Math.floor(Math.min(vue.largeur / carte.largeur, vue.hauteur / carte.hauteur));
+    vue.ox = Math.round((vue.largeur - vue.t * carte.largeur) / 2);
+    vue.oy = Math.round((vue.hauteur - vue.t * carte.hauteur) / 2);
+
+    ctx.clearRect(0, 0, vue.largeur, vue.hauteur);
+    for (let y = 0; y < carte.hauteur; y += 1) {
+      for (let x = 0; x < carte.largeur; x += 1) dessinerTerrain(x, y, M.terrainDe(partie, x, y));
+    }
+    for (const batiment of partie.batiments) dessinerBatiment(batiment);
+
+    const voile = VOILE_SAISON[SAISONS[partie.saison]];
+    if (voile) {
+      ctx.fillStyle = voile;
+      ctx.fillRect(vue.ox, vue.oy, vue.t * carte.largeur, vue.t * carte.hauteur);
+    }
+
+    // En mode construction, on éclaire les cases où l'on peut réellement poser.
+    if (typeAConstruire) {
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      for (let y = 0; y < carte.hauteur; y += 1) {
+        for (let x = 0; x < carte.largeur; x += 1) {
+          if (M.peutConstruire(partie, typeAConstruire, x, y) !== null) continue;
+          ctx.strokeStyle = '#d9a441';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(vue.ox + x * vue.t + 1, vue.oy + y * vue.t + 1, vue.t - 2, vue.t - 2);
+        }
+      }
+      ctx.restore();
+    }
+
+    if (caseChoisie) {
+      ctx.strokeStyle = '#f0e6d8';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(vue.ox + caseChoisie.x * vue.t, vue.oy + caseChoisie.y * vue.t, vue.t, vue.t);
+    }
+  }
+
+  /* ================================================ Toucher la carte */
+
+  toile.addEventListener('click', (evenement) => {
+    if (!partie || !mesurer()) return;
+    dessiner(); // la vue est recalculée là : le toucher vise ce qui est à l'écran
+    const boite = toile.getBoundingClientRect();
+    const x = Math.floor((evenement.clientX - boite.left - vue.ox) / vue.t);
+    const y = Math.floor((evenement.clientY - boite.top - vue.oy) / vue.t);
+    if (x < 0 || y < 0 || x >= partie.carte.largeur || y >= partie.carte.hauteur) return;
+
+    if (typeAConstruire) {
+      const refus = M.construire(partie, typeAConstruire, x, y);
+      if (refus) {
+        $('#info-case').textContent = `Impossible ici : ${refus}.`;
+      } else {
+        $('#info-case').textContent = `${BATIMENTS[typeAConstruire].nom} construite.`;
+        typeAConstruire = null;
+        $('#bandeau-construction').hidden = true;
+        sauvegarder();
+      }
+      majInterface();
+      return;
+    }
+
+    caseChoisie = { x, y };
+    decrireCase(x, y);
+    dessiner();
+  });
+
+  function decrireCase(x, y) {
+    const terrain = M.terrainDe(partie, x, y);
+    const batiment = M.batimentEn(partie, x, y);
+    if (!batiment) {
+      $('#info-case').textContent = `${TERRAINS[terrain].nom}${TERRAINS[terrain].bati ? '' : ' — on n’y bâtit pas'}.`;
+      return;
+    }
+    const modele = BATIMENTS[batiment.type];
+    const bras = modele.emplois
+      ? ` ${batiment.travailleurs.length} sur ${modele.emplois} postes tenus.`
+      : '';
+    const memoire = batiment.generationDe
+      ? ` Bâtie en l’an ${batiment.annee}, sous la génération de ${batiment.generationDe}.`
+      : ` Bâtie en l’an ${batiment.annee}.`;
+    $('#info-case').textContent = `${modele.nom}.${memoire}${bras}`;
+  }
+
+  /* ==================================================== HUD et temps */
+
+  function majHud() {
+    if (!partie) return;
+    const vivants = partie.habitantsVivants();
+    const nourriture = partie.ressources.cereales + partie.ressources.fruits;
+    const stats = [
+      ['POPULATION', vivants.length, false],
+      ['ARGENT', Math.round(partie.ressources.argent), false],
+      ['EAU', Math.round(partie.ressources.eau), partie.ressources.eau < vivants.length * 2],
+      ['NOURRITURE', Math.round(nourriture), nourriture < vivants.length * 2],
+      ['ANNÉE', partie.annee, false],
+      ['SATISFACTION', Math.round(partie.satisfaction), partie.satisfaction < 35],
+    ];
+    $('#hud').innerHTML = stats
+      .map(([nom, valeur, manque]) => `<div class="stat${manque ? ' manque' : ''}"><small>${nom}</small><b>${valeur}</b></div>`)
+      .join('');
+
+    $('#saison-texte').textContent = `An ${partie.annee} — ${SAISONS[partie.saison]}`;
+    $('#jauge-saison').style.transform = `scaleX(${(horloge / (DUREE_SAISON / Math.max(vitesse, 1))).toFixed(3)})`;
+    $('#btn-vitesse').textContent = vitesse === 0 ? '❚❚ pause' : `▶ ×${vitesse}`;
+
+    const ongletTajmaet = document.querySelector('[data-panneau="tajmaet"]');
+    ongletTajmaet.classList.toggle('alerte', Boolean(partie.decision));
+  }
+
+  function majInterface() {
+    majHud();
+    dessiner();
+    if (caseChoisie) decrireCase(caseChoisie.x, caseChoisie.y);
+  }
+
+  let dernier = 0;
+  function boucle(instant) {
+    requestAnimationFrame(boucle);
+    const delta = Math.min(instant - dernier, 400);
+    dernier = instant;
+    if (!partie || $('#ecran-jeu').hidden || vitesse === 0) return;
+
+    horloge += delta;
+    const duree = DUREE_SAISON / vitesse;
+    if (horloge >= duree) {
+      horloge = 0;
+      const rapport = M.avancerSaison(partie);
+      sauvegarder();
+      if (rapport.evenements.length) {
+        $('#info-case').textContent = rapport.evenements.slice(0, 2).join(' ');
+      }
+      majInterface();
+      if ($('#feuille').hidden === false) rafraichirFeuille();
+    }
+    majHud();
+  }
+
+  /* ======================================================= Panneaux */
+
+  let panneauCourant = null;
+
+  const badge = (statut) =>
+    statut === 'HISTORICAL'
+      ? '<span class="badge historique">HISTORIQUE</span>'
+      : '<span class="badge fiction">FICTION DU JEU</span>';
+
+  function ficheHistorique(fiche) {
+    const lien = fiche.source.url
+      ? `<a href="${echapper(fiche.source.url)}" target="_blank" rel="noopener">${echapper(fiche.source.url)}</a>`
+      : '';
+    return `
+      <article class="carte-item">
+        <h3>${badge('HISTORICAL')}${echapper(fiche.title)}</h3>
+        <div class="meta">${echapper(fiche.date)} · ${echapper(fiche.region)}</div>
+        <p>${echapper(fiche.description)}</p>
+        ${fiche.precaution ? `<div class="precaution">${echapper(fiche.precaution)}</div>` : ''}
+        <div class="source">Source : ${echapper(fiche.source.nom)}${lien ? `<br />${lien}` : ''}</div>
+      </article>`;
+  }
+
+  function panneauConstruire() {
+    if (!partie) return '<p class="vide">Commencez une partie pour bâtir.</p>';
+    const items = Object.entries(BATIMENTS)
+      .filter(([cle, modele]) => !(modele.unique && partie.compte(cle) > 0))
+      .map(([cle, modele]) => {
+        const prix = Object.entries(modele.cout)
+          .map(([r, q]) => `${q} ${r}`)
+          .join(' · ');
+        const abordable = Object.entries(modele.cout).every(([r, q]) => partie.ressources[r] >= q);
+        const emplois = modele.emplois ? `${modele.emplois} poste(s)` : 'aucun poste';
+        return `
+          <button class="bouton-item" data-batir="${cle}" ${abordable ? '' : 'disabled'}>
+            <span class="titre"><b>${echapper(modele.nom)}</b><small>${echapper(modele.description)}<br />${emplois}${modele.entretien ? ` · entretien ${modele.entretien}/saison` : ''}</small></span>
+            <span class="prix">${echapper(prix)}</span>
+          </button>`;
+      })
+      .join('');
+    return `<p class="meta" style="margin-bottom:10px">Choisissez un bâtiment, puis touchez une case en surbrillance.</p>${items}`;
+  }
+
+  function panneauVillage() {
+    if (!partie) return '<p class="vide">Aucune partie en cours.</p>';
+    const mission = MISSIONS[partie.missionCourante];
+    let html = '';
+
+    if (mission) {
+      const objectifs = mission.objectifs
+        .map((objectif) => {
+          const valeur = objectif.valeur(partie);
+          const fait = valeur >= objectif.cible;
+          const part = Math.min(1, valeur / objectif.cible);
+          return `
+            <div><span class="${fait ? 'fait' : ''}">${fait ? '✓ ' : ''}${echapper(objectif.texte)}</span><span>${Math.floor(valeur)} / ${objectif.cible}</span></div>
+            <div class="barre-fond"><i style="width:${(part * 100).toFixed(0)}%"></i></div>`;
+        })
+        .join('');
+      html += `
+        <article class="carte-item">
+          <h3>${badge('FICTION')}Mission ${mission.numero} — ${echapper(mission.titre)}</h3>
+          <p>${echapper(mission.resume)}</p>
+          ${mission.note ? `<div class="precaution">${echapper(mission.note)}</div>` : ''}
+          <div class="progression">${objectifs}</div>
+        </article>`;
+    } else {
+      html += `<article class="carte-item"><h3>${badge('FICTION')}Les dix missions sont accomplies</h3><p>Le village continue de vivre : faites-le durer, et regardez les générations passer.</p></article>`;
+    }
+
+    html += '<div class="ressources-liste">';
+    for (const ressource of RESSOURCES) {
+      html += `<div><span>${ressource.icone} ${echapper(ressource.nom)}</span><b>${Math.round(partie.ressources[ressource.id])}</b></div>`;
+    }
+    html += '</div>';
+
+    const chronique = partie.chronique.slice(-40).reverse();
+    html += `<h3 style="font-size:14px;margin:6px 0 8px">Mémoire du village</h3>`;
+    html += chronique.length
+      ? `<ul class="chronique">${chronique
+          .map((c) => `<li><span class="an">An ${c.annee}</span>${echapper(c.texte)}</li>`)
+          .join('')}</ul>`
+      : '<p class="vide">Le village n’a pas encore d’histoire.</p>';
+    return html;
+  }
+
+  function panneauTajmaet() {
+    if (!partie) return '<p class="vide">Aucune partie en cours.</p>';
+    const entete = `
+      <div class="note-encadree">
+        <h3>Une mécanique inspirée, pas une reconstitution</h3>
+        <p>Ce système de décision s’inspire de l’organisation communautaire villageoise kabyle telle que la décrivent les travaux de recherche. Ce n’est pas une reproduction des règles historiques : les pratiques variaient d’un village à l’autre et selon les époques.</p>
+        <p>La fiche HISTORIQUE « La tajmaɛt, assemblée du village » est consultable dans l’écran Histoire.</p>
+      </div>`;
+
+    if (!partie.decision) {
+      return `${entete}<p class="vide">Aucune assemblée en cours.<br />La prochaine se tiendra à la fin de l’année.</p>`;
+    }
+
+    const decision = DECISIONS.find((d) => d.id === partie.decision.id);
+    const options = decision.options
+      .map((option, index) => {
+        const prix = Object.entries(option.cout || {})
+          .map(([r, q]) => `${q} ${r}`)
+          .join(' · ');
+        const abordable = Object.entries(option.cout || {}).every(([r, q]) => partie.ressources[r] >= q);
+        return `
+          <button class="bouton-item" data-trancher="${index}" ${abordable ? '' : 'disabled'}>
+            <span class="titre"><b>${echapper(option.texte)}</b><small>${prix ? `Coût : ${echapper(prix)}` : 'Sans coût'}</small></span>
+          </button>`;
+      })
+      .join('');
+
+    return `${entete}
+      <article class="carte-item">
+        <h3>${badge('FICTION')}${echapper(decision.titre)}</h3>
+        <p>${echapper(decision.contexte)}</p>
+      </article>${options}`;
+  }
+
+  function panneauHistoire() {
+    const note = HISTOIRE.NOTE_METHODE;
+    const entete = `
+      <div class="note-encadree">
+        <h3>${echapper(note.titre)}</h3>
+        ${note.paragraphes.map((p) => `<p>${echapper(p)}</p>`).join('')}
+      </div>`;
+    return entete + HISTOIRE.HISTORICAL_EVENTS.map(ficheHistorique).join('');
+  }
+
+  /** Fiches FICTION tirées du village lui-même : sa propre mémoire. */
+  function fichesDuVillage() {
+    if (!partie) return [];
+    const fiches = [];
+    const doyen = partie.habitants.filter((h) => h.vivant).sort((a, b) => b.age - a.age)[0];
+    const plusAncien = partie.batiments.slice().sort((a, b) => a.annee - b.annee)[0];
+
+    fiches.push({
+      titre: `Taddart, an ${partie.annee}`,
+      categorie: 'lieu',
+      texte: `Village fictif de ${partie.habitantsVivants().length} habitants, ${partie.compte('maison')} maisons, fondé il y a ${partie.annee - 1} ans. Il ne correspond à aucun village réel.`,
+    });
+    if (plusAncien) {
+      fiches.push({
+        titre: `Le plus ancien bâtiment : ${BATIMENTS[plusAncien.type].nom}`,
+        categorie: 'architecture',
+        texte: `Bâti en l’an ${plusAncien.annee}${plusAncien.generationDe ? `, sous la génération de ${plusAncien.generationDe}` : ''}.`,
+      });
+    }
+    if (doyen) {
+      fiches.push({
+        titre: `Le doyen : ${doyen.prenom} (${doyen.famille})`,
+        categorie: 'personnage',
+        texte: `${doyen.age} ans, ${METIERS[doyen.metier] ? METIERS[doyen.metier].nom.toLowerCase() : doyen.metier}. Génération ${doyen.generation}. Personnage fictif.`,
+      });
+    }
+    for (const entree of partie.chronique.filter((c) => c.type === 'assemblee').slice(-3)) {
+      fiches.push({ titre: `Décision de l’an ${entree.annee}`, categorie: 'document', texte: entree.texte });
+    }
+    return fiches;
+  }
+
+  function panneauMusee() {
+    const debloquees = partie ? partie.musee : [];
+    const fiches = HISTOIRE.HISTORICAL_EVENTS.filter((f) => debloquees.includes(f.id));
+    const manquantes = HISTOIRE.HISTORICAL_EVENTS.length - fiches.length;
+
+    let html = `
+      <div class="note-encadree">
+        <h3>Deux collections, jamais mélangées</h3>
+        <p>Les pièces HISTORIQUE se débloquent en accomplissant les missions ; chacune porte sa source. Les pièces FICTION DU JEU viennent de votre village et n’ont aucune valeur historique.</p>
+      </div>`;
+
+    html += `<h3 style="font-size:14px;margin:4px 0 8px">Collection historique — ${fiches.length} sur ${HISTOIRE.HISTORICAL_EVENTS.length}</h3>`;
+    html += fiches.length
+      ? fiches.map(ficheHistorique).join('')
+      : `<p class="vide">Rien encore. Avancez dans les missions : la mission 8 ouvre le chapitre de Béjaïa.</p>`;
+    if (manquantes > 0) {
+      html += `<p class="meta" style="margin:4px 0 14px">${manquantes} fiche(s) encore à découvrir.</p>`;
+    }
+
+    const duVillage = fichesDuVillage();
+    html += `<h3 style="font-size:14px;margin:14px 0 8px">Mémoire de votre village</h3>`;
+    html += duVillage.length
+      ? duVillage
+          .map(
+            (f) => `<article class="carte-item"><h3>${badge('FICTION')}${echapper(f.titre)}</h3>
+              <div class="meta">${echapper(f.categorie)}</div><p>${echapper(f.texte)}</p></article>`
+          )
+          .join('')
+      : '<p class="vide">Commencez une partie pour remplir cette vitrine.</p>';
+    return html;
+  }
+
+  function panneauFamilles() {
+    if (!partie) return '<p class="vide">Aucune partie en cours.</p>';
+    const parFamille = new Map();
+    for (const habitant of partie.habitants) {
+      if (!parFamille.has(habitant.famille)) parFamille.set(habitant.famille, []);
+      parFamille.get(habitant.famille).push(habitant);
+    }
+
+    const nom = (id) => {
+      const h = partie.habitants.find((p) => p.id === id);
+      return h ? h.prenom : '?';
+    };
+
+    let html = `<p class="meta" style="margin-bottom:10px">${badge('FICTION')}Tous ces habitants sont inventés. Ils vieillissent, se marient, ont des enfants et disparaissent.</p>`;
+
+    for (const [famille, membres] of [...parFamille.entries()].sort()) {
+      membres.sort((a, b) => a.generation - b.generation || b.age - a.age);
+      const lignes = membres
+        .map((h) => {
+          const metier = METIERS[h.metier] ? METIERS[h.metier].nom : h.metier;
+          const parents = h.parents.length ? ` · enfant de ${h.parents.map(nom).join(' et ')}` : '';
+          const conjoint = h.conjoint ? ` · marié(e) à ${nom(h.conjoint)}` : '';
+          const etat = h.vivant ? `${h.age} ans` : `mort en l’an ${h.mortEn} à ${h.age} ans`;
+          const dernier = h.histoire.length ? h.histoire[h.histoire.length - 1].texte : '';
+          return `
+            <div class="personne${h.vivant ? '' : ' disparu'}">
+              <span class="gen">G${h.generation}</span><b>${echapper(h.prenom)}</b>
+              <div class="detail">${echapper(etat)} · ${echapper(metier)}${echapper(parents)}${echapper(conjoint)}</div>
+              ${dernier ? `<div class="detail">« ${echapper(dernier)} »</div>` : ''}
+            </div>`;
+        })
+        .join('');
+      html += `<section class="famille"><h3>${echapper(famille)} — ${membres.filter((m) => m.vivant).length} vivant(s)</h3>${lignes}</section>`;
+    }
+    return html;
+  }
+
+  function panneauParametres() {
+    return `
+      <button class="bouton-item" data-reglage="theme">
+        <span class="titre"><b>Apparence</b><small>Mode sombre ou clair</small></span>
+        <span class="prix">${reglages.theme === 'sombre' ? 'SOMBRE' : 'CLAIR'}</span>
+      </button>
+      <button class="bouton-item" data-reglage="nouvelle">
+        <span class="titre"><b>Nouvelle partie</b><small>Repartir d’un village neuf. La partie en cours sera perdue.</small></span>
+      </button>
+      <button class="bouton-item" data-reglage="effacer">
+        <span class="titre"><b>Réinitialiser</b><small>Effacer la sauvegarde et revenir à l’accueil.</small></span>
+      </button>
+      <div class="note-encadree" style="margin-top:12px">
+        <h3>Sauvegarde</h3>
+        <p>La partie est enregistrée dans ce navigateur à chaque saison. Elle survit à la fermeture du navigateur et du téléphone.</p>
+        <p>${sauvegardeExiste() ? 'Une sauvegarde existe actuellement.' : 'Aucune sauvegarde pour l’instant.'}</p>
+      </div>`;
+  }
+
+  const PANNEAUX = {
+    construire: { titre: 'Construire', rendu: panneauConstruire },
+    village: { titre: 'Village', rendu: panneauVillage },
+    tajmaet: { titre: 'Tajmaɛt', rendu: panneauTajmaet },
+    histoire: { titre: 'Histoire — Mémoire d’Algérie', rendu: panneauHistoire },
+    musee: { titre: 'Musée de la mémoire', rendu: panneauMusee },
+    familles: { titre: 'Familles', rendu: panneauFamilles },
+    parametres: { titre: 'Paramètres', rendu: panneauParametres },
+  };
+
+  function ouvrirPanneau(nom) {
+    panneauCourant = nom;
+    ouvrirFeuille(PANNEAUX[nom].titre, PANNEAUX[nom].rendu());
+  }
+
+  function rafraichirFeuille() {
+    if (!panneauCourant) return;
+    const position = $('#feuille-contenu').scrollTop;
+    $('#feuille-contenu').innerHTML = PANNEAUX[panneauCourant].rendu();
+    $('#feuille-contenu').scrollTop = position;
+  }
+
+  /* ================================================== Branchements */
+
+  $('#feuille-contenu').addEventListener('click', (evenement) => {
+    const bouton = evenement.target.closest('button');
+    if (!bouton) return;
+
+    if (bouton.dataset.batir) {
+      typeAConstruire = bouton.dataset.batir;
+      $('#bandeau-construction').hidden = false;
+      $('#bandeau-construction').textContent = `Touchez une case pour poser : ${BATIMENTS[typeAConstruire].nom}`;
+      fermerFeuille();
+      dessiner();
+      return;
+    }
+
+    if (bouton.dataset.trancher !== undefined) {
+      const refus = M.trancher(partie, Number(bouton.dataset.trancher));
+      if (refus) {
+        bouton.querySelector('small').textContent = `Impossible : ${refus}`;
+        return;
+      }
+      sauvegarder();
+      majInterface();
+      rafraichirFeuille();
+      return;
+    }
+
+    if (bouton.dataset.reglage === 'theme') {
+      reglages.theme = reglages.theme === 'sombre' ? 'clair' : 'sombre';
+      document.documentElement.dataset.theme = reglages.theme;
+      ecrireReglages();
+      rafraichirFeuille();
+    } else if (bouton.dataset.reglage === 'nouvelle') {
+      nouvellePartie();
+      fermerFeuille();
+    } else if (bouton.dataset.reglage === 'effacer') {
+      effacerPartie();
+      fermerFeuille();
+      montrer('accueil');
+      majBoutonContinuer();
+    }
+  });
+
+  for (const onglet of document.querySelectorAll('[data-panneau]')) {
+    onglet.addEventListener('click', () => ouvrirPanneau(onglet.dataset.panneau));
+  }
+  $('#feuille-fermer').addEventListener('click', fermerFeuille);
+  $('#feuille-fond').addEventListener('click', fermerFeuille);
+
+  $('#btn-vitesse').addEventListener('click', () => {
+    vitesse = vitesse === 0 ? 1 : vitesse === 1 ? 2 : vitesse === 2 ? 4 : 0;
+    majHud();
+  });
+
+  function nouvellePartie() {
+    partie = M.creerPartie();
+    vitesse = 1;
+    horloge = 0;
+    caseChoisie = null;
+    typeAConstruire = null;
+    $('#bandeau-construction').hidden = true;
+    $('#info-case').textContent = 'Taddart est fondé. Touchez une case pour l’examiner.';
+    sauvegarder();
+    montrer('jeu');
+    majInterface();
+    majBoutonContinuer();
+  }
+
+  function majBoutonContinuer() {
+    $('#btn-continuer').disabled = !sauvegardeExiste();
+  }
+
+  $('#btn-jouer').addEventListener('click', nouvellePartie);
+  $('#btn-continuer').addEventListener('click', () => {
+    const reprise = charger();
+    if (!reprise) return;
+    partie = reprise;
+    vitesse = 1;
+    horloge = 0;
+    montrer('jeu');
+    majInterface();
+  });
+  $('#btn-histoire-accueil').addEventListener('click', () => ouvrirPanneau('histoire'));
+  $('#btn-musee-accueil').addEventListener('click', () => ouvrirPanneau('musee'));
+  $('#btn-familles-accueil').addEventListener('click', () => ouvrirPanneau('familles'));
+  $('#btn-parametres').addEventListener('click', () => ouvrirPanneau('parametres'));
+
+  // Un téléphone qu'on verrouille ne doit pas faire vieillir le village dans le vide.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && vitesse !== 0) {
+      vitesse = 0;
+      majHud();
+    }
+  });
+
+  /* ==================================================== Démarrage */
+
+  lireReglages();
+  majBoutonContinuer();
+  montrer('accueil');
+  requestAnimationFrame(boucle);
+
+  // Crochet de mise au point, pour inspecter la partie depuis la console.
+  window.Taddart = {
+    get partie() {
+      return partie;
+    },
+    get vue() {
+      return vue;
+    },
+    nouvellePartie,
+    ouvrirPanneau,
+    M,
+    JEU,
+    HISTOIRE,
+  };
+})();
+
+    </script>
+  </body>
+</html>

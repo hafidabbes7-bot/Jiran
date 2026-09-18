@@ -1,0 +1,12 @@
+{
+  "name": "taddart",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Taddart — Mémoire de Kabylie : jeu de village sur plusieurs générations, avec un corpus historique sourcé tenu à l’écart de la fiction. Aucune dépendance.",
+  "scripts": {
+    "verifier": "node tests/verifier.mjs",
+    "servir": "node outils/serveur.mjs",
+    "construire": "node outils/construire-autonome.mjs"
+  },
+  "engines": { "node": ">=18" }
+}

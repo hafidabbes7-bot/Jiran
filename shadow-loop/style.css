@@ -1,0 +1,458 @@
+/*
+ * SHADOW LOOP — habillage.
+ *
+ * Sombre, minimal, pensé pour le pouce : toutes les zones tactiles font au
+ * moins 56 px de haut, et aucune ressource n'est chargée depuis Internet.
+ */
+
+:root {
+  --fond: #07080d;
+  --fond-haut: #0f121c;
+  --panneau: #141828;
+  --trait: #232a40;
+  --texte: #e8ecf8;
+  --pale: #8b93ad;
+  --joueur: #22d3ee;
+  --ombre: #8b5cf6;
+  --ombre-2: #f472b6;
+  --cle: #fbbf24;
+  --sortie: #34d399;
+  --danger: #f87171;
+  --touche: 56px;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.ecran {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+}
+
+.ecran[hidden] {
+  display: none;
+}
+
+.centre {
+  margin: auto;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+/* Accueil --------------------------------------------------------------- */
+
+.logo {
+  margin: 0;
+  font-size: clamp(38px, 13vw, 62px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: 0.06em;
+}
+
+.logo span {
+  display: block;
+  color: var(--ombre);
+  /* L'écho du titre dit le jeu mieux qu'une explication. */
+  opacity: 0.75;
+}
+
+.slogan {
+  margin: 14px 0 38px;
+  color: var(--pale);
+  font-size: 15px;
+  font-style: italic;
+}
+
+.pile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Boutons --------------------------------------------------------------- */
+
+.bouton {
+  min-height: var(--touche);
+  padding: 0 20px;
+  border: 1px solid var(--trait);
+  border-radius: 14px;
+  background: var(--panneau);
+  color: var(--texte);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.bouton:active {
+  transform: scale(0.98);
+}
+
+.bouton.majeur {
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--joueur), #0ea5b7);
+  color: #04222a;
+}
+
+.bouton.icone {
+  min-width: var(--touche);
+  padding: 0;
+  font-size: 14px;
+}
+
+.bouton.retour {
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+/* Listes ---------------------------------------------------------------- */
+
+.barre {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.barre h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0.14em;
+}
+
+.liste {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  max-width: 460px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.niveau {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 68px;
+  padding: 12px 16px;
+  border: 1px solid var(--trait);
+  border-radius: 14px;
+  background: var(--panneau);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.niveau:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.niveau .numero {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #1d2338;
+  font-weight: 800;
+}
+
+.niveau .titre {
+  flex: 1;
+}
+
+.niveau .titre b {
+  display: block;
+  font-size: 16px;
+}
+
+.niveau .titre small {
+  color: var(--pale);
+  font-size: 12px;
+}
+
+.reglage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--touche);
+  padding: 0 18px;
+  border: 1px solid var(--trait);
+  border-radius: 14px;
+  background: var(--panneau);
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.reglage b {
+  color: var(--joueur);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
+
+.reglage.danger b {
+  color: var(--danger);
+}
+
+.note {
+  color: var(--pale);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* Jeu -------------------------------------------------------------------- */
+
+.hud {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.hud-bloc {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.hud-bloc small {
+  color: var(--pale);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+.hud-bloc strong {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-bloc.chrono {
+  margin-inline-start: auto;
+  text-align: end;
+}
+
+.jauge {
+  flex: none;
+  height: 4px;
+  margin: 10px 0;
+  border-radius: 2px;
+  background: #1a2032;
+  overflow: hidden;
+}
+
+.jauge i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--joueur);
+  transform-origin: left center;
+}
+
+.jauge i.urgent {
+  background: var(--danger);
+}
+
+.scene {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  touch-action: none;
+}
+
+#toile {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.aide {
+  flex: none;
+  margin: 10px 0 0;
+  min-height: 34px;
+  color: var(--pale);
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Commandes tactiles ------------------------------------------------------ */
+
+.joystick {
+  position: absolute;
+  width: 132px;
+  height: 132px;
+  margin: -66px 0 0 -66px;
+  border: 2px solid rgba(34, 211, 238, 0.28);
+  border-radius: 50%;
+  background: rgba(34, 211, 238, 0.06);
+  pointer-events: none;
+}
+
+.joystick[hidden] {
+  display: none;
+}
+
+.joystick-tete {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  background: rgba(34, 211, 238, 0.55);
+}
+
+.action {
+  position: absolute;
+  inset-block-end: 12px;
+  inset-inline-end: 12px;
+  width: 104px;
+  height: 104px;
+  border: 2px solid rgba(139, 92, 246, 0.5);
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.16);
+  color: var(--texte);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+.action[hidden] {
+  display: none;
+}
+
+/* Allumé seulement quand ACTION ferait quelque chose : sur téléphone, deviner
+   quand appuyer est le meilleur moyen de faire abandonner le joueur. */
+.action.pret {
+  border-color: var(--cle);
+  background: rgba(251, 191, 36, 0.22);
+}
+
+.action:active {
+  transform: scale(0.96);
+}
+
+/* Voiles ------------------------------------------------------------------ */
+
+.voile {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(7, 8, 13, 0.86);
+  z-index: 10;
+}
+
+.voile[hidden] {
+  display: none;
+}
+
+.panneau {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+  padding: 24px 20px;
+  border: 1px solid var(--trait);
+  border-radius: 20px;
+  background: var(--panneau);
+  text-align: center;
+}
+
+.panneau h2 {
+  margin: 0 0 8px;
+  font-size: 21px;
+  letter-spacing: 0.1em;
+}
+
+.panneau h2.gagne {
+  color: var(--sortie);
+}
+
+.panneau h2.perdu {
+  color: var(--danger);
+}
+
+.bilan {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.bilan div {
+  flex: 1;
+  padding: 10px 6px;
+  border-radius: 12px;
+  background: #0e1220;
+}
+
+.bilan dt {
+  color: var(--pale);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.bilan dd {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.record {
+  margin: 0 0 6px;
+  color: var(--cle);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.explication {
+  margin: 0 0 10px;
+  color: var(--pale);
+  font-size: 14px;
+}
+
+@media (min-height: 720px) {
+  .scene {
+    max-height: 68vh;
+  }
+}
