@@ -1,7 +1,7 @@
 import { config } from '../config.js';
 import { fournisseurMuetAutorise } from '../modeEssai.js';
 import { ConsoleProvider } from './consoleProvider.js';
-import { ResendEmailProvider, SmtpEmailProvider } from './emailProvider.js';
+import { BrevoEmailProvider, ResendEmailProvider, SmtpEmailProvider } from './emailProvider.js';
 import { HttpGatewaySmsProvider } from './httpGatewayProvider.js';
 import type { Channel, ChannelProviders, MessageProvider } from './provider.js';
 import { TwilioSmsProvider } from './twilioProvider.js';
@@ -77,7 +77,7 @@ function createWhatsAppProvider(): MessageProvider | undefined {
  * un contrat d'agrégateur SMS.
  */
 function createEmailProvider(): MessageProvider | undefined {
-  const { provider, from, subject, smtp, resendApiKey } = config.email;
+  const { provider, from, subject, smtp, resendApiKey, brevoApiKey } = config.email;
 
   switch (provider) {
     case 'none':
@@ -97,6 +97,13 @@ function createEmailProvider(): MessageProvider | undefined {
         throw new Error('EMAIL_PROVIDER=resend exige RESEND_API_KEY et EMAIL_FROM.');
       }
       return new ResendEmailProvider(resendApiKey, from, subject);
+    }
+
+    case 'brevo': {
+      if (!brevoApiKey || !from) {
+        throw new Error('EMAIL_PROVIDER=brevo exige BREVO_API_KEY et EMAIL_FROM.');
+      }
+      return new BrevoEmailProvider(brevoApiKey, from, subject);
     }
 
     case 'console': {

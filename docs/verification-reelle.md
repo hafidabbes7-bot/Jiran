@@ -44,6 +44,32 @@ Deux formes, au choix.
 > Avec Outlook, c'est `smtp-mail.outlook.com`, port 587 — Microsoft restreint
 > toutefois de plus en plus l'envoi depuis les comptes personnels.
 
+### Recommandé sur l'hébergement gratuit Render : Brevo
+
+Render **bloque les ports SMTP** sur son offre gratuite, donc l'option Gmail
+ci-dessus n'y fonctionne pas. Resend, lui, ne permet d'écrire qu'à sa propre
+adresse tant qu'on n'a pas acheté et vérifié un nom de domaine. **Brevo** passe
+par HTTPS et accepte une simple adresse vérifiée comme expéditeur : 300
+messages par jour, gratuit, sans carte.
+
+1. Créer un compte sur **brevo.com**.
+2. **Expéditeurs et IP → Expéditeurs → Ajouter** : saisir l'adresse qui enverra
+   (un Gmail convient) et cliquer sur le lien de confirmation reçu.
+3. **SMTP et API → Clés API → Générer une clé**, la copier.
+4. Dans **Render → jiran-essai → Environment** :
+
+   | Clé | Valeur |
+   | --- | --- |
+   | `EMAIL_PROVIDER` | `brevo` |
+   | `BREVO_API_KEY` | la clé de l'étape 3 |
+   | `EMAIL_FROM` | `Jiran <l-adresse-verifiee@gmail.com>` |
+
+5. **Save**. Render redéploie. Ouvrir `/health` pour contrôler.
+
+> Les messages envoyés depuis un Gmail via Brevo peuvent atterrir dans les
+> courriers indésirables. À dire aux voisins ; pour mieux, acheter un nom de
+> domaine et le vérifier chez Brevo.
+
 ### b) Avec un service d'envoi (Resend)
 
 Offre gratuite de 3 000 messages par mois, sans carte bancaire.

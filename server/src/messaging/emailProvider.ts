@@ -74,3 +74,49 @@ export class ResendEmailProvider implements MessageProvider {
     }
   }
 }
+
+/**
+ * Envoi par l'API de Brevo (300 messages par jour gratuits, sans carte).
+ *
+ * Contrairement à Resend, Brevo accepte d'écrire depuis une simple adresse
+ * vérifiée (un Gmail, par exemple), sans nom de domaine à acheter. Et comme
+ * c'est un appel HTTPS, il passe sur l'hébergement gratuit de Render, qui
+ * bloque les ports SMTP.
+ *
+ * `from` s'écrit « Nom <adresse@exemple.com> » ou simplement l'adresse.
+ */
+export class BrevoEmailProvider implements MessageProvider {
+  readonly name = 'brevo';
+
+  constructor(
+    private readonly apiKey: string,
+    private readonly from: string,
+    private readonly subject: string
+  ) {}
+
+  async send({ to, message }: { to: string; message: string }): Promise<void> {
+    const match = /^\s*(?:"?([^"<]*?)"?\s*)?<([^>]+)>\s*$/.exec(this.from);
+    const sender = match
+      ? { email: (match[2] ?? '').trim(), ...(match[1]?.trim() ? { name: match[1].trim() } : {}) }
+      : { email: this.from.trim() };
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': this.apiKey, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        sender,
+        to: [{ email: to }],
+        subject: this.subject,
+        textContent: message,
+      }),
+    });
+
+    if (!response.ok) {
+      const détail = await response.text().catch(() => '');
+      throw new MessageDeliveryError(
+        `Brevo a refusé l'envoi (${response.status}) : ${détail.slice(0, 200)}`,
+        this.name
+      );
+    }
+  }
+}
