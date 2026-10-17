@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { getLocales } from 'expo-localization';
 
 import { ToastProvider } from './src/components/Toast';
-import { HttpAuthService } from './src/data/authService';
+import { API_URL, HttpAuthService } from './src/data/authService';
 import { HttpRepository } from './src/data/httpRepository';
 import { configureForegroundAlerts } from './src/data/pushRegistration';
 import type { Language } from './src/domain/types';
@@ -18,6 +18,11 @@ import { colors } from './src/theme/theme';
 // Une alerte de sécurité doit être visible même quand l'application est déjà
 // ouverte, sans quoi elle passerait inaperçue.
 configureForegroundAlerts();
+
+// Réveille le serveur dès le lancement, sans rien attendre : un hébergement
+// gratuit s'endort après quelques minutes et met du temps à repartir. Ce temps
+// se passe alors pendant que l'écran s'affiche, pas après.
+fetch(`${API_URL}/health`).catch(() => {});
 
 /** Langue de départ : celle du téléphone si c'est l'arabe, sinon le français. */
 function deviceLanguage(): Language {

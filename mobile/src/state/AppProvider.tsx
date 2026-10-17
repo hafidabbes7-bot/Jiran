@@ -253,8 +253,11 @@ export function AppProvider({
       const stored = await repository.loadSession();
       if (cancelled) return;
       setSession(stored);
-      if (stored) await refresh({ session: stored });
-      if (!cancelled) setReady(true);
+      // L'écran s'ouvre tout de suite : le fil se charge en arrière-plan.
+      // Attendre le serveur ici bloquait l'ouverture sur un écran vide tant
+      // qu'un hébergement gratuit, endormi, n'était pas réveillé (30 à 60 s).
+      setReady(true);
+      if (stored) void refresh({ session: stored });
     })();
     return () => {
       cancelled = true;
