@@ -512,28 +512,36 @@ export class HttpRepository implements JiranRepository {
     body?: unknown,
     acceptedStatuses: number[] = [200, 201, 204]
   ): Promise<JsonObject> {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    let status = 0;
+    let data: JsonObject = {};
 
-    let status: number;
-    let data: JsonObject;
+    // Une lecture est rejouée si le serveur ne répond pas : un hébergement
+    // gratuit endormi met plus d'une demi-minute à se réveiller, bien plus que
+    // le délai d'une seule tentative. Les écritures ne sont jamais rejouées,
+    // au risque de publier deux fois.
+    const attempts = method === 'GET' ? 3 : 1;
 
-    try {
-      const response = await fetch(`${API_URL}${path}`, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
-        },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-        signal: controller.signal,
-      });
-      status = response.status;
-      data = status === 204 ? {} : ((await response.json().catch(() => ({}))) as JsonObject);
-    } catch {
-      throw new RepositoryError('Serveur injoignable', 'network');
-    } finally {
-      clearTimeout(timeout);
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+      try {
+        const response = await fetch(`${API_URL}${path}`, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
+          },
+          ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+          signal: controller.signal,
+        });
+        status = response.status;
+        data = status === 204 ? {} : ((await response.json().catch(() => ({}))) as JsonObject);
+        break;
+      } catch {
+        if (attempt === attempts) throw new RepositoryError('Serveur injoignable', 'network');
+      } finally {
+        clearTimeout(timeout);
+      }
     }
 
     if (acceptedStatuses.includes(status)) return data;

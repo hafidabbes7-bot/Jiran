@@ -134,6 +134,7 @@ export const config = {
       | 'none'
       | 'smtp'
       | 'resend'
+      | 'brevo'
       | 'console',
     from: process.env.EMAIL_FROM ?? '',
     subject: process.env.EMAIL_SUBJECT ?? 'Votre code Jiran',
@@ -146,6 +147,7 @@ export const config = {
       secure: (process.env.EMAIL_SMTP_SECURE ?? '') === 'true' || intFromEnv('EMAIL_SMTP_PORT', 587) === 465,
     },
     resendApiKey: process.env.RESEND_API_KEY ?? '',
+    brevoApiKey: process.env.BREVO_API_KEY ?? '',
   },
 
   whatsapp: {
